@@ -39,7 +39,7 @@ private:
   QPixmap brake_img;
   QPixmap lat_icon_img;
   QPixmap long_img;
-  const int radius = 192;
+  const int radius = 160;
   const int img_size = (radius / 2) * 1.5;
   QString speed;
   QString speedUnit;
