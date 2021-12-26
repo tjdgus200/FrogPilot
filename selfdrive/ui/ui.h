@@ -119,6 +119,9 @@ public:
 
   QTransform car_space_transform;
   bool wide_camera;
+  bool recording = false;
+  bool show_debug = false;
+
 
 signals:
   void uiUpdate(const UIState &s);
