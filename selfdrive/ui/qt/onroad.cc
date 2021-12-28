@@ -188,9 +188,11 @@ void OnroadHud::updateState(const UIState &s) {
   bool mainOnLocal = sm["carState"].getCarState().getMainOn();
   bool lkasEnabledLocal = sm["carState"].getCarState().getLkasEnable();
   bool adaptiveCruiseLocal = sm["carState"].getCarState().getAdaptiveCruise();
+  bool show_debugLocal = Params().getBool("ShowDebugUI");
   setProperty("mainOn", mainOnLocal);
   setProperty("lkasEnabled", lkasEnabledLocal);
   setProperty("adaptiveCruise", adaptiveCruiseLocal);
+  setProperty("show_debug", show_debugLocal);
 
   setProperty("is_cruise_set", cruise_set);
   setProperty("speed", QString::number(std::nearbyint(cur_speed)));
@@ -264,7 +266,7 @@ void OnroadHud::paintEvent(QPaintEvent *event) {
 
   }
 
-  if(s->show_debug && width() > 1200)
+  if(show_debug && width() > 1200)
     drawDebugText(p);
 
 
