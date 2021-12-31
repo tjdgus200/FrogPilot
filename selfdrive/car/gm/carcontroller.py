@@ -19,7 +19,7 @@ def accel_hysteresis(accel, accel_steady):
     elif accel < accel_steady - 0.02:
         accel_steady = accel + 0.02
     accel = accel_steady
-
+    
     return accel, accel_steady
 
 class CarController():
@@ -31,6 +31,7 @@ class CarController():
     self.steer_rate_limited = False
     
     self.accel_steady = 0.    
+    self.apply_pedal_last = 0.
     self.params = CarControllerParams()
 
     self.packer_pt = CANPacker(DBC[CP.carFingerprint]['pt'])
@@ -67,22 +68,48 @@ class CarController():
       can_sends.append(gmcan.create_steering_control(self.packer_pt, CanBus.POWERTRAIN, apply_steer, idx, lkas_enabled))
 
     # Pedal/Regen
+#    comma_pedal =0  #for supress linter error.
+#    accelMultiplier = 0.5 #default initializer.
+#    if CS.out.vEgo * CV.MS_TO_KPH < 40 :
+#      accelMultiplier = interp(CS.out.vEgo, [0., 12.], [0.55, 0.45])
+#    elif : # above 40 km/h
+#      accelMultiplier = 0.45
+    
+#    if not enabled or not CS.adaptive_Cruise or not CS.CP.enableGasInterceptor:
+#      comma_pedal = 0
+#    elif CS.adaptive_Cruise:
+#      minimumPedalOutputBySpeed = interp(CS.out.vEgo, VEL, MIN_PEDAL)
+#      pedal_accel = actuators.accel * accelMultiplier
+#      comma_pedal = clip(pedal_accel, minimumPedalOutputBySpeed, 1.)
+#      comma_pedal, self.accel_steady = accel_hysteresis(comma_pedal, self.accel_steady)
+            
+#      if actuators.accel < 0.1:
+#        can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN))
+
+#    if (frame % 4) == 0:
+#      idx = (frame // 4) % 4
+#      can_sends.append(create_gas_interceptor_command(self.packer_pt, comma_pedal, idx))
+        
+    # Pedal/Regen 2nd Option, Apply IIR filter         
     comma_pedal =0  #for supress linter error.
     accelMultiplier = 0.5 #default initializer.
-    if CS.out.vEgo * CV.MS_TO_KPH < 40 :
-      accelMultiplier = interp(CS.out.vEgo, [0., 12.], [0.55, 0.45])
-    elif : # above 40 km/h
-      accelMultiplier = 0.45
     
     if not enabled or not CS.adaptive_Cruise or not CS.CP.enableGasInterceptor:
       comma_pedal = 0
-    elif CS.adaptive_Cruise:
-      minimumPedalOutputBySpeed = interp(CS.out.vEgo, VEL, MIN_PEDAL)
-      pedal_accel = actuators.accel * accelMultiplier
-      comma_pedal = clip(pedal_accel, minimumPedalOutputBySpeed, 1.)
-      comma_pedal, self.accel_steady = accel_hysteresis(comma_pedal, self.accel_steady)
-            
-      if actuators.accel < 0.1:
+    elif CS.adaptive_Cruise:      
+      min_pedal_speed = interp(CS.out.vEgo, VEL, MIN_PEDAL)
+      pedal_accel = actuators.accel * 0.5
+      Delta = pedal_accel - self.apply_pedal_last      
+        
+      if Delta > 0:
+        pedal = 0.8 * pedal_accel + self.apply_pedal_last * 0.2
+      else:
+        pedal = self.apply_pedal_last + Delta / 10.
+
+      comma_pedal = clip(pedal, min_pedal_speed, 1.)
+      self.apply_pedal_last = comma_pedal
+                  
+      if pedal_accel < 0.1:
         can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN))
 
     if (frame % 4) == 0:
