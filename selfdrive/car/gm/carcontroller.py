@@ -102,14 +102,14 @@ class CarController():
       Delta = pedal_accel - self.apply_pedal_last      
         
       if Delta > 0:
-        pedal = 0.8 * pedal_accel + self.apply_pedal_last * 0.2
+        pedal = 0.6 * pedal_accel + self.apply_pedal_last * 0.4
       else:
         pedal = self.apply_pedal_last + Delta / 10.
 
       comma_pedal = clip(pedal, min_pedal_speed, 1.)
       self.apply_pedal_last = comma_pedal
                   
-      if pedal_accel < 0.1:
+      if pedal_accel < 0.05:
         can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN))
 
     if (frame % 4) == 0:
