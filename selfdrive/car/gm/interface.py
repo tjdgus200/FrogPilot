@@ -41,10 +41,6 @@ class CarInterface(CarInterfaceBase):
   @staticmethod
   def compute_gb(accel, speed):
     return float(accel) / 4.0
-  
-  @staticmethod
-  def get_pid_accel_limits(CP, current_speed, cruise_speed):
-    return ACCEL_MIN, 
 
   @staticmethod
   def get_params(candidate, fingerprint=gen_empty_fingerprint(), has_relay=False, car_fw=None):
@@ -97,30 +93,27 @@ class CarInterface(CarInterfaceBase):
 
     # longitudinal
     ret.longitudinalTuning.kpBP = [0., 25.*CV.KPH_TO_MS, 40.*CV.KPH_TO_MS, 80.*CV.KPH_TO_MS, 100.*CV.KPH_TO_MS]
-    ret.longitudinalTuning.kpV = [2.40, 0.90, 0.66, 0.57, 0.54]
+    ret.longitudinalTuning.kpV = [1.80, 0.90, 0.66, 0.57, 0.54]
   
-#    ret.longitudinalTuning.kiBP = [0., 130. * CV.KPH_TO_MS]
-#    ret.longitudinalTuning.kiV = [0.18, 0.12]
+    ret.longitudinalTuning.kiBP = [0., 130. * CV.KPH_TO_MS]
+    ret.longitudinalTuning.kiV = [0.18, 0.12]
     
-    ret.longitudinalTuning.kiBP = [0.]
-    ret.longitudinalTuning.kiV = [0.36]
-    
-    ret.longitudinalTuning.deadzoneBP = [0.]
-    ret.longitudinalTuning.deadzoneV = [0.]
-    ret.longitudinalActuatorDelayLowerBound = 0.14
-    ret.longitudinalActuatorDelayUpperBound = 0.16
+    ret.longitudinalTuning.deadzoneBP = [0., 30.*CV.KPH_TO_MS]
+    ret.longitudinalTuning.deadzoneV = [0., 0.10]
+    ret.longitudinalActuatorDelayLowerBound = 0.15
+    ret.longitudinalActuatorDelayUpperBound = 0.2
     
     ret.startAccel = -0.8
     ret.stopAccel = -2.0
-    ret.startingAccelRate = 3.2
-    ret.stoppingDecelRate = 0.8
-    ret.vEgoStopping = 0.5
+    ret.startingAccelRate = 5.0
+    ret.stoppingDecelRate = 0.3
+    ret.vEgoStopping = 0.6
     ret.vEgoStarting = 0.5
     ret.stoppingControl = True
     
     ret.steerLimitTimer = 0.4
     ret.radarTimeStep = 0.0667  # GM radar runs at 15Hz instead of standard 20Hz
-    
+
     return ret
 
   # returns a car.CarState
