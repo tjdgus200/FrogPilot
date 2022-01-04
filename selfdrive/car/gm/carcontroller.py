@@ -99,18 +99,26 @@ class CarController():
     elif CS.adaptive_Cruise:      
       min_pedal_speed = interp(CS.out.vEgo, VEL, MIN_PEDAL)
       pedal_accel = actuators.accel * accelMultiplier
-#      Delta = pedal_accel - self.apply_pedal_last      
+      Delta = pedal_accel - self.apply_pedal_last      
         
-#      if Delta > 0:
-      pedal = 0.6 * pedal_accel + self.apply_pedal_last * 0.4
+      if Delta > 0:
+        if CS.out.vEgo < 5:
+          pedal = 0.2 * pedal_accel + self.apply_pedal_last * 0.8
+        elif CS.out.vEgo < 10:
+          pedal = 0.5 * pedal_accel + self.apply_pedal_last * 0.5
+        else : 
+          pedal = 0.8 * pedal_accel + self.apply_pedal_last * 0.2
+      else :
+        pedal = pedal_accel  
+
 #      else:
 #        pedal = self.apply_pedal_last + Delta / 10.
 
       comma_pedal = clip(pedal, min_pedal_speed, 1.)
       self.apply_pedal_last = comma_pedal
                   
-#      if pedal_accel < 0.05:
-#        can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN))
+      if pedal_accel < 0.05:
+        can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN))
 
     if (frame % 4) == 0:
       idx = (frame // 4) % 4
