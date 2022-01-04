@@ -92,25 +92,25 @@ class CarController():
         
     # Pedal/Regen 2nd Option, Apply IIR filter         
     comma_pedal =0  #for supress linter error.
-    accelMultiplier = 0.5 #default initializer.
+    accelMultiplier = 0.45 #default initializer.
     
     if not enabled or not CS.adaptive_Cruise or not CS.CP.enableGasInterceptor:
       comma_pedal = 0
     elif CS.adaptive_Cruise:      
       min_pedal_speed = interp(CS.out.vEgo, VEL, MIN_PEDAL)
-      pedal_accel = actuators.accel * 0.5
-      Delta = pedal_accel - self.apply_pedal_last      
+      pedal_accel = actuators.accel * accelMultiplier
+#      Delta = pedal_accel - self.apply_pedal_last      
         
-      if Delta > 0:
-        pedal = 0.6 * pedal_accel + self.apply_pedal_last * 0.4
-      else:
-        pedal = self.apply_pedal_last + Delta / 10.
+#      if Delta > 0:
+      pedal = 0.6 * pedal_accel + self.apply_pedal_last * 0.4
+#      else:
+#        pedal = self.apply_pedal_last + Delta / 10.
 
       comma_pedal = clip(pedal, min_pedal_speed, 1.)
       self.apply_pedal_last = comma_pedal
                   
-      if pedal_accel < 0.05:
-        can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN))
+#      if pedal_accel < 0.05:
+#        can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN))
 
     if (frame % 4) == 0:
       idx = (frame // 4) % 4
