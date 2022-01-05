@@ -26,13 +26,17 @@ class CarController():
   def __init__(self, dbc_name, CP, VM):
     self.start_time = 0.
     self.apply_steer_last = 0
+    self.apply_gas = 0
+    self.apply_brake = 0
+    
     self.lka_steering_cmd_counter_last = -1
     self.lka_icon_status_last = (False, False)
     self.steer_rate_limited = False
     
     self.accel_steady = 0.    
     self.apply_pedal_last = 0.
-    self.params = CarControllerParams()
+    
+    self.params = CarControllerParams(CP)
 
     self.packer_pt = CANPacker(DBC[CP.carFingerprint]['pt'])
     #self.packer_obj = CANPacker(DBC[CP.carFingerprint]['radar'])
@@ -89,41 +93,31 @@ class CarController():
 #    if (frame % 4) == 0:
 #      idx = (frame // 4) % 4
 #      can_sends.append(create_gas_interceptor_command(self.packer_pt, comma_pedal, idx))
-        
-    # Pedal/Regen 2nd Option, Apply IIR filter         
-    comma_pedal =0  #for supress linter error.
-    accelMultiplier = 0.45 #default initializer.
-    
-    if not enabled or not CS.adaptive_Cruise or not CS.CP.enableGasInterceptor:
-      comma_pedal = 0
-    elif CS.adaptive_Cruise:      
-      min_pedal_speed = interp(CS.out.vEgo, VEL, MIN_PEDAL)
-      pedal_accel = actuators.accel * accelMultiplier
-      Delta = pedal_accel - self.apply_pedal_last      
-        
-      if Delta > 0:
-        if CS.out.vEgo < 5:
-          pedal = 0.2 * pedal_accel + self.apply_pedal_last * 0.8
-        elif CS.out.vEgo < 10:
-          pedal = 0.5 * pedal_accel + self.apply_pedal_last * 0.5
-        else : 
-          pedal = 0.8 * pedal_accel + self.apply_pedal_last * 0.2
-      else :
-        pedal = pedal_accel  
 
-#      else:
-#        pedal = self.apply_pedal_last + Delta / 10.
-
-      comma_pedal = clip(pedal, min_pedal_speed, 1.)
-      self.apply_pedal_last = comma_pedal
-                  
-      if pedal_accel < 0.05:
-        can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN))
-
+    # Pedal/Regen 2md Option
     if (frame % 4) == 0:
-      idx = (frame // 4) % 4
-      can_sends.append(create_gas_interceptor_command(self.packer_pt, comma_pedal, idx))
-      
+      if not enabled or not CS.adaptive_Cruise or not CS.CP.enableGasInterceptor:
+        self.apply_gas = P.MAX_ACC_REGEN
+        self.apply_brake = 0
+      else CS.adaptive_Cruise:
+        self.apply_gas = int(round(interp(actuators.accel, P.GAS_LOOKUP_BP, P.GAS_LOOKUP_V)))
+        self.apply_brake = int(round(interp(actuators.accel, P.BRAKE_LOOKUP_BP, P.BRAKE_LOOKUP_V)))
+        
+        idx = (frame // 4) % 4
+        
+        at_full_stop = enabled and CS.out.standstill
+        near_stop = enabled and (CS.out.vEgo < P.NEAR_STOP_BRAKE_PHASE)
+        # non-ascm cars have brakes on PT bus (if they have them)
+        can_sends.append(gmcan.create_friction_brake_command(self.packer_pt, CanBus.POWERTRAIN, self.apply_brake, idx, near_stop, at_full_stop))
+        # TODO: Can we detect that brake controller via fingerprint?
+        # TODO: Check to see if your fingerprint has changed!
+        
+        if CS.CP.enableGasInterceptor:
+          pedal_gas = clip(actuators.accel, 0., 1.) # TODO: major tuning
+          can_sends.append(create_gas_interceptor_command(self.packer_pt, pedal_gas, idx))
+        else:
+         can_sends.append(gmcan.create_gas_regen_command(self.packer_pt, CanBus.POWERTRAIN, self.apply_gas, idx, enabled, at_full_stop))
+
     # Send dashboard UI commands (ACC status), 25hz
     #if (frame % 4) == 0:
     #  send_fcw = hud_alert == VisualAlert.fcw
