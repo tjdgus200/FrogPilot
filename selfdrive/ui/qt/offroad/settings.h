@@ -10,7 +10,7 @@
 #include <QStackedLayout>
 
 
-#include "selfdrive/ui/qt/widgets/controls.h"
+#include "selfdrive/ui/qt/widgets/controls.h "
 
 // ********** settings window + top-level panels **********
 class SettingsWindow : public QFrame {
