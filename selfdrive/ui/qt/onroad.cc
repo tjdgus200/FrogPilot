@@ -51,8 +51,6 @@ void OnroadWindow::updateState(const UIState &s) {
   if (s.sm->updated("controlsState") || !alert.equal({})) {
     if (alert.type == "controlsUnresponsive") {
       bgColor = bg_colors[STATUS_ALERT];
-    } else if (alert.type == "controlsUnresponsivePermanent") {
-      bgColor = bg_colors[STATUS_DISENGAGED];
     }
     alerts->updateAlert(alert, bgColor);
   }
@@ -81,7 +79,6 @@ void OnroadWindow::offroadTransition(bool offroad) {
     if (map == nullptr && (uiState()->has_prime || !MAPBOX_TOKEN.isEmpty())) {
       MapWindow * m = new MapWindow(get_mapbox_settings());
       m->setFixedWidth(topWidget(this)->width() / 2);
-      m->offroadTransition(offroad);
       QObject::connect(uiState(), &UIState::offroadTransition, m, &MapWindow::offroadTransition);
       split->addWidget(m, 0, Qt::AlignRight);
       map = m;
@@ -117,9 +114,9 @@ void OnroadAlerts::paintEvent(QPaintEvent *event) {
     return;
   }
   static std::map<cereal::ControlsState::AlertSize, const int> alert_sizes = {
-          {cereal::ControlsState::AlertSize::SMALL, 271},
-          {cereal::ControlsState::AlertSize::MID, 420},
-          {cereal::ControlsState::AlertSize::FULL, height()},
+    {cereal::ControlsState::AlertSize::SMALL, 271},
+    {cereal::ControlsState::AlertSize::MID, 420},
+    {cereal::ControlsState::AlertSize::FULL, height()},
   };
   int h = alert_sizes[alert.size];
   QRect r = QRect(0, height() - h, width(), h);
@@ -165,8 +162,8 @@ void OnroadAlerts::paintEvent(QPaintEvent *event) {
 
 // OnroadHud
 OnroadHud::OnroadHud(QWidget *parent) : QWidget(parent) {
-  engage_img = loadPixmap("../assets/img_chffr_wheel.png", {img_size, img_size});
-  dm_img = loadPixmap("../assets/img_driver_face.png", {img_size, img_size});
+  engage_img = QPixmap("../assets/img_chffr_wheel.png").scaled(img_size, img_size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+  dm_img = QPixmap("../assets/img_driver_face.png").scaled(img_size, img_size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
   brake_img =  QPixmap("../assets/img_brake_disc.png").scaled(img_size, img_size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
 //  lat_img =  QPixmap("../assets/img_lat.png").scaled(img_size, img_size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
   lat_icon_img =  QPixmap("../assets/img_lat_icon.png").scaled(img_size, img_size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
@@ -339,14 +336,14 @@ void NvgWindow::updateFrameMat(int w, int h) {
   if (s->wide_camera) {
     zoom *= 0.5;
   }
-  // Apply transformation such that video pixel coordinates match videog
+  // Apply transformation such that video pixel coordinates match video
   // 1) Put (0, 0) in the middle of the video
   // 2) Apply same scaling as video
   // 3) Put (0, 0) in top left corner of video
   s->car_space_transform.reset();
   s->car_space_transform.translate(w / 2, h / 2 + y_offset)
-          .scale(zoom, zoom)
-          .translate(-intrinsic_matrix.v[2], -intrinsic_matrix.v[5]);
+      .scale(zoom, zoom)
+      .translate(-intrinsic_matrix.v[2], -intrinsic_matrix.v[5]);
 }
 
 void NvgWindow::drawLaneLines(QPainter &painter, const UIScene &scene) {
@@ -406,7 +403,7 @@ void NvgWindow::paintGL() {
   CameraViewWidget::paintGL();
 
   UIState *s = uiState();
-  if (s->worldObjectsVisible()) {
+  if (s->scene.world_objects_visible) {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
     painter.setPen(Qt::NoPen);
