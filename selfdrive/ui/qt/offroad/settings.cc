@@ -473,6 +473,15 @@ CommunityPanel::CommunityPanel(QWidget* parent) : QWidget(parent) {
   QVBoxLayout* vlayout = new QVBoxLayout(homeScreen);
   vlayout->setContentsMargins(0, 20, 0, 20);
 
+  QString selected = QString::fromStdString(Params().get("SelectedCar"));
+
+  QPushButton* selectCarBtn = new QPushButton(selected.length() ? selected : "Select your car");
+  selectCarBtn->setObjectName("selectCarBtn");
+  selectCarBtn->setStyleSheet("margin-right: 30px;");
+  //selectCarBtn->setFixedSize(350, 100);
+  connect(selectCarBtn, &QPushButton::clicked, [=]() { main_layout->setCurrentWidget(selectCar); });
+  vlayout->addSpacing(10);
+  vlayout->addWidget(selectCarBtn, 0, Qt::AlignRight);
   vlayout->addSpacing(10);
 
   homeWidget = new QWidget(this);
@@ -485,6 +494,15 @@ CommunityPanel::CommunityPanel(QWidget* parent) : QWidget(parent) {
 
   main_layout->addWidget(homeScreen);
 
+  selectCar = new SelectCar(this);
+  connect(selectCar, &SelectCar::backPress, [=]() { main_layout->setCurrentWidget(homeScreen); });
+  connect(selectCar, &SelectCar::selectedCar, [=]() {
+
+      QString selected = QString::fromStdString(Params().get("SelectedCar"));
+      selectCarBtn->setText(selected.length() ? selected : "Select your car");
+      main_layout->setCurrentWidget(homeScreen);
+  });
+  main_layout->addWidget(selectCar);
 
   QPalette pal = palette();
   pal.setColor(QPalette::Background, QColor(0x29, 0x29, 0x29));
