@@ -266,10 +266,8 @@ void OnroadHud::paintEvent(QPaintEvent *event) {
 
   }
 
-  if(show_debug ) {
+  if(show_debug && width() > 1200)
     drawDebugText(p);
-  }
-
 
 
 
@@ -448,7 +446,7 @@ void OnroadHud::drawDebugText(QPainter &p) {
 
   auto controls_state = sm["controlsState"].getControlsState();
   auto car_control = sm["carControl"].getCarControl();
-  auto car_state = sm["carState"].getCarState();
+//  auto car_state = sm["carState"].getCarState();
 
   float applyAccel = controls_state.getApplyAccel();
 
@@ -502,14 +500,14 @@ void OnroadHud::drawDebugText(QPainter &p) {
   y += height;
   str.sprintf("%.3f (%.3f/%.3f)\n", aReqValue, aReqValueMin, aReqValueMax);
   p.drawText(text_x, y, str);
-//
-//  auto lead_radar = sm["radarState"].getRadarState().getLeadOne();
-//  auto lead_one = sm["modelV2"].getModelV2().getLeadsV3()[0];
-//
-//  float radar_dist = lead_radar.getStatus() && lead_radar.getRadar() ? lead_radar.getDRel() : 0;
-//  float vision_dist = lead_one.getProb() > .5 ? (lead_one.getX()[0] - 1.5) : 0;
-//
-//  y += height;
-//  str.sprintf("Lead: %.1f/%.1f/%.1f\n", radar_dist, vision_dist, (radar_dist - vision_dist));
-//  p.drawText(text_x, y, str);
+
+  auto lead_radar = sm["radarState"].getRadarState().getLeadOne();
+  auto lead_one = sm["modelV2"].getModelV2().getLeadsV3()[0];
+
+  float radar_dist = lead_radar.getStatus() && lead_radar.getRadar() ? lead_radar.getDRel() : 0;
+  float vision_dist = lead_one.getProb() > .5 ? (lead_one.getX()[0] - 1.5) : 0;
+
+  y += height;
+  str.sprintf("Lead: %.1f/%.1f/%.1f\n", radar_dist, vision_dist, (radar_dist - vision_dist));
+  p.drawText(text_x, y, str);
 }
