@@ -446,7 +446,7 @@ void OnroadHud::drawDebugText(QPainter &p) {
 
   auto controls_state = sm["controlsState"].getControlsState();
   auto car_control = sm["carControl"].getCarControl();
-//  auto car_state = sm["carState"].getCarState();
+  auto car_state = sm["carState"].getCarState();
 
   float applyAccel = controls_state.getApplyAccel();
 
