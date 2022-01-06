@@ -164,26 +164,6 @@ class Controls:
     self.logged_comm_issue = False
     self.button_timers = {ButtonEvent.Type.decelCruise: 0, ButtonEvent.Type.accelCruise: 0}
 
-
-    # scc smoother
-    self.is_cruise_enabled = False
-    self.applyMaxSpeed = 0
-    self.apply_accel = 0.
-    self.fused_accel = 0.
-    self.lead_drel = 0.
-    self.aReqValue = 0.
-    self.aReqValueMin = 0.
-    self.aReqValueMax = 0.
-    self.sccStockCamStatus = 0
-    self.sccStockCamAct = 0
-
-    self.left_lane_visible = False
-    self.right_lane_visible = False
-
-    self.wide_camera = TICI and params.get_bool('EnableWideCamera')
-    # self.disable_op_fcw = params.get_bool('DisableOpFcw')
-
-
     # TODO: no longer necessary, aside from process replay
     self.sm['liveParameters'].valid = True
 
@@ -714,18 +694,6 @@ class Controls:
     controlsState.startMonoTime = int(start_time * 1e9)
     controlsState.forceDecel = bool(force_decel)
     controlsState.canErrorCounter = self.can_error_counter
-
-
-    controlsState.angleSteers = steer_angle_without_offset * CV.RAD_TO_DEG
-    controlsState.applyAccel = self.apply_accel
-    controlsState.aReqValue = self.aReqValue
-    controlsState.aReqValueMin = self.aReqValueMin
-    controlsState.aReqValueMax = self.aReqValueMax
-    controlsState.sccStockCamAct = self.sccStockCamAct
-    controlsState.sccStockCamStatus = self.sccStockCamStatus
-
-    controlsState.steerRatio = self.VM.sR
-
 
     if self.joystick_mode:
       controlsState.lateralControlState.debugState = lac_log
