@@ -180,23 +180,6 @@ std::unordered_map<std::string, uint32_t> keys = {
     {"ShowBattLevelUI", PERSISTENT},
 
 
-    {"UseClusterSpeed", PERSISTENT},
-
-    {"MadModeEnabled", PERSISTENT},
-
-
-
-    {"AutoLaneChangeEnabled", PERSISTENT},
-
-
-
-
-    {"KeepSteeringTurnSignals", PERSISTENT},
-    {"WarningOverSpeedLimit", PERSISTENT},
-
-    {"SoftRestartTriggered", CLEAR_ON_MANAGER_START},
-
-
 };
 
 } // namespace
