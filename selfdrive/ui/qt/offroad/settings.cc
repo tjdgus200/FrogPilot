@@ -511,30 +511,30 @@ CommunityPanel::CommunityPanel(QWidget* parent) : QWidget(parent) {
                                   "../assets/offroad/icon_road.png",
                                   this));
 
-//
-//  toggles.append(new ParamControl("MadModeEnabled",
-//                                  "Enable HKG MAD mode",
-//                                  "Openpilot will engage when turn cruise control on",
-//                                  "../assets/offroad/icon_openpilot.png",
-//                                  this));
-//
-//  toggles.append(new ParamControl("AutoLaneChangeEnabled",
-//                                  "Enable Auto Lane Change(Nudgeless)",
-//                                  "warnings: it is beta, be careful!!",
-//                                  "../assets/offroad/icon_road.png",
-//                                  this));
-//
-//
-//  toggles.append(new ParamControl("KeepSteeringTurnSignals",
-//                                  "Keep steering while turn signals",
-//                                  "",
-//                                  "../assets/offroad/icon_openpilot.png",
-//                                  this));
-//  toggles.append(new ParamControl("WarningOverSpeedLimit",
-//                                  "Warning when speeding",
-//                                  "Warning when the current speed exceeds the speed limit.",
-//                                  "../assets/offroad/icon_openpilot.png",
-//                                  this));
+
+  toggles.append(new ParamControl("MadModeEnabled",
+                                  "Enable HKG MAD mode",
+                                  "Openpilot will engage when turn cruise control on",
+                                  "../assets/offroad/icon_openpilot.png",
+                                  this));
+
+  toggles.append(new ParamControl("AutoLaneChangeEnabled",
+                                  "Enable Auto Lane Change(Nudgeless)",
+                                  "warnings: it is beta, be careful!!",
+                                  "../assets/offroad/icon_road.png",
+                                  this));
+
+
+  toggles.append(new ParamControl("KeepSteeringTurnSignals",
+                                  "Keep steering while turn signals",
+                                  "",
+                                  "../assets/offroad/icon_openpilot.png",
+                                  this));
+  toggles.append(new ParamControl("WarningOverSpeedLimit",
+                                  "Warning when speeding",
+                                  "Warning when the current speed exceeds the speed limit.",
+                                  "../assets/offroad/icon_openpilot.png",
+                                  this));
 
 
   toggles.append(new ParamControl("ShowDebugUI",
