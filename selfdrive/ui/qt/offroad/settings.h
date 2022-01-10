@@ -7,7 +7,6 @@
 #include <QPushButton>
 #include <QStackedWidget>
 #include <QWidget>
-#include <QStackedLayout>
 
 
 #include "selfdrive/ui/qt/widgets/controls.h"
@@ -87,18 +86,4 @@ private:
   void showEvent(QShowEvent *event) override;
   QString getIPAddress();
   LabelControl *ipaddress;
-};
-
-class CommunityPanel : public QWidget {
-    Q_OBJECT
-
-private:
-    QStackedLayout* main_layout = nullptr;
-
-
-
-    QWidget* homeWidget;
-
-public:
-    explicit CommunityPanel(QWidget *parent = nullptr);
 };

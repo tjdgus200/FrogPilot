@@ -7,11 +7,6 @@
 #include "selfdrive/ui/ui.h"
 
 
-#ifdef QCOM2
-#include <QTimer>
-#include "selfdrive/ui/qt/screenrecorder/screenrecorder.h"
-#endif
-
 // ***** onroad widgets *****
 
 class OnroadHud : public QWidget {
@@ -27,7 +22,6 @@ class OnroadHud : public QWidget {
   Q_PROPERTY(bool mainOn MEMBER mainOn NOTIFY valueChanged);
   Q_PROPERTY(bool lkasEnabled MEMBER lkasEnabled NOTIFY valueChanged);
   Q_PROPERTY(bool adaptiveCruise MEMBER adaptiveCruise NOTIFY valueChanged);
-  Q_PROPERTY(bool show_debug MEMBER show_debug NOTIFY valueChanged);
 
 
 
@@ -39,8 +33,6 @@ private:
   void drawIcon(QPainter &p, int x, int y, QPixmap &img, QBrush bg, float opacity);
   void drawText(QPainter &p, int x, int y, const QString &text, int alpha = 255);
   void paintEvent(QPaintEvent *event) override;
-    void drawText2(QPainter &p, int x, int y, int flags, const QString &text, const QColor& color);
-    void drawTextWithColor(QPainter &p, int x, int y, const QString &text, QColor& color);
 
   QPixmap engage_img;
   QPixmap dm_img;
@@ -60,18 +52,6 @@ private:
   bool mainOn = false;
   bool lkasEnabled = false;
   bool adaptiveCruise = false;
-  bool show_debug = false;
-
-
-    void drawMaxSpeed(QPainter &p);
-    void drawSpeed(QPainter &p);
-    void drawBottomIcons(QPainter &p);
-    void drawSpeedLimit(QPainter &p);
-    void drawTurnSignals(QPainter &p);
-    void drawGpsStatus(QPainter &p);
-    void drawDebugText(QPainter &p);
-    void drawHud(QPainter &p);
-
 
 signals:
   void valueChanged();
