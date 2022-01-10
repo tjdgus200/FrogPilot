@@ -289,4 +289,3 @@ def ensure_running(procs, started, driverview=False, not_run=None):
       p.stop(block=False)
 
     p.check_watchdog(started)
-
