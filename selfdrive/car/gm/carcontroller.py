@@ -28,7 +28,7 @@ def compute_gas_brake(accel, speed):
   creep_brake_value = 0.15
   if speed < creep_speed:
     creep_brake = (creep_speed - speed) / creep_speed * creep_brake_value
-  gb = float(accel) - creep_brake
+  gb = float(accel) / 4.0 - creep_brake
   return clip(gb, 0.0, 1.0), clip(-gb, 0.0, 1.0)
 
 class CarController():
@@ -52,7 +52,7 @@ class CarController():
     P = self.params
     
     if enabled:
-      accel = actuators.accel * 0.5
+      accel = actuators.accel
       gas, brake = compute_gas_brake(actuators.accel, CS.out.vEgo)
     else:
       accel = 0.0
@@ -101,10 +101,10 @@ class CarController():
 #      minimumPedalOutputBySpeed = interp(CS.out.vEgo, VEL, MIN_PEDAL)
 #      pedal_accel = actuators.accel * 0.45
 #      comma_pedal = clip(pedal_accel, minimumPedalOutputBySpeed, 1.)
-      comma_pedal, self.accel_steady = accel_hysteresis(comma_pedal, self.accel_steady)
+#      comma_pedal, self.accel_steady = accel_hysteresis(comma_pedal, self.accel_steady)
             
-      if actuators.accel < 0.1:
-        can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN))
+#      if actuators.accel < 0.1:
+#        can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN))
 
     if (frame % 4) == 0:
       idx = (frame // 4) % 4
