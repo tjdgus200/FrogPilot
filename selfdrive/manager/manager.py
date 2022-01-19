@@ -134,8 +134,7 @@ def manager_thread():
   cloudlog.info("manager start")
   cloudlog.info({"environ": os.environ})
 
-  Process(name="road_speed_limiter", target=launcher,
-          args=("selfdrive.road_speed_limiter", "road_speed_limiter")).start()
+  Process(name="road_speed_limiter", target=launcher, args=("selfdrive.road_speed_limiter",)).start()
 
   params = Params()
 
