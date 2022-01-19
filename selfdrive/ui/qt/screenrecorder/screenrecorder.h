@@ -8,7 +8,7 @@
 #include <thread>
 #include <chrono>
 
-#include "selfdrive/loggerd/omx_encoder.h"
+#include "omx_encoder.h"
 #include "blocking_queue.h"
 #include "selfdrive/ui/ui.h"
 
