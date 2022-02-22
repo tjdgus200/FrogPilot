@@ -11,7 +11,6 @@
 #include "selfdrive/ui/qt/screenrecorder/screenrecorder.h"
 #endif
 
-
 // ***** onroad widgets *****
 
 class OnroadHud : public QWidget {
@@ -44,7 +43,7 @@ private:
   QPixmap brake_img;
   QPixmap lat_icon_img;
   QPixmap long_img;
-  const int radius = 160;
+  const int radius = 192;
   const int img_size = (radius / 2) * 1.5;
   QString speed;
   QString speedUnit;
@@ -118,7 +117,7 @@ private:
   QWidget *map = nullptr;
   QHBoxLayout* split;
 
-  // neokii
+    // neokii
 #ifdef QCOM2
 private:
   ScreenRecoder* recorder;

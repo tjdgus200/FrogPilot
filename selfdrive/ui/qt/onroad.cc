@@ -44,9 +44,8 @@ OnroadWindow::OnroadWindow(QWidget *parent) : QWidget(parent) {
   QObject::connect(uiState(), &UIState::uiUpdate, this, &OnroadWindow::updateState);
   QObject::connect(uiState(), &UIState::offroadTransition, this, &OnroadWindow::offroadTransition);
 
-  #ifdef QCOM2
+#ifdef QCOM2
   // screen recoder - neokii
-
   record_timer = std::make_shared<QTimer>();
 	QObject::connect(record_timer.get(), &QTimer::timeout, [=]() {
     if(recorder) {
@@ -66,8 +65,6 @@ OnroadWindow::OnroadWindow(QWidget *parent) : QWidget(parent) {
   recorder_widget->raise();
   alerts->raise();
 #endif
-
-
 }
 
 void OnroadWindow::updateState(const UIState &s) {
@@ -279,12 +276,12 @@ void OnroadHud::paintEvent(QPaintEvent *event) {
 
   //lkas icon
   if ( (adaptiveCruise && lkasEnabled) || mainOn ) {
-    drawIcon(p, rect().center().x() - radius / 2 - bdr_s * 2 - 36, radius / 2 + int(bdr_s * 1.5),
+    drawIcon(p, rect().center().x() - radius / 2 - bdr_s * 2 - 24, radius / 2 + int(bdr_s * 1.5),
              lat_icon_img, QColor(0, 0, 0, 70), 1.0);
   }
   //long icon
   if(adaptiveCruise) {
-    drawIcon(p, rect().center().x() + radius / 2 + bdr_s * 2 + 36, radius / 2 + int(bdr_s * 1.5),
+    drawIcon(p, rect().center().x() + radius / 2 + bdr_s * 2 + 24, radius / 2 + int(bdr_s * 1.5),
              long_img, QColor(0, 0, 0, 70), 1.0);
 
   }
