@@ -1,27 +1,22 @@
 import os
+from typing import Any, Dict, List
+
 from common.params import Params
 from common.basedir import BASEDIR
-from selfdrive.version import is_comma_remote, is_tested_branch
 from selfdrive.car.fingerprints import eliminate_incompatible_cars, all_legacy_fingerprint_cars
 from selfdrive.car.vin import get_vin, VIN_UNKNOWN
 from selfdrive.car.fw_versions import get_fw_versions, match_fw_to_car
-from selfdrive.hardware import EON
 from selfdrive.swaglog import cloudlog
 import cereal.messaging as messaging
 from selfdrive.car import gen_empty_fingerprint
 
 from cereal import car
-
-from selfdrive.car.gm.values import CAR
-
 EventName = car.CarEvent.EventName
 
 
 def get_startup_event(car_recognized, controller_available, fw_seen):
-  if is_comma_remote() and is_tested_branch():
-    event = EventName.startup
-  else:
-    event = EventName.startup
+
+  event = EventName.startup
 
   if not car_recognized:
     if fw_seen:
@@ -43,7 +38,7 @@ def get_one_can(logcan):
 def load_interfaces(brand_names):
   ret = {}
   for brand_name in brand_names:
-    path = ('selfdrive.car.%s' % brand_name)
+    path = f'selfdrive.car.{brand_name}'
     CarInterface = __import__(path + '.interface', fromlist=['CarInterface']).CarInterface
 
     if os.path.exists(BASEDIR + '/' + path.replace('.', '/') + '/carstate.py'):
@@ -61,19 +56,25 @@ def load_interfaces(brand_names):
   return ret
 
 
-def _get_interface_names():
-  # read all the folders in selfdrive/car and return a dict where:
-  # - keys are all the car names that which we have an interface for
-  # - values are lists of spefic car models for a given car
+def get_interface_attr(attr: str) -> Dict[str, Any]:
+  # returns given attribute from each interface
   brand_names = {}
-  for car_folder in [x[0] for x in os.walk(BASEDIR + '/selfdrive/car')]:
+  for car_folder in sorted([x[0] for x in os.walk(BASEDIR + '/selfdrive/car')]):
     try:
       brand_name = car_folder.split('/')[-1]
-      model_names = __import__('selfdrive.car.%s.values' % brand_name, fromlist=['CAR']).CAR
-      model_names = [getattr(model_names, c) for c in model_names.__dict__.keys() if not c.startswith("__")]
-      brand_names[brand_name] = model_names
-    except (ImportError, IOError):
+      attr_data = getattr(__import__(f'selfdrive.car.{brand_name}.values', fromlist=[attr]), attr, None)
+      brand_names[brand_name] = attr_data
+    except (ImportError, OSError):
       pass
+  return brand_names
+
+
+def _get_interface_names() -> Dict[str, List[str]]:
+  # returns a dict of brand name and its respective models
+  brand_names = {}
+  for brand_name, model_names in get_interface_attr("CAR").items():
+    model_names = [getattr(model_names, c) for c in model_names.__dict__.keys() if not c.startswith("__")]
+    brand_names[brand_name] = model_names
 
   return brand_names
 
@@ -84,11 +85,11 @@ interfaces = load_interfaces(interface_names)
 
 
 # **** for use live only ****
-def fingerprint(logcan, sendcan, has_relay):
+def fingerprint(logcan, sendcan):
   fixed_fingerprint = os.environ.get('FINGERPRINT', "")
   skip_fw_query = os.environ.get('SKIP_FW_QUERY', False)
 
-  if has_relay and not fixed_fingerprint and not skip_fw_query:
+  if not fixed_fingerprint and not skip_fw_query:
     # Vin query only reliably works thorugh OBDII
     bus = 1
 
@@ -105,7 +106,7 @@ def fingerprint(logcan, sendcan, has_relay):
     else:
       cloudlog.warning("Getting VIN & FW versions")
       _, vin = get_vin(logcan, sendcan, bus)
-      car_fw = get_fw_versions(logcan, sendcan, bus)
+      car_fw = get_fw_versions(logcan, sendcan)
 
     exact_fw_match, fw_candidates = match_fw_to_car(car_fw)
   else:
@@ -129,13 +130,13 @@ def fingerprint(logcan, sendcan, has_relay):
       # The fingerprint dict is generated for all buses, this way the car interface
       # can use it to detect a (valid) multipanda setup and initialize accordingly
       if can.src < 128:
-        if can.src not in finger.keys():
+        if can.src not in finger:
           finger[can.src] = {}
         finger[can.src][can.address] = len(can.dat)
 
       for b in candidate_cars:
         # Ignore extended messages and VIN query response.
-        if can.src == b and can.address < 0x800 and can.address not in [0x7df, 0x7e0, 0x7e8]:
+        if can.src == b and can.address < 0x800 and can.address not in (0x7df, 0x7e0, 0x7e8):
           candidate_cars[b] = eliminate_incompatible_cars(can, candidate_cars[b])
 
     # if we only have one car choice and the time since we got our first
@@ -170,18 +171,24 @@ def fingerprint(logcan, sendcan, has_relay):
   return car_fingerprint, finger, vin, car_fw, source, exact_match
 
 
-def get_car(logcan, sendcan, has_relay=False):
-  candidate, fingerprints, vin, car_fw, source, exact_match = fingerprint(logcan, sendcan, has_relay)
+def get_car(logcan, sendcan):
+  candidate, fingerprints, vin, car_fw, source, exact_match = fingerprint(logcan, sendcan)
 
-  if candidate is not CAR.BOLT:
-    cloudlog.warning("car doesn't match any BOLT EV: %r", fingerprints)
-    candidate = CAR.BOLT
+  if candidate is None:
+    cloudlog.warning("car doesn't match any fingerprints: %r", fingerprints)
+    candidate = "mock"
+
+  disable_radar = Params().get_bool("DisableRadar")
+
+  selected_car = Params().get("SelectedCar")
+  if selected_car:
+    candidate = selected_car.decode("utf-8")
 
   CarInterface, CarController, CarState = interfaces[candidate]
-  car_params = CarInterface.get_params(candidate, fingerprints, has_relay, car_fw)
-  car_params.carVin = vin
-  car_params.carFw = car_fw
-  car_params.fingerprintSource = source
-  car_params.fuzzyFingerprint = not exact_match
+  CP = CarInterface.get_params(candidate, fingerprints, car_fw, disable_radar)
+  CP.carVin = vin
+  CP.carFw = car_fw
+  CP.fingerprintSource = source
+  CP.fuzzyFingerprint = not exact_match
 
-  return CarInterface(car_params, CarController, CarState), car_params
+  return CarInterface(CP, CarController, CarState), CP

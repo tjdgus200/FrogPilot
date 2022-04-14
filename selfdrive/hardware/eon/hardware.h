@@ -2,7 +2,6 @@
 
 #include <cstdlib>
 #include <fstream>
-#include <cstdio>
 
 #include <gui/ISurfaceComposer.h>
 #include <gui/SurfaceComposerClient.h>
@@ -13,7 +12,7 @@
 
 class HardwareEon : public HardwareNone {
 public:
-  static constexpr float MAX_VOLUME = 0.85;
+  static constexpr float MAX_VOLUME = 0.9;
   static constexpr float MIN_VOLUME = 0.45;
 
   static bool EON() { return true; }
@@ -26,9 +25,6 @@ public:
   static void set_brightness(int percent) {
     std::ofstream brightness_control("/sys/class/leds/lcd-backlight/brightness");
     if (brightness_control.is_open()) {
-      if (percent > 50 ) {
-        percent *= 0.75;
-      }
       brightness_control << (int)(percent * (255/100.)) << "\n";
       brightness_control.close();
     }
@@ -73,32 +69,5 @@ public:
   }
   static void launch_tethering() {
     launch_activity("com.android.settings/.TetherSettings");
-  }
-
-  // added jc01rho
-  static void touch_prebuilt() {
-    std::ofstream output("/data/openpilot/prebuilt"); //touch prebuilt
-  }
-  static void rm_prebuilt() {
-    std::remove("/data/openpilot/prebuilt"); //rm prebuilt
-  }
-  static void git_clean_reset() {
-    std::system("/system/bin/su -c LD_LIBRARY_PATH=/data/phonelibs:/data/data/com.termux/files/usr/lib data/data/com.termux/files/usr/bin/git -C /data/openpilot reset --hard");
-    std::system("/system/bin/su -c LD_LIBRARY_PATH=/data/phonelibs:/data/data/com.termux/files/usr/lib data/data/com.termux/files/usr/bin/git -C /data/openpilot clean -xfd");
-  }
-  static void clean_build_cache() {
-    std::system("/system/bin/su -c rm -rf /data/build_cache");
-  }
-  static void update_reboot() {
-
-    rm_prebuilt();
-    std::system("/system/bin/su -c LD_LIBRARY_PATH=/data/phonelibs:/data/data/com.termux/files/usr/lib data/data/com.termux/files/usr/bin/git -C /data/openpilot pull");
-    reboot();
-  }
-  static void clean_build_reboot() {
-    git_clean_reset();
-    clean_build_cache();
-    update_reboot();
-
   }
 };

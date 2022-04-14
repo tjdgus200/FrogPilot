@@ -3,63 +3,18 @@
 #include <QStackedLayout>
 #include <QWidget>
 
+#include "selfdrive/common/util.h"
 #include "selfdrive/ui/qt/widgets/cameraview.h"
 #include "selfdrive/ui/ui.h"
 
-#ifdef QCOM2
 #include <QTimer>
+#include <QMap>
+
+#if  defined(QCOM2) || defined(QCOM)
 #include "selfdrive/ui/qt/screenrecorder/screenrecorder.h"
 #endif
 
 // ***** onroad widgets *****
-
-class OnroadHud : public QWidget {
-  Q_OBJECT
-  Q_PROPERTY(QString speed MEMBER speed NOTIFY valueChanged);
-  Q_PROPERTY(QString speedUnit MEMBER speedUnit NOTIFY valueChanged);
-  Q_PROPERTY(QString maxSpeed MEMBER maxSpeed NOTIFY valueChanged);
-  Q_PROPERTY(bool is_cruise_set MEMBER is_cruise_set NOTIFY valueChanged);
-  Q_PROPERTY(bool engageable MEMBER engageable NOTIFY valueChanged);
-  Q_PROPERTY(bool dmActive MEMBER dmActive NOTIFY valueChanged);
-  Q_PROPERTY(bool hideDM MEMBER hideDM NOTIFY valueChanged);
-  Q_PROPERTY(int status MEMBER status NOTIFY valueChanged);
-  Q_PROPERTY(bool mainOn MEMBER mainOn NOTIFY valueChanged);
-  Q_PROPERTY(bool lkasEnabled MEMBER lkasEnabled NOTIFY valueChanged);
-  Q_PROPERTY(bool adaptiveCruise MEMBER adaptiveCruise NOTIFY valueChanged);
-
-
-
-public:
-  explicit OnroadHud(QWidget *parent);
-  void updateState(const UIState &s);
-
-private:
-  void drawIcon(QPainter &p, int x, int y, QPixmap &img, QBrush bg, float opacity);
-  void drawText(QPainter &p, int x, int y, const QString &text, int alpha = 255);
-  void paintEvent(QPaintEvent *event) override;
-
-  QPixmap engage_img;
-  QPixmap dm_img;
-  QPixmap brake_img;
-  QPixmap lat_icon_img;
-  QPixmap long_img;
-  const int radius = 192;
-  const int img_size = (radius / 2) * 1.5;
-  QString speed;
-  QString speedUnit;
-  QString maxSpeed;
-  bool is_cruise_set = false;
-  bool engageable = false;
-  bool dmActive = false;
-  bool hideDM = false;
-  int status = STATUS_DISENGAGED;
-  bool mainOn = false;
-  bool lkasEnabled = false;
-  bool adaptiveCruise = false;
-
-signals:
-  void valueChanged();
-};
 
 class OnroadAlerts : public QWidget {
   Q_OBJECT
@@ -81,22 +36,60 @@ class NvgWindow : public CameraViewWidget {
   Q_OBJECT
 
 public:
-  explicit NvgWindow(VisionStreamType type, QWidget* parent = 0) : CameraViewWidget("camerad", type, true, parent) {}
+  explicit NvgWindow(VisionStreamType type, QWidget* parent = 0);
 
 protected:
   void paintGL() override;
   void initializeGL() override;
   void showEvent(QShowEvent *event) override;
   void updateFrameMat(int w, int h) override;
-  void drawLaneLines(QPainter &painter, const UIScene &scene);
-  void drawLead(QPainter &painter, const cereal::ModelDataV2::LeadDataV3::Reader &lead_data, const QPointF &vd);
+  void drawLaneLines(QPainter &painter, const UIState *s);
+  void drawLead(QPainter &painter, const cereal::ModelDataV2::LeadDataV3::Reader &lead_data, const QPointF &vd, bool is_radar);
   inline QColor redColor(int alpha = 255) { return QColor(201, 34, 49, alpha); }
-  double prev_draw_t = 0;
+  inline QColor whiteColor(int alpha = 255) { return QColor(255, 255, 255, alpha); }
 
-  // nda
+  double prev_draw_t = 0;
+  FirstOrderFilter fps_filter;
+
+  // neokii
+  void drawIcon(QPainter &p, int x, int y, QPixmap &img, QBrush bg, float opacity);
+  void drawText(QPainter &p, int x, int y, const QString &text, int alpha = 255);
+  void drawText2(QPainter &p, int x, int y, int flags, const QString &text, const QColor& color);
+  void drawTextWithColor(QPainter &p, int x, int y, const QString &text, QColor& color);
+  void paintEvent(QPaintEvent *event) override;
+
+  const int radius = 192;
+  const int img_size = (radius / 2) * 1.5;
+
+  uint64_t last_update_params;
+
+  // neokii
+  QPixmap ic_brake;
+  QPixmap ic_autohold_warning;
+  QPixmap ic_autohold_active;
   QPixmap ic_nda;
   QPixmap ic_hda;
+  QPixmap ic_tire_pressure;
+  QPixmap ic_turn_signal_l;
+  QPixmap ic_turn_signal_r;
+  QPixmap ic_satellite;
+
+  QMap<QString, QPixmap> ic_oil_com;
+
+  void drawMaxSpeed(QPainter &p);
+  void drawSpeed(QPainter &p);
+  void drawBottomIcons(QPainter &p);
   void drawSpeedLimit(QPainter &p);
+  void drawRestArea(QPainter &p);
+  void drawTurnSignals(QPainter &p);
+  void drawGpsStatus(QPainter &p);
+  void drawDebugText(QPainter &p);
+  void drawHud(QPainter &p);
+
+private:
+  QPixmap get_icon_iol_com(const char* key);
+  void drawRestAreaItem(QPainter &p, int yPos, capnp::Text::Reader image, capnp::Text::Reader title,
+                        capnp::Text::Reader oilPrice, capnp::Text::Reader distance, bool lastItem);
 };
 
 // container for all onroad widgets
@@ -107,23 +100,26 @@ public:
   OnroadWindow(QWidget* parent = 0);
   bool isMapVisible() const { return map && map->isVisible(); }
 
-private:
-  void paintEvent(QPaintEvent *event);
+protected:
   void mousePressEvent(QMouseEvent* e) override;
-  OnroadHud *hud;
+  void mouseReleaseEvent(QMouseEvent* e) override;
+
+  void paintEvent(QPaintEvent *event) override;
+
+private:
   OnroadAlerts *alerts;
   NvgWindow *nvg;
   QColor bg = bg_colors[STATUS_DISENGAGED];
   QWidget *map = nullptr;
   QHBoxLayout* split;
 
-    // neokii
-#ifdef QCOM2
+  // neokii
 private:
+#if  defined(QCOM2) || defined(QCOM)
   ScreenRecoder* recorder;
+#endif
   std::shared_ptr<QTimer> record_timer;
   QPoint startPos;
-#endif
 
 private slots:
   void offroadTransition(bool offroad);

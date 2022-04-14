@@ -211,12 +211,12 @@ void cameras_init(VisionIpcServer *v, MultiCameraState *s, cl_device_id device_i
               /*fps*/ 20,
 #endif
               device_id, ctx,
-              VISION_STREAM_RGB_BACK, VISION_STREAM_ROAD);
+              VISION_STREAM_RGB_ROAD, VISION_STREAM_ROAD);
 
   camera_init(v, &s->driver_cam, CAMERA_ID_OV8865, 1,
               /*pixel_clock=*/72000000, /*line_length_pclk=*/1602,
               /*max_gain=*/510, 10, device_id, ctx,
-              VISION_STREAM_RGB_FRONT, VISION_STREAM_DRIVER);
+              VISION_STREAM_RGB_DRIVER, VISION_STREAM_DRIVER);
 
   s->sm = new SubMaster({"driverState"});
   s->pm = new PubMaster({"roadCameraState", "driverCameraState", "thumbnail"});
@@ -399,7 +399,7 @@ static void sensors_init(MultiCameraState *s) {
     .output_format = MSM_SENSOR_BAYER,
   }};
 
-  unique_fd sensorinit_fd = HANDLE_EINTR(open("/dev/v4l-subdev11", O_RDWR | O_NONBLOCK));
+  unique_fd sensorinit_fd = open_v4l_by_name_and_index("msm_sensor_init");
   assert(sensorinit_fd >= 0);
   for (auto &info : slave_infos) {
     info.power_setting_array.power_setting = &info.power_setting_array.power_setting_a[0];
@@ -417,31 +417,22 @@ static void camera_open(CameraState *s, bool is_road_cam) {
   struct msm_actuator_cfg_data actuator_cfg_data = {};
 
   // open devices
-  const char *sensor_dev;
+  s->csid_fd = open_v4l_by_name_and_index("msm_csid", is_road_cam ? 0 : 2);
+  assert(s->csid_fd >= 0);
+  s->csiphy_fd = open_v4l_by_name_and_index("msm_csiphy", is_road_cam ? 0 : 2);
+  assert(s->csiphy_fd >= 0);
+  s->isp_fd = open_v4l_by_name_and_index("vfe", is_road_cam ? 0 : 1);
+  assert(s->isp_fd >= 0);
+
   if (is_road_cam) {
-    s->csid_fd = HANDLE_EINTR(open("/dev/v4l-subdev3", O_RDWR | O_NONBLOCK));
-    assert(s->csid_fd >= 0);
-    s->csiphy_fd = HANDLE_EINTR(open("/dev/v4l-subdev0", O_RDWR | O_NONBLOCK));
-    assert(s->csiphy_fd >= 0);
-    sensor_dev = "/dev/v4l-subdev17";
-    s->isp_fd = HANDLE_EINTR(open("/dev/v4l-subdev13", O_RDWR | O_NONBLOCK));
-    assert(s->isp_fd >= 0);
-    s->actuator_fd = HANDLE_EINTR(open("/dev/v4l-subdev7", O_RDWR | O_NONBLOCK));
+    s->actuator_fd = open_v4l_by_name_and_index("msm_actuator");
     assert(s->actuator_fd >= 0);
-  } else {
-    s->csid_fd = HANDLE_EINTR(open("/dev/v4l-subdev5", O_RDWR | O_NONBLOCK));
-    assert(s->csid_fd >= 0);
-    s->csiphy_fd = HANDLE_EINTR(open("/dev/v4l-subdev2", O_RDWR | O_NONBLOCK));
-    assert(s->csiphy_fd >= 0);
-    sensor_dev = "/dev/v4l-subdev18";
-    s->isp_fd = HANDLE_EINTR(open("/dev/v4l-subdev14", O_RDWR | O_NONBLOCK));
-    assert(s->isp_fd >= 0);
   }
 
   // wait for sensor device
   // on first startup, these devices aren't present yet
   for (int i = 0; i < 10; i++) {
-    s->sensor_fd = HANDLE_EINTR(open(sensor_dev, O_RDWR | O_NONBLOCK));
+    s->sensor_fd = open_v4l_by_name_and_index(is_road_cam ? "imx298" : "ov8865_sunny");
     if (s->sensor_fd >= 0) break;
     LOGW("waiting for sensors...");
     util::sleep_for(1000); // sleep one second
@@ -852,21 +843,7 @@ static void parse_autofocus(CameraState *s, uint8_t *d) {
   s->focus_err = max_focus*1.0;
 }
 
-static std::optional<float> get_accel_z(SubMaster *sm) {
-  sm->update(0);
-  if(sm->updated("sensorEvents")) {
-    for (auto event : (*sm)["sensorEvents"].getSensorEvents()) {
-      if (event.which() == cereal::SensorEventData::ACCELERATION) {
-        if (auto v = event.getAcceleration().getV(); v.size() >= 3)
-          return -v[2];
-        break;
-      }
-    }
-  }
-  return std::nullopt;
-}
-
-static void do_autofocus(CameraState *s, SubMaster *sm) {
+static void do_autofocus(CameraState *s) {
   float lens_true_pos = s->lens_true_pos.load();
   if (!isnan(s->focus_err)) {
     // learn lens_true_pos
@@ -874,23 +851,10 @@ static void do_autofocus(CameraState *s, SubMaster *sm) {
     lens_true_pos -= s->focus_err*focus_kp;
   }
 
-  if (auto accel_z = get_accel_z(sm)) {
-    s->last_sag_acc_z = *accel_z;
-  }
-  const float sag = (s->last_sag_acc_z / 9.8) * 128;
   // stay off the walls
   lens_true_pos = std::clamp(lens_true_pos, float(LP3_AF_DAC_DOWN), float(LP3_AF_DAC_UP));
-  int target = std::clamp(lens_true_pos - sag, float(LP3_AF_DAC_DOWN), float(LP3_AF_DAC_UP));
   s->lens_true_pos.store(lens_true_pos);
-
-  /*char debug[4096];
-  char *pdebug = debug;
-  pdebug += sprintf(pdebug, "focus ");
-  for (int i = 0; i < NUM_FOCUS; i++) pdebug += sprintf(pdebug, "%2x(%4d) ", s->confidence[i], s->focus[i]);
-  pdebug += sprintf(pdebug, "  err: %7.2f  offset: %6.2f sag: %6.2f lens_true_pos: %6.2f  cur_lens_pos: %4d->%4d", err * focus_kp, offset, sag, s->lens_true_pos, s->cur_lens_pos, target);
-  LOGD(debug);*/
-
-  actuator_move(s, target);
+  actuator_move(s, lens_true_pos);
 }
 
 void camera_autoexposure(CameraState *s, float grey_frac) {
@@ -935,7 +899,7 @@ void cameras_open(MultiCameraState *s) {
   s->v4l_fd = HANDLE_EINTR(open("/dev/video0", O_RDWR | O_NONBLOCK));
   assert(s->v4l_fd >= 0);
 
-  s->ispif_fd = HANDLE_EINTR(open("/dev/v4l-subdev15", O_RDWR | O_NONBLOCK));
+  s->ispif_fd = open_v4l_by_name_and_index("msm_ispif");
   assert(s->ispif_fd >= 0);
 
   // ISPIF: stop
@@ -1046,12 +1010,11 @@ static void ops_thread(MultiCameraState *s) {
   CameraExpInfo driver_cam_op;
 
   util::set_thread_name("camera_settings");
-  SubMaster sm({"sensorEvents"});
   while(!do_exit) {
     road_cam_op = road_cam_exp.load();
     if (road_cam_op.op_id != last_road_cam_op_id) {
       do_autoexposure(&s->road_cam, road_cam_op.grey_frac);
-      do_autofocus(&s->road_cam, &sm);
+      do_autofocus(&s->road_cam);
       last_road_cam_op_id = road_cam_op.op_id;
     }
 
@@ -1165,7 +1128,6 @@ void cameras_run(MultiCameraState *s) {
             .frame_length = (uint32_t)c->frame_length,
             .integ_lines = (uint32_t)c->cur_integ_lines,
             .lens_pos = c->cur_lens_pos,
-            .lens_sag = c->last_sag_acc_z,
             .lens_err = c->focus_err,
             .lens_true_pos = c->lens_true_pos,
             .gain = c->cur_gain_frac,

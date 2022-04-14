@@ -7,6 +7,7 @@
 #include <QObject>
 #include <QTimer>
 #include <QColor>
+#include <QFuture>
 #include <QTransform>
 
 #include "cereal/messaging/messaging.h"
@@ -14,7 +15,7 @@
 #include "selfdrive/common/params.h"
 #include "selfdrive/common/timing.h"
 
-const int bdr_s = 30;
+const int bdr_s = 20;
 const int header_h = 420;
 const int footer_h = 280;
 
@@ -32,29 +33,38 @@ struct Alert {
   QString type;
   cereal::ControlsState::AlertSize size;
   AudibleAlert sound;
+
   bool equal(const Alert &a2) {
     return text1 == a2.text1 && text2 == a2.text2 && type == a2.type && sound == a2.sound;
   }
 
   static Alert get(const SubMaster &sm, uint64_t started_frame) {
+    const cereal::ControlsState::Reader &cs = sm["controlsState"].getControlsState();
     if (sm.updated("controlsState")) {
-      const cereal::ControlsState::Reader &cs = sm["controlsState"].getControlsState();
       return {cs.getAlertText1().cStr(), cs.getAlertText2().cStr(),
               cs.getAlertType().cStr(), cs.getAlertSize(),
               cs.getAlertSound()};
     } else if ((sm.frame - started_frame) > 5 * UI_FREQ) {
       const int CONTROLS_TIMEOUT = 5;
+      const int controls_missing = (nanos_since_boot() - sm.rcv_time("controlsState")) / 1e9;
+
       // Handle controls timeout
       if (sm.rcv_frame("controlsState") < started_frame) {
         // car is started, but controlsState hasn't been seen at all
         return {"openpilot Unavailable", "Waiting for controls to start",
                 "controlsWaiting", cereal::ControlsState::AlertSize::MID,
                 AudibleAlert::NONE};
-      } else if ((nanos_since_boot() - sm.rcv_time("controlsState")) / 1e9 > CONTROLS_TIMEOUT) {
+      } else if (controls_missing > CONTROLS_TIMEOUT) {
         // car is started, but controls is lagging or died
-        return {"TAKE CONTROL IMMEDIATELY", "Controls Unresponsive",
-                "controlsUnresponsive", cereal::ControlsState::AlertSize::FULL,
-                AudibleAlert::WARNING_IMMEDIATE};
+        if (cs.getEnabled() && (controls_missing - CONTROLS_TIMEOUT) < 10) {
+          return {"TAKE CONTROL IMMEDIATELY", "Controls Unresponsive",
+                  "controlsUnresponsive", cereal::ControlsState::AlertSize::FULL,
+                  AudibleAlert::WARNING_IMMEDIATE};
+        } else {
+          return {"Controls Unresponsive", "Reboot Device",
+                  "controlsUnresponsivePermanent", cereal::ControlsState::AlertSize::MID,
+                  AudibleAlert::NONE};
+        }
       }
     }
     return {};
@@ -63,6 +73,7 @@ struct Alert {
 
 typedef enum UIStatus {
   STATUS_DISENGAGED,
+  STATUS_OVERRIDE,
   STATUS_ENGAGED,
   STATUS_WARNING,
   STATUS_ALERT,
@@ -70,6 +81,7 @@ typedef enum UIStatus {
 
 const QColor bg_colors [] = {
   [STATUS_DISENGAGED] =  QColor(0x17, 0x33, 0x49, 0xc8),
+  [STATUS_OVERRIDE] = QColor(0x91, 0x9b, 0x95, 0xf1),
   [STATUS_ENGAGED] = QColor(0x17, 0x86, 0x44, 0xf1),
   [STATUS_WARNING] = QColor(0xDA, 0x6F, 0x25, 0xf1),
   [STATUS_ALERT] = QColor(0xC9, 0x22, 0x31, 0xf1),
@@ -82,8 +94,6 @@ typedef struct {
 
 typedef struct UIScene {
   mat3 view_from_calib;
-  bool world_objects_visible;
-
   cereal::PandaState::PandaType pandaType;
 
   // modelV2
@@ -95,6 +105,7 @@ typedef struct UIScene {
 
   // lead
   QPointF lead_vertices[2];
+  bool lead_radar[2] = {false, false};
 
   float light_sensor, accel_sensor, gyro_sensor;
   bool started, ignition, is_metric, longitudinal_control, end_to_end;
@@ -106,6 +117,13 @@ class UIState : public QObject {
 
 public:
   UIState(QObject* parent = 0);
+  void updateStatus();
+  inline bool worldObjectsVisible() const {
+    return sm->rcv_frame("liveCalibration") > scene.started_frame;
+  };
+  inline bool engaged() const {
+    return scene.started && (*sm)["controlsState"].getControlsState().getEnabled();
+  };
 
   int fb_w = 0, fb_h = 0;
 
@@ -115,13 +133,15 @@ public:
   UIScene scene = {};
 
   bool awake;
-  bool has_prime = false;
+  int prime_type = 0;
 
   QTransform car_space_transform;
   bool wide_camera;
 
   bool recording = false;
   bool show_debug = false;
+  std::string lat_control;
+
 signals:
   void uiUpdate(const UIState &s);
   void offroadTransition(bool offroad);
@@ -131,7 +151,7 @@ private slots:
 
 private:
   QTimer *timer;
-  bool started_prev = true;
+  bool started_prev = false;
 };
 
 UIState *uiState();
@@ -153,6 +173,7 @@ private:
   bool ignition_on = false;
   int last_brightness = 0;
   FirstOrderFilter brightness_filter;
+  QFuture<void> brightness_future;
 
   void updateBrightness(const UIState &s);
   void updateWakefulness(const UIState &s);

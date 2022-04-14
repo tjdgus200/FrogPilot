@@ -11,7 +11,7 @@
 #include "selfdrive/ui/qt/widgets/scrollview.h"
 
 int main(int argc, char *argv[]) {
-  initApp();
+  initApp(argc, argv);
   QApplication a(argc, argv);
   QWidget window;
   setMainWindow(&window);
@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
   main_layout->addWidget(scroll, 0, 0, Qt::AlignTop);
 
   // Scroll to the bottom
-  QObject::connect(scroll->verticalScrollBar(), &QAbstractSlider::rangeChanged, [=]() {
+  QObject::connect(scroll->verticalScrollBar(), &QAbstractSlider::rangeChanged, [=](){
     scroll->verticalScrollBar()->setValue(scroll->verticalScrollBar()->maximum());
   });
 

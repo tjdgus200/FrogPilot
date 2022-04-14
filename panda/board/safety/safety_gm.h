@@ -89,6 +89,9 @@ static int gm_rx_hook(CANPacket_t *to_push) {
         case 5:  // main on
           controls_allowed = 1;
           break;
+        case 6:  // cancel
+          controls_allowed = 0;
+          break;
         default:
           break;  // any other button is irrelevant
       }
@@ -119,8 +122,7 @@ static int gm_rx_hook(CANPacket_t *to_push) {
     generic_rx_checks(addr == MSG_TX_LKA);
   }
   return valid;
-/////////////////슐러는 189에 대해 조사하고있으나 기존 사용하던 판다펌에선 0x189(393) 이 리젠 으로 지정되어있음. 그러나 기존 어차피 gm_rx_hook 에서 패들 검사 안함
-/////////////////향후에 차차님에게 확인 필요
+
     // exit controls on regen paddle
 //    if (addr == 189) {
 //      bool regen = GET_BYTE(to_push, 0) & 0x20U;
@@ -137,19 +139,24 @@ static int gm_rx_hook(CANPacket_t *to_push) {
 // else
 //     block all commands that produce actuation
 
-static int gm_tx_hook(CANPacket_t *to_send) {
+static int gm_tx_hook(CANPacket_t *to_send, bool longitudinal_allowed) {
+
+ bool boolValue =longitudinal_allowed;
 
   int tx = 1;
   int addr = GET_ADDR(to_send);
 
   if (!msg_allowed(to_send, GM_TX_MSGS, sizeof(GM_TX_MSGS)/sizeof(GM_TX_MSGS[0]))) {
     tx = 0;
+    if (boolValue) {
+       tx = 0 ;
+    }
   }
 
   // disallow actuator commands if gas or brake (with vehicle moving) are pressed
   // and the the latching controls_allowed flag is True
   int pedal_pressed = brake_pressed_prev && vehicle_moving;
-  bool unsafe_allow_gas = unsafe_mode & UNSAFE_DISABLE_DISENGAGE_ON_GAS;
+  bool unsafe_allow_gas = alternative_experience & ALT_EXP_DISABLE_DISENGAGE_ON_GAS;
   if (!unsafe_allow_gas) {
     pedal_pressed = pedal_pressed || gas_pressed_prev;
   }
@@ -157,7 +164,7 @@ static int gm_tx_hook(CANPacket_t *to_send) {
 
   // GAS: safety check (interceptor)
   if (addr == MSG_TX_PEDAL) {
-    if (!current_controls_allowed) {
+    if (!current_controls_allowed ) {
       if (GET_BYTE(to_send, 0) || GET_BYTE(to_send, 1)) {
         tx = 0;
       }
@@ -185,7 +192,7 @@ static int gm_tx_hook(CANPacket_t *to_send) {
     bool violation = 0;
     desired_torque = to_signed(desired_torque, 11);
 
-    if (current_controls_allowed) {
+    if (current_controls_allowed ) {
 
       // *** global torque limit check ***
       violation |= max_limit_check(desired_torque, GM_MAX_STEER, -GM_MAX_STEER);
@@ -231,7 +238,7 @@ static int gm_tx_hook(CANPacket_t *to_send) {
     int gas_regen = ((GET_BYTE(to_send, 2) & 0x7FU) << 5) + ((GET_BYTE(to_send, 3) & 0xF8U) >> 3);
     // Disabled message is !engaged with gas
     // value that corresponds to max regen.
-    if (!current_controls_allowed) {
+    if (!current_controls_allowed ) {
       bool apply = GET_BYTE(to_send, 0) & 1U;
       if (apply || (gas_regen != GM_MAX_REGEN)) {
         tx = 0;

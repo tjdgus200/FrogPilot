@@ -104,14 +104,7 @@ function tici_init {
     sleep 3
   fi
 
-  # setup governors
-  sudo su -c 'echo "performance" > /sys/class/devfreq/soc:qcom,memlat-cpu0/governor'
-  sudo su -c 'echo "performance" > /sys/class/devfreq/soc:qcom,memlat-cpu4/governor'
-
   # TODO: move this to agnos
-  # network manager config
-  nmcli connection modify --temporary lte gsm.auto-config yes
-  nmcli connection modify --temporary lte gsm.home-only yes
   sudo rm -f /data/etc/NetworkManager/system-connections/*.nmmeta
 
   # set success flag for current boot slot
@@ -183,6 +176,9 @@ function launch {
 
   # write tmux scrollback to a file
   tmux capture-pane -pq -S-1000 > /tmp/launch_log
+
+ python ./selfdrive/car/gm/values.py > /data/params/d/SupportedCars
+#  python ./selfdrive/car/hyundai/values.py >> /data/params/d/SupportedCars
 
   # start manager
   cd selfdrive/manager

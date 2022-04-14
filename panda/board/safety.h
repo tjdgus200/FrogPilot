@@ -1,19 +1,23 @@
-// include first, needed by safety policies
 #include "safety_declarations.h"
-// Include the actual safety policies.
+
+// include the safety policies.
 #include "safety/safety_defaults.h"
-#include "safety/safety_honda.h"
+/*#include "safety/safety_honda.h"
 #include "safety/safety_toyota.h"
 #include "safety/safety_tesla.h"
-#include "safety/safety_gm.h"
-#include "safety/safety_ford.h"
+
+#include "safety/safety_ford.h"*/
 #include "safety/safety_hyundai.h"
-#include "safety/safety_chrysler.h"
+#include "safety/safety_gm.h"
+/*#include "safety/safety_chrysler.h"
 #include "safety/safety_subaru.h"
 #include "safety/safety_mazda.h"
 #include "safety/safety_nissan.h"
-#include "safety/safety_volkswagen.h"
+#include "safety/safety_volkswagen_mqb.h"
+#include "safety/safety_volkswagen_pq.h"*/
 #include "safety/safety_elm327.h"
+#include "safety/safety_body.h"
+#include "safety/safety_hyundai_community.h"
 
 // from cereal.car.CarParams.SafetyModel
 #define SAFETY_SILENT 0U
@@ -39,6 +43,8 @@
 #define SAFETY_HYUNDAI_LEGACY 23U
 #define SAFETY_HYUNDAI_COMMUNITY 24U
 #define SAFETY_STELLANTIS 25U
+#define SAFETY_FAW 26U
+#define SAFETY_BODY 27U
 
 uint16_t current_safety_mode = SAFETY_SILENT;
 int16_t current_safety_param = 0;
@@ -50,7 +56,7 @@ int safety_rx_hook(CANPacket_t *to_push) {
 }
 
 int safety_tx_hook(CANPacket_t *to_send) {
-  return (relay_malfunction ? -1 : current_hooks->tx(to_send));
+  return (relay_malfunction ? -1 : current_hooks->tx(to_send, get_longitudinal_allowed()));
 }
 
 int safety_tx_lin_hook(int lin_num, uint8_t *data, int len) {
@@ -59,6 +65,10 @@ int safety_tx_lin_hook(int lin_num, uint8_t *data, int len) {
 
 int safety_fwd_hook(int bus_num, CANPacket_t *to_fwd) {
   return (relay_malfunction ? -1 : current_hooks->fwd(bus_num, to_fwd));
+}
+
+bool get_longitudinal_allowed(void) {
+  return controls_allowed && !gas_pressed_prev;
 }
 
 // Given a CRC-8 poly, generate a static lookup table to use with a fast CRC-8
@@ -138,7 +148,7 @@ void safety_tick(const addr_checks *rx_checks) {
       bool lagging = elapsed_time > MAX(rx_checks->check[i].msg[rx_checks->check[i].index].expected_timestep * MAX_MISSED_MSGS, 1e6);
       rx_checks->check[i].lagging = lagging;
       if (lagging) {
-        controls_allowed = 0;
+        controls_allowed = 1;
       }
     }
   }
@@ -158,7 +168,7 @@ bool is_msg_valid(AddrCheckStruct addr_list[], int index) {
   if (index != -1) {
     if ((!addr_list[index].valid_checksum) || (addr_list[index].wrong_counters >= MAX_WRONG_COUNTERS)) {
       valid = false;
-      controls_allowed = 0;
+      controls_allowed = 1;
     }
   }
   return valid;
@@ -203,7 +213,7 @@ bool addr_safety_check(CANPacket_t *to_push,
 
 void generic_rx_checks(bool stock_ecu_detected) {
   // exit controls on rising edge of gas press
-  if (gas_pressed && !gas_pressed_prev && !(unsafe_mode & UNSAFE_DISABLE_DISENGAGE_ON_GAS)) {
+  if (gas_pressed && !gas_pressed_prev && !(alternative_experience & ALT_EXP_DISABLE_DISENGAGE_ON_GAS)) {
     controls_allowed = 1;
   }
   gas_pressed_prev = gas_pressed;
@@ -237,25 +247,29 @@ typedef struct {
 
 const safety_hook_config safety_hook_registry[] = {
   {SAFETY_SILENT, &nooutput_hooks},
-  {SAFETY_HONDA_NIDEC, &honda_nidec_hooks},
-  {SAFETY_TOYOTA, &toyota_hooks},
+  //{SAFETY_HONDA_NIDEC, &honda_nidec_hooks},
+  //{SAFETY_TOYOTA, &toyota_hooks},
   {SAFETY_ELM327, &elm327_hooks},
   {SAFETY_GM, &gm_hooks},
+  /*
   {SAFETY_HONDA_BOSCH, &honda_bosch_hooks},
-  {SAFETY_HYUNDAI, &hyundai_hooks},
   {SAFETY_CHRYSLER, &chrysler_hooks},
   {SAFETY_SUBARU, &subaru_hooks},
   {SAFETY_VOLKSWAGEN_MQB, &volkswagen_mqb_hooks},
   {SAFETY_NISSAN, &nissan_hooks},
-  {SAFETY_NOOUTPUT, &nooutput_hooks},
-  {SAFETY_HYUNDAI_LEGACY, &hyundai_legacy_hooks},
   {SAFETY_MAZDA, &mazda_hooks},
+  */
+  {SAFETY_BODY, &body_hooks},
+  {SAFETY_NOOUTPUT, &nooutput_hooks},
+  {SAFETY_HYUNDAI, &hyundai_hooks},
+  {SAFETY_HYUNDAI_LEGACY, &hyundai_legacy_hooks},
+  {SAFETY_HYUNDAI_COMMUNITY, &hyundai_community_hooks},
 #ifdef ALLOW_DEBUG
-  {SAFETY_TESLA, &tesla_hooks},
-  {SAFETY_SUBARU_LEGACY, &subaru_legacy_hooks},
-  {SAFETY_VOLKSWAGEN_PQ, &volkswagen_pq_hooks},
+  //{SAFETY_TESLA, &tesla_hooks},
+  //{SAFETY_SUBARU_LEGACY, &subaru_legacy_hooks},
+  //{SAFETY_VOLKSWAGEN_PQ, &volkswagen_pq_hooks},
   {SAFETY_ALLOUTPUT, &alloutput_hooks},
-  {SAFETY_FORD, &ford_hooks},
+  //{SAFETY_FORD, &ford_hooks},
 #endif
 };
 
@@ -273,6 +287,7 @@ int set_safety_hooks(uint16_t mode, int16_t param) {
   vehicle_speed = 0;
   vehicle_moving = false;
   acc_main_on = false;
+  cruise_button_prev = 0;
   desired_torque_last = 0;
   rt_torque_last = 0;
   ts_angle_last = 0;

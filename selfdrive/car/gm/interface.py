@@ -2,7 +2,7 @@
 from cereal import car
 from common.numpy_fast import interp
 from math import fabs
-from selfdrive.config import Conversions as CV
+from common.conversions import Conversions as CV
 from selfdrive.car.gm.values import CAR, CruiseButtons, AccState, CarControllerParams
 from selfdrive.car import STD_CARGO_KG, scale_rot_inertia, scale_tire_stiffness, gen_empty_fingerprint, get_safety_config
 from selfdrive.car.interfaces import CarInterfaceBase
@@ -12,9 +12,13 @@ ButtonType = car.CarState.ButtonEvent.Type
 EventName = car.CarEvent.EventName
 
 class CarInterface(CarInterfaceBase):
+  def __init__(self, CP, CarController, CarState):
+    super().__init__(CP, CarController, CarState)
+
+
   @staticmethod
   def get_pid_accel_limits(CP, current_speed, cruise_speed):
-    params = CarControllerParams()
+    params = CarControllerParams(CP)
     return params.ACCEL_MIN, params.ACCEL_MAX
 
   # Determined by iteratively plotting and minimizing error for f(angle, speed) = steer.
@@ -31,32 +35,39 @@ class CarInterface(CarInterfaceBase):
     return 0.04689655 * sigmoid * (v_ego + 10.028217)
 
   def get_steer_feedforward_function(self):
-    if self.CP.carFingerprint == CAR.VOLT:
-      return self.get_steer_feedforward_volt
-    elif self.CP.carFingerprint == CAR.ACADIA:
-      return self.get_steer_feedforward_acadia
-    else:
-      return CarInterfaceBase.get_steer_feedforward_default
+    # if self.CP.carFingerprint == CAR.VOLT:
+    #   return self.get_steer_feedforward_volt
+    # elif self.CP.carFingerprint == CAR.ACADIA:
+    #   return self.get_steer_feedforward_acadia
+    # else:
+    #   return CarInterfaceBase.get_steer_feedforward_default
+    return CarInterfaceBase.get_steer_feedforward_default
+
     
   @staticmethod
   def compute_gb(accel, speed):
     return float(accel) / 4.0
 
   @staticmethod
-  def get_params(candidate, fingerprint=gen_empty_fingerprint(), has_relay=False, car_fw=None):
-    ret = CarInterfaceBase.get_std_params(candidate, fingerprint, has_relay)
+  def get_params(candidate, fingerprint=gen_empty_fingerprint(), car_fw=None, disable_radar=False):
+    ret = CarInterfaceBase.get_std_params(candidate, fingerprint)
     ret.carName = "gm"
     ret.safetyConfigs = [get_safety_config(car.CarParams.SafetyModel.gm)]
     ret.pcmCruise = False  # stock cruise control is kept off
 
     # GM port is a community feature
     # TODO: make a port that uses a car harness and it only intercepts the camera
-    ret.communityFeature = True
+    # ret.communityFeature = True
+
+    #for neokii integration
+    ret.maxSteeringAngleDeg = 1000.
+    # for neokii integration end.
 
     # Presence of a camera on the object bus is ok.
     # Have to go to read_only if ASCM is online (ACC-enabled cars),
     # or camera is on powertrain bus (LKA cars without ACC).
-    ret.enableGasInterceptor = 0x201 in fingerprint[0]
+    # ret.enableGasInterceptor = 0x201 in fingerprint[0]
+    ret.enableGasInterceptor = Params().get_bool('CommaPedal')
     ret.openpilotLongitudinalControl = ret.enableGasInterceptor
 
     tire_stiffness_factor = 0.5
@@ -68,12 +79,12 @@ class CarInterface(CarInterfaceBase):
     ret.minEnableSpeed = -1
     ret.mass = 1625. + STD_CARGO_KG
     ret.wheelbase = 2.60096
-    ret.steerRatio = 16.8
+    ret.steerRatio = 16.85
     ret.steerRatioRear = 0.
     ret.centerToFront = ret.wheelbase * 0.49 # wild guess
     ret.lateralTuning.init('lqr')
 
-    ret.lateralTuning.lqr.scale = 1975.0
+    ret.lateralTuning.lqr.scale = 1950.0
     ret.lateralTuning.lqr.ki = 0.032
     ret.lateralTuning.lqr.a = [0., 1., -0.22619643, 1.21822268]
     ret.lateralTuning.lqr.b = [-1.92006585e-04, 3.95603032e-05]
@@ -103,9 +114,9 @@ class CarInterface(CarInterfaceBase):
     ret.longitudinalActuatorDelayLowerBound = 0.13
     ret.longitudinalActuatorDelayUpperBound = 0.15
     
-    ret.startAccel = -0.8
+    # ret.startAccel = -0.8 #### REMOVED
     ret.stopAccel = -2.0
-    ret.startingAccelRate = 5.0
+    # ret.startingAccelRate = 5.0 #### REMOVED
     ret.stoppingDecelRate = 4.0
     ret.vEgoStopping = 0.5
     ret.vEgoStarting = 0.5
@@ -160,21 +171,23 @@ class CarInterface(CarInterfaceBase):
     # if ret.vEgo < self.CP.minSteerSpeed:
     #   events.add(car.CarEvent.EventName.belowSteerSpeed)
     if self.CP.enableGasInterceptor:
-      if self.CS.adaptive_Cruise and ret.brakePressed:
+      if ret.cruiseState.enabled and ret.brakePressed:
         events.add(EventName.pedalPressed)
         self.CS.adaptive_Cruise = False
-        self.CS.enable_lkas = False
+        self.CS.enable_lkas = True
+
+
 
     # handle button presses
     if self.CP.enableGasInterceptor:
       if not self.CS.main_on : #lat dis-engage
         for b in ret.buttonEvents:
-          if (b.type == ButtonType.decelCruise and not b.pressed) and not self.CS.adaptive_Cruise:
+          if (b.type == ButtonType.decelCruise and not b.pressed) and not ret.cruiseState.enabled:
             self.CS.adaptive_Cruise = True
             self.CS.enable_lkas = True
             events.add(EventName.buttonEnable)
             break
-          if (b.type == ButtonType.accelCruise and not b.pressed) and not self.CS.adaptive_Cruise:
+          if (b.type == ButtonType.accelCruise and not b.pressed) and not ret.cruiseState.enabled:
             self.CS.adaptive_Cruise = True
             self.CS.enable_lkas = False
             events.add(EventName.buttonEnable)
@@ -184,9 +197,10 @@ class CarInterface(CarInterfaceBase):
             self.CS.enable_lkas = False
             events.add(EventName.buttonCancel)
             break
-          if (b.type == ButtonType.altButton3 and b.pressed) : #and self.CS.adaptive_Cruise
+          if (b.type == ButtonType.altButton3 and b.pressed) and not ret.cruiseState.enabled :
             self.CS.adaptive_Cruise = False
             self.CS.enable_lkas = True
+            # events.add(EventName.buttonEnable)
             break
       else :#lat engage
         # self.CS.adaptive_Cruise = False
@@ -202,12 +216,17 @@ class CarInterface(CarInterfaceBase):
       if self.CS.main_on: #wihtout pedal case
         self.CS.adaptive_Cruise = False
         self.CS.enable_lkas = True
+        if ret.brakePressed :
+          self.CS.enable_lkas = False
+          events.add(EventName.pedalPressed)
+
       else:
         self.CS.adaptive_Cruise = False
         self.CS.enable_lkas = False
 
     #Added by jc01rho inspired by JangPoo
-    if self.CS.main_on  and self.CS.enable_lkas and not self.CS.adaptive_Cruise and ret.cruiseState.enabled and ret.gearShifter == GearShifter.drive and ret.vEgo > 2.4 and not ret.brakePressed :
+    #some other logics in interfaces.py
+    if self.CS.main_on  and self.CS.enable_lkas and not self.CS.adaptive_Cruise and ret.cruiseState.enabled and ret.gearShifter == GearShifter.drive and ret.vEgo > 2.1 and not ret.brakePressed :
       if ret.cruiseState.available and not ret.seatbeltUnlatched and not ret.espDisabled and self.flag_pcmEnable_able :
 
         if self.flag_pcmEnable_initialSet == False :
@@ -219,12 +238,14 @@ class CarInterface(CarInterfaceBase):
             self.initial_pcmEnable_counter = 0
         else :
           self.flag_pcmEnable_able = False
-          events.add(EventName.buttonEnable)
+          events.add(EventName.pcmEnable)
           # self.flag_pcmEnable_initialSet = True
           # self.initial_pcmEnable_counter = 0
     else  :
       self.flag_pcmEnable_able = True
     ###
+    if self.CC.scc_smoother is not None:
+      self.CC.scc_smoother.inject_events(events)
     ret.events = events.to_msg()
 
     # copy back carState packet to CS
@@ -232,16 +253,17 @@ class CarInterface(CarInterfaceBase):
 
     return self.CS.out
 
-  def apply(self, c):
+  def apply(self, c, controls):
+    # return self.CC.update(c, self.CS, controls)
     hud_v_cruise = c.hudControl.setSpeed
     if hud_v_cruise > 70:
       hud_v_cruise = 0
 
     # For Openpilot, "enabled" includes pre-enable.
-    can_sends = self.CC.update(c.enabled, self.CS, self.frame,
+    new_actuators, can_sends = self.CC.update(c, c.enabled, self.CS, controls ,
                                c.actuators,
                                hud_v_cruise, c.hudControl.lanesVisible,
                                c.hudControl.leadVisible, c.hudControl.visualAlert)
 
-    self.frame += 1
-    return can_sends
+
+    return new_actuators, can_sends

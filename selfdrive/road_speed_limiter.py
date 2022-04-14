@@ -7,11 +7,10 @@ import socket
 import fcntl
 import struct
 from threading import Thread
-from cereal import messaging
-from common.params import Params
-from common.numpy_fast import clip, mean
+from cereal import messaging, log
+from common.numpy_fast import clip
 from common.realtime import sec_since_boot
-from selfdrive.config import Conversions as CV
+from common.conversions import Conversions as CV
 
 CAMERA_SPEED_FACTOR = 1.05
 
@@ -174,24 +173,27 @@ class RoadLimitSpeedServer:
 
   def check(self):
     now = sec_since_boot()
-    if now - self.last_updated > 20.:
+    if now - self.last_updated > 6.:
       try:
         self.lock.acquire()
         self.json_road_limit = None
       finally:
         self.lock.release()
 
-    if now - self.last_updated_active > 10.:
+    if now - self.last_updated_active > 6.:
       self.active = 0
 
   def get_limit_val(self, key, default=None):
+    return self.get_json_val(self.json_road_limit, key, default)
+
+  def get_json_val(self, json, key, default=None):
 
     try:
-      if self.json_road_limit is None:
+      if json is None:
         return default
 
-      if key in self.json_road_limit:
-        return self.json_road_limit[key]
+      if key in json:
+        return json[key]
 
     except:
       pass
@@ -227,6 +229,24 @@ def main():
           dat.roadLimitSpeed.sectionLimitSpeed = server.get_limit_val("section_limit_speed", 0)
           dat.roadLimitSpeed.sectionLeftDist = server.get_limit_val("section_left_dist", 0)
           dat.roadLimitSpeed.camSpeedFactor = server.get_limit_val("cam_speed_factor", CAMERA_SPEED_FACTOR)
+
+          try:
+            json = server.json_road_limit
+            if json is not None and "rest_area" in json:
+
+              restAreaList = []
+              for rest_area in json["rest_area"]:
+                restArea = log.RoadLimitSpeed.RestArea.new_message()
+                restArea.image = server.get_json_val(rest_area, "image")
+                restArea.title = server.get_json_val(rest_area, "title")
+                restArea.oilPrice = server.get_json_val(rest_area, "oilPrice")
+                restArea.distance = server.get_json_val(rest_area, "distance")
+                restAreaList.append(restArea)
+
+              dat.roadLimitSpeed.restArea = restAreaList
+          except:
+            pass
+
           roadLimitSpeed.send(dat.to_bytes())
 
           server.send_sdp(sock)
@@ -286,11 +306,14 @@ class RoadSpeedLimiter:
           MIN_LIMIT = 40
           MAX_LIMIT = 120
         else:
-          MIN_LIMIT = 30
+          MIN_LIMIT = 20
           MAX_LIMIT = 100
       else:
-        MIN_LIMIT = 30
+        MIN_LIMIT = 20
         MAX_LIMIT = 120
+
+      if cam_type == 22:  # speed bump
+        MIN_LIMIT = 10
 
       if cam_limit_speed_left_dist is not None and cam_limit_speed is not None and cam_limit_speed_left_dist > 0:
 
@@ -299,7 +322,11 @@ class RoadSpeedLimiter:
         #cam_limit_speed_ms = cam_limit_speed * (CV.KPH_TO_MS if is_metric else CV.MPH_TO_MS)
 
         starting_dist = v_ego * 30.
-        safe_dist = v_ego * 6.
+
+        if cam_type == 22:
+          safe_dist = v_ego * 3.
+        else:
+          safe_dist = v_ego * 6.
 
         if MIN_LIMIT <= cam_limit_speed <= MAX_LIMIT and (self.slowing_down or cam_limit_speed_left_dist < starting_dist):
           if not self.slowing_down:

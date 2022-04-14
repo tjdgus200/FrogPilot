@@ -10,6 +10,12 @@ from typing import List, Union
 from cereal import log
 from selfdrive.hardware.base import HardwareBase, ThermalConfig
 
+try:
+  from common.params import Params
+except Exception:
+  # openpilot is not built yet
+  Params = None
+
 NetworkType = log.DeviceState.NetworkType
 NetworkStrength = log.DeviceState.NetworkStrength
 
@@ -70,6 +76,11 @@ class Android(HardwareBase):
       return f.read().strip()
 
   def get_device_type(self):
+    try:
+      if int(Params().get("LastPeripheralPandaType")) == log.PandaState.PandaType.uno:
+        return "two"
+    except Exception:
+      pass
     return "eon"
 
   def get_sound_card_online(self):
@@ -362,26 +373,25 @@ class Android(HardwareBase):
     return self.read_param_file("/sys/class/power_supply/usb/present", lambda x: bool(int(x)), False)
 
   def get_current_power_draw(self):
-    # We don't have a good direct way to measure this on android
-    return None
+    if self.get_battery_status() == 'Discharging':
+      # If the battery is discharging, we can use this measurement
+      # On C2: this is low by about 10-15%, probably mostly due to UNO draw not being factored in
+      return ((self.get_battery_voltage() / 1000000) * (self.get_battery_current() / 1000000))
+    else:
+      # We don't have a good direct way to measure this if it's not "discharging"
+      return None
 
   def shutdown(self):
     os.system('LD_LIBRARY_PATH="" svc power shutdown')
 
   def get_thermal_config(self):
-    return ThermalConfig(cpu=((5, 7, 10, 12), 10), gpu=((16,), 10), mem=(2, 10), bat=(29, 1000), ambient=(25, 1), pmic=((22,), 1000))
+    # the thermal sensors on the 820 don't have meaningful names
+    return ThermalConfig(cpu=((5, 7, 10, 12), 10), gpu=((16,), 10), mem=(2, 10),
+                         bat=("battery", 1000), ambient=("pa_therm0", 1), pmic=(("pm8994_tz",), 1000))
 
   def set_screen_brightness(self, percentage):
     with open("/sys/class/leds/lcd-backlight/brightness", "w") as f:
       f.write(str(int(percentage * 2.55)))
-
-  def get_ip_address(self):
-    try:
-      wlan = subprocess.check_output(["ifconfig", "wlan0"], encoding='utf8').strip()
-      pattern = re.compile(r'inet addr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})')
-      return pattern.search(wlan).group(1)
-    except Exception:
-      return "--"
 
   def get_screen_brightness(self):
     try:
@@ -401,9 +411,6 @@ class Android(HardwareBase):
     except Exception:
       return 0
 
-  def get_modem_version(self):
-    return None
-
   def get_modem_temperatures(self):
     # Not sure if we can get this on the LeEco
     return []
@@ -416,3 +423,11 @@ class Android(HardwareBase):
 
   def get_networks(self):
     return None
+
+  def get_ip_address(self):
+    try:
+      wlan = subprocess.check_output(["ifconfig", "wlan0"], encoding='utf8').strip()
+      pattern = re.compile(r'inet addr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})')
+      return pattern.search(wlan).group(1)
+    except Exception:
+      return "--"

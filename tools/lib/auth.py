@@ -86,13 +86,13 @@ def auth_redirect_link(method):
     })
     return 'https://github.com/login/oauth/authorize?' + urlencode(params)
   elif method == 'apple':
-      params.update({
-        'client_id': 'ai.comma.login',
-        'response_type': 'code',
-        'response_mode': 'form_post',
-        'scope': 'name email',
-      })
-      return 'https://appleid.apple.com/auth/authorize?' + urlencode(params)
+    params.update({
+      'client_id': 'ai.comma.login',
+      'response_type': 'code',
+      'response_mode': 'form_post',
+      'scope': 'name email',
+    })
+    return 'https://appleid.apple.com/auth/authorize?' + urlencode(params)
   else:
     raise NotImplementedError(f"no redirect implemented for method {method}")
 
@@ -109,7 +109,7 @@ def login(method):
     if 'code' in web_server.query_params:
       break
     elif 'error' in web_server.query_params:
-      print('Authentication Error: "%s". Description: "%s" ' % (
+      print('Authentication Error: "{}". Description: "{}" '.format(
         web_server.query_params['error'],
         web_server.query_params.get('error_description')), file=sys.stderr)
       break

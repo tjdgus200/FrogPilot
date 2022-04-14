@@ -2,6 +2,8 @@
 
 #include <QMouseEvent>
 
+#include "selfdrive/common/util.h"
+#include "selfdrive/hardware/hw.h"
 #include "selfdrive/ui/qt/util.h"
 
 void Sidebar::drawMetric(QPainter &p, const QString &label, QColor c, int y) {
@@ -53,6 +55,7 @@ void Sidebar::updateState(const UIState &s) {
   setProperty("netType", network_type[deviceState.getNetworkType()]);
   int strength = (int)deviceState.getNetworkStrength();
   setProperty("netStrength", strength > 0 ? strength + 1 : 0);
+  setProperty("wifiAddr", deviceState.getWifiIpAddress().cStr());
 
   ItemStatus connectStatus;
   auto last_ping = deviceState.getLastAthenaPingTime();
@@ -75,9 +78,9 @@ void Sidebar::updateState(const UIState &s) {
   ItemStatus pandaStatus = {"VEHICLE\nONLINE", good_color};
   if (s.scene.pandaType == cereal::PandaState::PandaType::UNKNOWN) {
     pandaStatus = {"NO\nPANDA", danger_color};
-  } else if (s.scene.started && !sm["liveLocationKalman"].getLiveLocationKalman().getGpsOK()) {
-    pandaStatus = {"GPS\nSEARCHING", warning_color};
-  }
+  } /*else if (s.scene.started && !sm["liveLocationKalman"].getLiveLocationKalman().getGpsOK()) {
+    pandaStatus = {"GPS\nSEARCH", warning_color};
+  }*/
   setProperty("pandaStatus", QVariant::fromValue(pandaStatus));
 }
 
@@ -103,12 +106,18 @@ void Sidebar::paintEvent(QPaintEvent *event) {
     x += 37;
   }
 
-  configFont(p, "Open Sans", 35, "Regular");
+  configFont(p, "Open Sans", 30, "Regular");
   p.setPen(QColor(0xff, 0xff, 0xff));
-  const QRect r = QRect(50, 247, 100, 50);
-  p.drawText(r, Qt::AlignCenter, net_type);
+
+  const QRect r = QRect(0, 247, event->rect().width(), 50);
+
+  if(net_type == network_type[cereal::DeviceState::NetworkType::WIFI])
+    p.drawText(r, Qt::AlignCenter, wifi_addr);
+  else
+    p.drawText(r, Qt::AlignCenter, net_type);
 
   // metrics
+  configFont(p, "Open Sans", 35, "Regular");
   drawMetric(p, temp_status.first, temp_status.second, 338);
   drawMetric(p, panda_status.first, panda_status.second, 496);
   drawMetric(p, connect_status.first, connect_status.second, 654);

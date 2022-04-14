@@ -5,7 +5,7 @@ from opendbc.can.parser import CANParser
 from selfdrive.car.interfaces import CarStateBase
 from selfdrive.car.gm.values import DBC, CAR, AccState, CanBus, \
                                     CruiseButtons, STEER_THRESHOLD
-from selfdrive.config import Conversions as CV
+from common.conversions import Conversions as CV
 
 class CarState(CarStateBase):
   def __init__(self, CP):
@@ -15,6 +15,15 @@ class CarState(CarStateBase):
     self.adaptive_Cruise = False
     self.enable_lkas = False
     self.lka_steering_cmd_counter = 0
+    self.cruiseState_speed = 0
+
+    self.acc_mode = False
+    self.cruise_gap = 1
+    self.brake_pressed = False
+    self.gas_pressed = False
+    self.standstill = False
+    self.cruiseState_enabled = False
+
 
   def update(self, pt_cp, loopback_cp):
     ret = car.CarState.new_message()
@@ -32,7 +41,13 @@ class CarState(CarStateBase):
     ret.vEgoRaw = mean([ret.wheelSpeeds.fl, ret.wheelSpeeds.fr, ret.wheelSpeeds.rl, ret.wheelSpeeds.rr])
     ret.vEgo, ret.aEgo = self.update_speed_kf(ret.vEgoRaw)
     ret.standstill = ret.vEgoRaw < 0.01
-    ret.vEgo = pt_cp.vl["ECMVehicleSpeed"]["VehicleSpeed"] * CV.MPH_TO_MS
+    # ret.vEgo = pt_cp.vl["ECMVehicleSpeed"]["VehicleSpeed"] * CV.MPH_TO_MS
+
+    ###for neokii integration
+    ret.cluSpeedMs = pt_cp.vl["ECMVehicleSpeed"]["VehicleSpeed"] * CV.MPH_TO_MS
+    self.ECMVehicleSpeed = pt_cp.vl["ECMVehicleSpeed"]
+    ret.vCluRatio = 1.0
+    ###for neokii integration ends
 
     ret.gearShifter = self.parse_gear_shifter(self.shifter_values.get(pt_cp.vl["ECMPRDNL"]["PRNDL"], None))
     ret.brake = pt_cp.vl["EBCMBrakePedalPosition"]["BrakePedalPosition"] / 0xd0
@@ -56,8 +71,8 @@ class CarState(CarStateBase):
 
     # 0 inactive, 1 active, 2 temporarily limited, 3 failed
     self.lkas_status = pt_cp.vl["PSCMStatus"]["LKATorqueDeliveredStatus"]
-    ret.steerWarning = self.lkas_status == 2
-    ret.steerError = self.lkas_status == 3
+    ret.steerFaultTemporary = self.lkas_status == 2
+    ret.steerFaultPermanent = self.lkas_status == 3
 
     # 1 - open, 0 - closed
     ret.doorOpen = (pt_cp.vl["BCMDoorBeltStatus"]["FrontLeftDoor"] == 1 or
@@ -80,15 +95,20 @@ class CarState(CarStateBase):
 
     ret.brakePressed = ret.brake > 1e-5
     ret.regenPressed = False
-    if self.car_fingerprint == CAR.VOLT or self.car_fingerprint == CAR.BOLT:
+    if  self.car_fingerprint == CAR.BOLT_EV:
       ret.regenPressed = bool(pt_cp.vl["EBCMRegenPaddle"]["RegenPaddle"])
     brake_light_enable = False
-    if self.car_fingerprint == CAR.BOLT:
+    if self.car_fingerprint == CAR.BOLT_EV:
       if ret.aEgo < -1.3:
         brake_light_enable = True
     ret.brakeLights = ret.brakePressed or ret.regenPressed or brake_light_enable
 
     ret.cruiseState.enabled = self.main_on or ret.adaptiveCruise
+
+    ###for neokii integration
+    ret.cruiseState.enabledAcc = ret.cruiseState.enabled
+    ###for neokii integration ends
+
 
     return ret
 
@@ -128,7 +148,7 @@ class CarState(CarStateBase):
     ]
 
 
-    if CP.carFingerprint == CAR.VOLT or CP.carFingerprint == CAR.BOLT:
+    if CP.carFingerprint == CAR.BOLT_EV:
       signals += [
         ("RegenPaddle", "EBCMRegenPaddle", 0),
       ]

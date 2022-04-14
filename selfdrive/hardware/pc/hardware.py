@@ -92,9 +92,6 @@ class Pc(HardwareBase):
   def get_gpu_usage_percent(self):
     return 0
 
-  def get_modem_version(self):
-    return None
-
   def get_modem_temperatures(self):
     return []
 
@@ -108,4 +105,4 @@ class Pc(HardwareBase):
     return None
 
   def get_ip_address(self):
-    return "--"
+    return ""
