@@ -26,7 +26,7 @@ jobs:
   syncbb:
     name: Synch from Github to Bitbucket using SSH
     runs-on: ubuntu-20.04
-    if: github.repository == 'jc01rho-openpilot-BoltEV2019-KoKr/openpilot'
+    if: github.repository == 'jc01rho-openpilot-BoltEV2019-KoKr/boltpilot'
     steps:
       - name: pull the github repo
         uses: actions/checkout@v2
