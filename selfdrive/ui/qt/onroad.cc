@@ -270,6 +270,9 @@ void NvgWindow::initializeGL() {
   ic_turn_signal_l = QPixmap("../assets/images/turn_signal_l.png");
   ic_turn_signal_r = QPixmap("../assets/images/turn_signal_r.png");
   ic_satellite = QPixmap("../assets/images/satellite.png");
+  ic_latMainOn =  QPixmap("../assets/images/img_lat_icon.png").scaled(img_size, img_size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+  ic_regenPaddle =  QPixmap("../assets/images/img_regen.png").scaled(img_size, img_size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+
 }
 
 void NvgWindow::updateFrameMat(int w, int h) {
@@ -297,7 +300,7 @@ void NvgWindow::drawLaneLines(QPainter &painter, const UIState *s) {
   const UIScene &scene = s->scene;
   // lanelines
   for (int i = 0; i < std::size(scene.lane_line_vertices); ++i) {
-    painter.setBrush(QColor::fromRgbF(1.0, 1.0, 1.0, scene.lane_line_probs[i]));
+    painter.setBrush(QColor::fromRgbF(1.0, 1.0, 1.0, std::clamp<float>(scene.lane_line_probs[i], 0.0, 0.7)));
     painter.drawPolygon(scene.lane_line_vertices[i].v, scene.lane_line_vertices[i].cnt);
   }
 
@@ -306,21 +309,24 @@ void NvgWindow::drawLaneLines(QPainter &painter, const UIState *s) {
     painter.setBrush(QColor::fromRgbF(1.0, 0, 0, std::clamp<float>(1.0 - scene.road_edge_stds[i], 0.0, 1.0)));
     painter.drawPolygon(scene.road_edge_vertices[i].v, scene.road_edge_vertices[i].cnt);
   }
+
   // paint path
-  QLinearGradient bg(0, height(), 0, height() / 2);
+  QLinearGradient bg(0, height(), 0, height() / 4);
   if (scene.end_to_end) {
     const auto &orientation = (*s->sm)["modelV2"].getModelV2().getOrientation();
     float orientation_future = 0;
     if (orientation.getZ().size() > 16) {
       orientation_future = std::abs(orientation.getZ()[16]);  // 2.5 seconds
     }
-    // straight: 101, in turns: 70
-    const float curve_hue = fmax(70, 101 - (orientation_future * 310));
+    // straight: 112, in turns: 70
+    float curve_hue = fmax(70, 112 - (orientation_future * 420));
+    // FIXME: painter.drawPolygon can be slow if hue is not rounded
+    curve_hue = int(curve_hue * 100 + 0.5) / 100;
 
-    bg.setColorAt(0.0, QColor::fromHslF(148 / 360., 1.0, 0.5, 1.0));
-    bg.setColorAt(0.35, QColor::fromHslF(148 / 360., 1.0, 0.5, 0.9));
-    bg.setColorAt(0.9, QColor::fromHslF(curve_hue / 360., 1.0, 0.65, 0.8));
-    bg.setColorAt(1.0, QColor::fromHslF(curve_hue / 360., 1.0, 0.65, 0.4));
+    bg.setColorAt(0.0 / 1.5, QColor::fromHslF(148 / 360., 1.0, 0.5, 1.0));
+    bg.setColorAt(0.55 / 1.5, QColor::fromHslF(112 / 360., 1.0, 0.68, 0.8));
+    bg.setColorAt(0.9 / 1.5, QColor::fromHslF(curve_hue / 360., 1.0, 0.65, 0.6));
+    bg.setColorAt(1.0, QColor::fromHslF(curve_hue / 360., 1.0, 0.65, 0.0));
   } else {
     bg.setColorAt(0, whiteColor());
     bg.setColorAt(1, whiteColor(0));
@@ -468,6 +474,7 @@ void NvgWindow::drawHud(QPainter &p) {
   drawRestArea(p);
   drawTurnSignals(p);
   drawGpsStatus(p);
+  drawLkasIcon(p);
 
   if(s->show_debug && width() > 1200)
     drawDebugText(p);
@@ -531,6 +538,7 @@ void NvgWindow::drawHud(QPainter &p) {
 void NvgWindow::drawBottomIcons(QPainter &p) {
   const SubMaster &sm = *(uiState()->sm);
   auto car_state = sm["carState"].getCarState();
+  auto car_control = sm["carControl"].getCarControl();
 //  auto scc_smoother = sm["carControl"].getCarControl().getSccSmoother();
 
   // tire pressure
@@ -607,6 +615,13 @@ void NvgWindow::drawBottomIcons(QPainter &p) {
   float img_alpha = brake_valid ? 1.0f : 0.15f;
   float bg_alpha = brake_valid ? 0.3f : 0.1f;
   drawIcon(p, x, y, ic_brake, QColor(0, 0, 0, (255 * bg_alpha)), img_alpha);
+
+
+  x = radius / 2 + (bdr_s * 2) + (radius + 50) * 1;
+  bool regen_valid = car_control.getActuators().getRegenPaddle();
+  img_alpha = regen_valid ? 1.0f : 0.15f;
+  bg_alpha = regen_valid ? 0.3f : 0.1f;
+  drawIcon(p, x, y, ic_regenPaddle, QColor(0, 0, 0, (255 * bg_alpha)), img_alpha);
 
   // auto hold
 //  int autohold = car_state.getAutoHold();
@@ -1021,6 +1036,7 @@ void NvgWindow::drawDebugText(QPainter &p) {
   float uiAccelCmd = controls_state.getUiAccelCmd();
   float ufAccelCmd = controls_state.getUfAccelCmd();
   float accel = car_control.getActuators().getAccel();
+  float commaPedal = car_control.getActuators().getCommaPedal();
 
   const char* long_state[] = {"off", "pid", "stopping", "starting"};
 
@@ -1056,6 +1072,10 @@ void NvgWindow::drawDebugText(QPainter &p) {
   p.drawText(text_x, y, str);
 
   y += height;
+  str.sprintf("CommaPedal: %.3f\n", commaPedal);
+  p.drawText(text_x, y, str);
+
+  y += height;
   str.sprintf("Apply: %.3f, Stock: %.3f\n", applyAccel, aReqValue);
   p.drawText(text_x, y, str);
 
@@ -1076,4 +1096,26 @@ void NvgWindow::drawDebugText(QPainter &p) {
   y += height;
   str.sprintf("Lead: %.1f/%.1f/%.1f\n", radar_dist, vision_dist, (radar_dist - vision_dist));
   p.drawText(text_x, y, str);
+}
+
+
+
+void NvgWindow::drawLkasIcon(QPainter &p) {
+
+  UIState *s = uiState();
+  const SubMaster &sm = *(s->sm);
+//  float cur_speed = std::max(0.0, sm["carState"].getCarState().getCluSpeedMs() * (s->scene.is_metric ? MS_TO_KPH : MS_TO_MPH));
+  auto car_state = sm["carState"].getCarState();
+//  float accel = car_state.getAEgo();
+
+  bool mainOnLocal = car_state.getMainOn();
+//  bool lkasEnabledLocal = car_state.getLkasEnable();
+//  bool adaptiveCruiseLocal = car_state.getAdaptiveCruise();
+
+  if ( mainOnLocal ) {
+    p.drawPixmap(rect().center().x() - radius / 2 - bdr_s * 2 - (48*3), radius / 2 + int(bdr_s * 1.5), ic_latMainOn);
+  }
+
+
+
 }

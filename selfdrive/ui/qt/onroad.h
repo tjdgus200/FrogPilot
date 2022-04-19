@@ -73,6 +73,8 @@ protected:
   QPixmap ic_turn_signal_l;
   QPixmap ic_turn_signal_r;
   QPixmap ic_satellite;
+  QPixmap ic_latMainOn;
+  QPixmap ic_regenPaddle;
 
   QMap<QString, QPixmap> ic_oil_com;
 
@@ -85,6 +87,7 @@ protected:
   void drawGpsStatus(QPainter &p);
   void drawDebugText(QPainter &p);
   void drawHud(QPainter &p);
+  void drawLkasIcon(QPainter &p);
 
 private:
   QPixmap get_icon_iol_com(const char* key);
