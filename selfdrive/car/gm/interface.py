@@ -76,7 +76,7 @@ class CarInterface(CarInterfaceBase):
 
     ret.openpilotLongitudinalControl = ret.enableGasInterceptor
 
-    ret.forceAccelWhenLeadsCar = Params().get_bool('RestartForceAccel')
+    ret.restartForceAccel = Params().get_bool('RestartForceAccel')
 
     tire_stiffness_factor = 0.5
 
