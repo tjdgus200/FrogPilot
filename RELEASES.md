@@ -1,12 +1,6 @@
-Version 0.8.14 (2022-0X-XX)
+Version 0.8.14.c2 (2022-04-27)
 ========================
- * feature브랜치로서 실험적인 내용이 많이 들어갑니다.
- * 조금 안정적인 버전을 원하신다면 develop브랜치로 교체하세요.
- * bigmodel!
- * comma body support
- * Hyundai Tucson Diesel 2019 support thanks to sunnyhaibin!
- * Toyota Alphard Hybrid 2021 support
- * Toyota Avalon Hybrid 2022 support
+ * NEOS 20: improved reliability
 
 Version 0.8.13 (2022-02-18)
 ========================

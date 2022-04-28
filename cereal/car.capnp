@@ -457,7 +457,7 @@ struct CarParams {
 
   notCar @66 :Bool;  # flag for non-car robotics platforms
 
-  restartForceAccel  @78 :Bool;
+  restartForceAccel  @79 :Bool;
 
   enableGasInterceptor @2 :Bool;
   pcmCruise @3 :Bool;        # is openpilot's state tied to the PCM's cruise state?
@@ -544,6 +544,8 @@ struct CarParams {
   steerFaultMaxAngle @76 :Int16;
   steerFaultMaxFrames @77 :Int16;
 
+  disableLateralLiveTuning @78 :Bool;
+
   struct LateralParams {
     torqueBP @0 :List(Int32);
     torqueV @1 :List(Int32);
@@ -566,6 +568,8 @@ struct CarParams {
     friction @3 :Float32;
     kf @4 :Float32;
     kd @5 :Float32;
+    deadzoneBP @6 :List(Float32);
+    deadzoneV @7 :List(Float32);
   }
 
   struct LongitudinalPIDTuning {

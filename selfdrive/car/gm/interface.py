@@ -90,6 +90,7 @@ class CarInterface(CarInterfaceBase):
     ret.steerRatio = 16.85
     ret.steerRatioRear = 0.
     ret.centerToFront = ret.wheelbase * 0.49 # wild guess
+    ret.disableLateralLiveTuning = False
 
     lateral_control = Params().get("LateralControl", encoding='utf-8')
     if lateral_control == 'INDI':
@@ -118,11 +119,13 @@ class CarInterface(CarInterfaceBase):
     else:
       ret.lateralTuning.init('torque')
       ret.lateralTuning.torque.useSteeringAngle = True
-      max_lat_accel = 2.5
+      max_lat_accel = 3.5
       ret.lateralTuning.torque.kp = 2.0 / max_lat_accel
       ret.lateralTuning.torque.kf = 1.0 / max_lat_accel
       ret.lateralTuning.torque.friction = 0.6
       ret.lateralTuning.torque.ki = 0.5 / max_lat_accel
+      ret.lateralTuning.torque.deadzoneBP = [0.]
+      ret.lateralTuning.torque.deadzoneV = [0.]
 
 
     # TODO: get actual value, for now starting with reasonable value for
