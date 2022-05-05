@@ -95,7 +95,7 @@ class CarInterface(CarInterfaceBase):
     ret.steerRatio = 16.85
     ret.steerRatioRear = 0.
     ret.centerToFront = ret.wheelbase * 0.49 # wild guess
-    ret.disableLateralLiveTuning = False
+    ret.disableLateralLiveTuning = True
 
     lateral_control = Params().get("LateralControl", encoding='utf-8')
     if lateral_control == 'INDI':
