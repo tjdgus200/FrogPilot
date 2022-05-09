@@ -377,6 +377,7 @@ struct CarControl {
     pedalDistanceAdder @11: Float32;
     pedalAdderFinal @12: Float32;
     stoppingStateTimeWindowsActiveCounter @13: Int32;
+    stoppingStateTimeWindowsClosingCounter @14: Int32;
 
 
 
