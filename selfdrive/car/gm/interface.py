@@ -60,12 +60,9 @@ class CarInterface(CarInterfaceBase):
 
 
   def get_steer_feedforward_function(self):
-    if self.CP.carFingerprint == CAR.BOLT_EUV:
-      return self.get_steer_feedforward_bolt_euv
-    elif self.CP.carFingerprint == CAR.BOLT_NR or self.CP.carFingerprint == CAR.BOLT:
       return self.get_steer_feedforward_bolt
-    else:
-      return CarInterfaceBase.get_steer_feedforward_default
+    #else:
+      #return CarInterfaceBase.get_steer_feedforward_default
 
     
   @staticmethod
