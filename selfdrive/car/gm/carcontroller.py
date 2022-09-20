@@ -8,14 +8,30 @@ from selfdrive.car.gm.values import DBC, CanBus, CarControllerParams
 from opendbc.can.packer import CANPacker
 from selfdrive.car.hyundai.scc_smoother import SccSmoother
 from selfdrive.controls.lib.longitudinal_mpc_lib.long_mpc import STOP_DISTANCE
+import math
 
 min_set_speed = 30 * CV.KPH_TO_MS
 VisualAlert = car.CarControl.HUDControl.VisualAlert
 LongCtrlState = car.CarControl.Actuators.LongControlState
 
+def actuator_hystereses(final_pedal, pedal_steady):
+  # hyst params... TODO: move these to VehicleParams
+  pedal_hyst_gap = 0.01    # don't change pedal command for small oscillations within this value
+
+  # for small pedal oscillations within pedal_hyst_gap, don't change the pedal command
+  if math.isclose(final_pedal,0.0):
+    pedal_steady = 0.
+  elif final_pedal > pedal_steady + pedal_hyst_gap:
+    pedal_steady = final_pedal - pedal_hyst_gap
+  elif final_pedal < pedal_steady - pedal_hyst_gap:
+    pedal_steady = final_pedal + pedal_hyst_gap
+  final_pedal = pedal_steady
+
+  return final_pedal, pedal_steady
 
 class CarController():
   def __init__(self, dbc_name, CP, VM):
+    self.pedal_steady = 0.
     self.start_time = 0.
     self.apply_steer_last = 0
     self.apply_gas = 0
@@ -93,15 +109,8 @@ class CarController():
       
       self.comma_pedal = clip (interp(actuators.accel, [-0.725, 0.00, 0.20], [0.0, ConstAccel, ConstAccel + 0.0125]) + accelFomula , 0., 1.)
       
-      #pedalValue = interp(CS.out.vEgo, [0., 18.0 * CV.KPH_TO_MS], [0.1625, 0.2125]) + accelFomula
-      #pedalValue = min(pedalValue, interp(CS.out.vEgo, [0., 19.0 * CV.KPH_TO_MS, 30.0 * CV.KPH_TO_MS], [0.2550, 0.2750, 0.3150]) )
-
-      #self.comma_pedal_original = pedalValue # (actuators.accel * acc_mult, 0., 1.)
-      #self.comma_pedal_new = clip (interp(actuators.accel, [-0.725, -0.315, 0.00, 0.20], [0.0, 0.1575, 0.2190, 0.22150]) + accelFomula , 0., 1.)
-      #gapInterP = interp(CS.out.vEgo, [19 * CV.KPH_TO_MS, 45*CV.KPH_TO_MS], [1, 0])
-      #self.comma_pedal =  (gapInterP * self.comma_pedal_original)  +  ((1.0-gapInterP) * self.comma_pedal_new)
-
-      #self.comma_pedal = clip(self.comma_pedal, 0.0, interp(actuators.accel, [0.85, 1.5], [0.0000, 0.0200]) + self.pedalMaxValue) #급가속 방
+      self.pedal_final, self.pedal_steady = actuator_hystereses(self.comma_pedal_original, self.pedal_steady)
+      self.comma_pedal = clip(self.pedal_final, 0., 1.)
 
       actuators.commaPedalOrigin = self.comma_pedal
 
@@ -242,6 +251,5 @@ class CarController():
 
         controls.sccStockCamAct = 0
         controls.sccStockCamStatus = 0
-
 
 
