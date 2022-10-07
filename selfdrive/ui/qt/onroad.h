@@ -93,7 +93,7 @@ protected:
   void drawHud(QPainter &p);
   void drawLkasIcon(QPainter &p);
 
-
+Params params;
 };
 
 // container for all onroad widgets
