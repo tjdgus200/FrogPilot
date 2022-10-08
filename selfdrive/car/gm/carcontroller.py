@@ -100,13 +100,13 @@ class CarController():
       self.comma_pedal = 0.0 # Must be set by zero, or cannot re-acceling when stopped. - jc01rho.
 
     elif CS.adaptive_Cruise:
-      ConstAccel = interp(CS.out.vEgo, [18.0 * CV.KPH_TO_MS, 100.0 * CV.KPH_TO_MS], [0.17, 0.250])
+      ConstAccel = interp(CS.out.vEgo, [18.0 * CV.KPH_TO_MS, 100.0 * CV.KPH_TO_MS], [0.17, 0.245])
       accelFomula = ((actuators.accel-ConstAccel) / 8.0)
       accelFomula = round(accelFomula,3)
       
       self.comma_pedal_original = clip (interp(actuators.accel, [-0.775, 0.00, 0.20], [0.0, ConstAccel, ConstAccel + 0.0125]) + accelFomula , 0., 1.)
       
-      self.pedal_hyst_gap = interp(CS.out.vEgo, [50.0 * CV.KPH_TO_MS, 100.0 * CV.KPH_TO_MS], [0.01, 0.007])
+      self.pedal_hyst_gap = interp(CS.out.vEgo, [40.0 * CV.KPH_TO_MS, 100.0 * CV.KPH_TO_MS], [0.01, 0.006])
       self.pedal_final, self.pedal_steady = actuator_hystereses(self.comma_pedal_original, self.pedal_steady, self.pedal_hyst_gap)
       self.comma_pedal = clip(self.pedal_final, 0., 1.)
 
@@ -174,7 +174,7 @@ class CarController():
       #if actuators.accel < -0.15 :
         can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN))
         actuators.regenPaddle = True #for icon
-      elif controls.LoC.pid.f < - 0.65 :
+      elif controls.LoC.pid.f < - 0.95 :
         can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN))
         actuators.regenPaddle = True #for icon
         minMultipiler = interp(CS.out.vEgo, [20 * CV.KPH_TO_MS ,  30 * CV.KPH_TO_MS , 60 * CV.KPH_TO_MS ,120 * CV.KPH_TO_MS ], [0.850, 0.750, 0.625, 0.150])
