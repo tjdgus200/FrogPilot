@@ -126,7 +126,7 @@ class CarController():
                          zero)  # Make brake the same size as gas, but clip to regen
         # aeb = actuators.brake*(1-zero)-regen # For use later, braking more than regen
 
-      pedal_final, self.pedal_steady = actuator_hystereses(pedal_gas, self.pedal_steady, 0.01)
+      pedal_final, self.pedal_steady = actuator_hystereses(self.comma_pedal , self.pedal_steady, 0.01)
       self.comma_pedal = clip(pedal_final, 0., 1.)
 
       actuators.commaPedalOrigin = self.comma_pedal
