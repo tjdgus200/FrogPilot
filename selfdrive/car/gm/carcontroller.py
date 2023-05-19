@@ -100,15 +100,34 @@ class CarController():
       self.comma_pedal = 0.0 # Must be set by zero, or cannot re-acceling when stopped. - jc01rho.
 
     elif CS.adaptive_Cruise:
-      ConstAccel = interp(CS.out.vEgo, [18.0 * CV.KPH_TO_MS, 100.0 * CV.KPH_TO_MS], [0.17, 0.245])
-      accelFomula = ((actuators.accel-ConstAccel) / 8.0)
-      accelFomula = round(accelFomula,3)
-      
-      self.comma_pedal_original = clip (interp(actuators.accel, [-0.775, 0.00, 0.20], [0.0, ConstAccel, ConstAccel + 0.0125]) + accelFomula , 0., 1.)
-      
-      self.pedal_hyst_gap = interp(CS.out.vEgo, [40.0 * CV.KPH_TO_MS, 100.0 * CV.KPH_TO_MS], [0.01, 0.006])
-      self.pedal_final, self.pedal_steady = actuator_hystereses(self.comma_pedal_original, self.pedal_steady, self.pedal_hyst_gap)
-      self.comma_pedal = clip(self.pedal_final, 0., 1.)
+      # ConstAccel = interp(CS.out.vEgo, [18.0 * CV.KPH_TO_MS, 100.0 * CV.KPH_TO_MS], [0.17, 0.245])
+      # accelFomula = ((actuators.accel-ConstAccel) / 8.0)
+      # accelFomula = round(accelFomula,3)
+      #
+      # self.comma_pedal_original = clip (interp(actuators.accel, [-0.775, 0.00, 0.20], [0.0, ConstAccel, ConstAccel + 0.0125]) + accelFomula , 0., 1.)
+      #
+      # self.pedal_hyst_gap = interp(CS.out.vEgo, [40.0 * CV.KPH_TO_MS, 100.0 * CV.KPH_TO_MS], [0.01, 0.006])
+      # self.pedal_final, self.pedal_steady = actuator_hystereses(self.comma_pedal_original, self.pedal_steady, self.pedal_hyst_gap)
+      # self.comma_pedal = clip(self.pedal_final, 0., 1.)
+
+      zero = 0.15625  # 40/256
+      # pedalAccGain = 0.24 # 가속 gain, 0.25 부터 시작, 50~60km/h 에서는 0.25가 딱 좋음
+      # Tuning 가이드 -> plot 그래프상 노란색이 아래에 있으면 그 속도에서 gain 값을 올려주고,
+      #               노란색이 위에 있으면 gain 값을 낮춰주고
+      #               단, 정지 출발은 예외, gain 값이 너무 높으면 말타기함.
+      pedalAccGain = interp(CS.out.vEgo, [0, 14.0, 22], [0.26, 0.25, 0.27])
+      pedalDecelgain = interp(CS.out.vEgo, [0, 14.0, 22], [0.27, 0.27, 0.27])
+      if actuators.accel > 0.:
+        # Scales the accel from 0-1 to 0.156-1
+        self.comma_pedal = clip(((1 - zero) * actuators.accel * pedalAccGain + zero), 0., 1.)
+      else:
+        # if accel is negative, -0.1 -> 0.015625
+        self.comma_pedal = clip(zero + actuators.accel * pedalDecelgain, 0.,
+                         zero)  # Make brake the same size as gas, but clip to regen
+        # aeb = actuators.brake*(1-zero)-regen # For use later, braking more than regen
+
+      pedal_final, self.pedal_steady = actuator_hystereses(pedal_gas, self.pedal_steady, 0.01)
+      self.comma_pedal = clip(pedal_final, 0., 1.)
 
       actuators.commaPedalOrigin = self.comma_pedal
 
