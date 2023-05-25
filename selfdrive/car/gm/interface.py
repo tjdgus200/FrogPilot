@@ -35,7 +35,7 @@ class CarInterface(CarInterfaceBase):
     v_current_kph = current_speed * CV.MS_TO_KPH
     # return params.ACCEL_MIN, params.ACCEL_MAX
     accel_max_bp = [10., 20., 50.]
-    accel_max_v = [0.7, 1.0, 0.95]
+    accel_max_v = [1.0, 1.0, 1.0]
 
     return params.ACCEL_MIN, interp(v_current_kph, accel_max_bp, accel_max_v)
 
@@ -178,8 +178,8 @@ class CarInterface(CarInterfaceBase):
                                                                          tire_stiffness_factor=tire_stiffness_factor)
 
     # longitudinal
-    ret.longitudinalTuning.kpBP = [0.]
-    ret.longitudinalTuning.kpV = [1.]
+    ret.longitudinalTuning.kpBP = [0., 30.]
+    ret.longitudinalTuning.kpV = [1.0, 0.25]
     ret.longitudinalTuning.kiBP = [0.]
     ret.longitudinalTuning.kiV = [0.]
     
