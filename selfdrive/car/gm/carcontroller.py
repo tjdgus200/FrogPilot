@@ -119,7 +119,7 @@ class CarController():
       self.comma_pedal = clip((actuators.accel * accGain + zero), 0., 1.)
 
 
-      pedal_final, self.pedal_steady = actuator_hystereses(self.comma_pedal, self.pedal_steady, 0.01)
+      pedal_final, self.pedal_steady = actuator_hystereses(self.comma_pedal, self.pedal_steady, 0.0033)
       self.comma_pedal = clip(pedal_final, 0., 1.)
 
       actuators.commaPedalOrigin = self.comma_pedal
