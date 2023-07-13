@@ -64,6 +64,9 @@ class CarController():
 
     self.pedalMaxValue = 0.3310
 
+    self.pedal_hyst_gap = 1.0
+    self.pedal_gas_max = 0.3275
+
   def update(self,c,  enabled, CS, controls ,  actuators,
              hud_v_cruise, hud_show_lanes, hud_show_car, hud_alert):
 
@@ -109,18 +112,19 @@ class CarController():
       # self.pedal_hyst_gap = interp(CS.out.vEgo, [40.0 * CV.KPH_TO_MS, 100.0 * CV.KPH_TO_MS], [0.01, 0.006])
       # self.pedal_final, self.pedal_steady = actuator_hystereses(self.comma_pedal_original, self.pedal_steady, self.pedal_hyst_gap)
       # self.comma_pedal = clip(self.pedal_final, 0., 1.)
+      self.pedal_gas_max = interp(CS.out.vEgo, [0.0, 5, 30], [0.2725, 0.3275, 0.3650])
 
       if actuators.accel > 0.:
-        accGain = interp(CS.out.vEgo, [0., 5], [0.25, 0.275])
+        accGain = interp(CS.out.vEgo, [0., 5], [0.23, 0.130])
       else:
-        accGain = interp(CS.out.vEgo, [0., 5], [0.25, 0.125])
+        accGain = interp(CS.out.vEgo, [0., 5], [0.23, 0.165])
 
-      zero = interp(CS.out.vEgo,[0., 5], [0.156, 0.22])
+      zero = interp(CS.out.vEgo,[0., 5, 30], [0.165, 0.2050, 0.260])
       self.comma_pedal = clip((actuators.accel * accGain + zero), 0., 1.)
 
-
-      pedal_final, self.pedal_steady = actuator_hystereses(self.comma_pedal, self.pedal_steady, 0.0033)
-      self.comma_pedal = clip(pedal_final, 0., 1.)
+      self.pedal_hyst_gap = interp(CS.out.vEgo, [40.0 * CV.KPH_TO_MS, 100.0 * CV.KPH_TO_MS], [0.01, 0.0050])
+      pedal_final, self.pedal_steady = actuator_hystereses(self.comma_pedal, self.pedal_steady, self.pedal_hyst_gap)
+      self.comma_pedal = clip(pedal_final, 0., self.pedal_gas_max)
 
       actuators.commaPedalOrigin = self.comma_pedal
 
