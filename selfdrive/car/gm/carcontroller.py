@@ -114,12 +114,10 @@ class CarController():
       # self.comma_pedal = clip(self.pedal_final, 0., 1.)
       self.pedal_gas_max = interp(CS.out.vEgo, [0.0, 5, 30], [0.2725, 0.3275, 0.3650])
 
-      if actuators.accel > 0.:
-        accGain = interp(CS.out.vEgo, [0., 5], [0.23, 0.130])
-      else:
-        accGain = interp(CS.out.vEgo, [0., 5], [0.23, 0.165])
+      accGain = 0.1429
+      accGain2 = interp(actuators.accel, [-3.5, 2], [0.1667, 0.1325])
+      zero = interp(CS.out.vEgo, [0., 5, 10, 30], [0, accGain2, 0.19, 0.265])
 
-      zero = interp(CS.out.vEgo,[0., 5, 30], [0.165, 0.2050, 0.260])
       self.comma_pedal = clip((actuators.accel * accGain + zero), 0., 1.)
 
       self.pedal_hyst_gap = interp(CS.out.vEgo, [40.0 * CV.KPH_TO_MS, 100.0 * CV.KPH_TO_MS], [0.01, 0.0050])
