@@ -194,7 +194,7 @@ class StartupAlert(Alert):
   def __init__(self, alert_text_1: str, alert_text_2: str = "Always keep hands on wheel and eyes on road", alert_status=AlertStatus.normal):
     super().__init__(alert_text_1, alert_text_2,
                      alert_status, AlertSize.mid,
-                     Priority.LOWER, VisualAlert.none, AudibleAlert.none, 5.),
+                     Priority.LOWER, VisualAlert.none, AudibleAlert.none, 2.),
 
 
 # ********** helper functions **********
@@ -445,7 +445,7 @@ EVENTS: Dict[int, Dict[str, Union[Alert, AlertCallbackType]]] = {
       "Steering Temporarily Unavailable",
       "",
       AlertStatus.userPrompt, AlertSize.small,
-      Priority.LOW, VisualAlert.steerRequired, AudibleAlert.prompt, 1.8),
+      Priority.LOW, VisualAlert.steerRequired, AudibleAlert.none, 1.),
   },
 
   EventName.preDriverDistracted: {
@@ -552,8 +552,8 @@ EVENTS: Dict[int, Dict[str, Union[Alert, AlertCallbackType]]] = {
     ET.WARNING: Alert(
       "Take Control",
       "Turn Exceeds Steering Limit",
-      AlertStatus.userPrompt, AlertSize.mid,
-      Priority.LOW, VisualAlert.steerRequired, AudibleAlert.promptRepeat, 2.),
+      AlertStatus.userPrompt, AlertSize.none,
+      Priority.LOW, VisualAlert.steerRequired, AudibleAlert.none, 1.),
   },
 
   # Thrown when the fan is driven at >50% but is not rotating
@@ -1025,6 +1025,71 @@ EVENTS: Dict[int, Dict[str, Union[Alert, AlertCallbackType]]] = {
       Priority.LOW, VisualAlert.none, AudibleAlert.none, .1, alert_rate=0.75),
   },
 
+  EventName.laneChangeRoadEdge: {
+    ET.WARNING: Alert(
+      "Car Detected in Blindspot or RoadEdge",
+      "",
+      AlertStatus.userPrompt, AlertSize.none,
+      #Priority.LOW, VisualAlert.none, AudibleAlert.prompt, .1),
+      Priority.LOW, VisualAlert.none, AudibleAlert.none, .1),
+  },
+  EventName.cruisePaused: {
+    ET.WARNING: EngagementAlert(AudibleAlert.longDisengaged),
+  },
+  EventName.cruiseResume: {
+    ET.WARNING: EngagementAlert(AudibleAlert.longEngaged),
+  },
+  EventName.trafficSignGreen: {
+    ET.WARNING: EngagementAlert(AudibleAlert.trafficSignGreen),
+    #ET.WARNING: Alert(
+    #  "출발합니다.",
+    #  "",
+    #  AlertStatus.normal, AlertSize.small,
+    #  Priority.LOW, VisualAlert.none, AudibleAlert.trafficSignGreen, 3.),
+  },
+  EventName.trafficSignChanged: {
+    ET.WARNING: Alert(
+      "신호가바뀌었어요.",
+      "",
+      AlertStatus.normal, AlertSize.small,
+      Priority.LOW, VisualAlert.none, AudibleAlert.trafficSignChanged, 3.),
+  },
+  EventName.autoHold: {
+    ET.WARNING: Alert(
+      "소프트 오토홀드",
+      "",
+      AlertStatus.normal, AlertSize.small,
+      Priority.LOW, VisualAlert.none, AudibleAlert.autoHold, 3.),
+  },
+  EventName.trafficError: {
+     ET.WARNING: EngagementAlert(AudibleAlert.trafficError),
+  },
+  EventName.audioPrompt: {
+     ET.WARNING: EngagementAlert(AudibleAlert.prompt),
+  },
+  EventName.audioRefuse: {
+     ET.WARNING: EngagementAlert(AudibleAlert.refuse),
+  },
+  EventName.trafficStopping: {
+    ET.WARNING: EngagementAlert(AudibleAlert.stopping),
+    #ET.WARNING: Alert(
+    #  "신호 감속정지중입니다.",
+    #  "",
+    #  AlertStatus.normal, AlertSize.small,
+    #  Priority.LOW, VisualAlert.none, AudibleAlert.stopping, 3.),
+  },
+  EventName.speedDown: {
+     ET.WARNING: EngagementAlert(AudibleAlert.speedDown),
+  },
+  EventName.stopStop: {
+     ET.WARNING: EngagementAlert(AudibleAlert.stopStop),
+  },
+  EventName.audioLaneChange: {
+     ET.WARNING: EngagementAlert(AudibleAlert.laneChange),
+  },
+  EventName.audioTurn: {
+     ET.WARNING: EngagementAlert(AudibleAlert.audioTurn),
+  },
 }
 
 

@@ -125,6 +125,22 @@ struct CarEvent @0x9b1657f34caf3ad3 {
     torqueNNLoad @123;
     turningLeft @124;
     turningRight @125;
+    
+    # ajouatom events
+    cruisePaused @126;
+    cruiseResume @127;
+    autoHold @128;
+    trafficStopping @129;
+    trafficError @130;
+    laneChangeRoadEdge @131;
+    speedDown @132;
+    audioPrompt @133;
+    audioRefuse @134;
+    stopStop @135;
+    audioLaneChange @136;
+    audioTurn @137;
+    trafficSignGreen @138;
+    trafficSignChanged @139;
 
     radarCanErrorDEPRECATED @15;
     communityFeatureDisallowedDEPRECATED @62;
@@ -227,6 +243,25 @@ struct CarState {
   fuelGauge @41 :Float32; # battery or fuel tank level from 0.0 to 1.0
   charging @43 :Bool;
 
+
+  cruiseGap @53 : Int32;
+  tpms @48 : Tpms;
+  # neokii
+  vCluRatio @49 :Float32;
+  driverOverride @50 : Int32; #0: Normal, 1:Gas, 2:Brake
+  chargeMeter @51 : Float32;
+  motorRpm @52 : Float32;
+  totalDistance @54 : Float32;
+  speedLimit @55 : Int32;
+  speedLimitDistance @56 : Float32;
+
+  struct Tpms {
+    fl @0 :Float32;
+    fr @1 :Float32;
+    rl @2 :Float32;
+    rr @3 :Float32;
+  }
+
   struct WheelSpeeds {
     # optional wheel speeds
     fl @0 :Float32;
@@ -282,7 +317,7 @@ struct CarState {
 
   # deprecated
   errorsDEPRECATED @0 :List(CarEvent.EventName);
-  brakeLightsDEPRECATED @19 :Bool;
+  brakeLights @19 :Bool;
   steeringRateLimitedDEPRECATED @29 :Bool;
   canMonoTimesDEPRECATED @12: List(UInt64);
 }
@@ -394,6 +429,11 @@ struct CarControl {
     leftLaneVisible @7: Bool;
     rightLaneDepart @8: Bool;
     leftLaneDepart @9: Bool;
+    cruiseGap @10: Int32;
+    objDist @11: Int32;
+    objRelSpd @12: Float32;
+    softHold @13: Bool;
+    radarAlarm @14: Bool;
 
     enum VisualAlert {
       # these are the choices from the Honda
@@ -421,6 +461,23 @@ struct CarControl {
       prompt @6;
       promptRepeat @7;
       promptDistracted @8;
+
+      longEngaged @9;
+      longDisengaged @10;
+
+      trafficSignGreen @11;
+      trafficSignChanged @12;
+      laneChange @13;
+      stopping @14;
+      autoHold @15;
+      engage2 @16;
+      disengage2 @17;
+      trafficError @18;
+      bsdWarning @19;
+      speedDown @20;
+      stopStop @21;
+      audioTurn @22;
+      
     }
   }
 

@@ -1,6 +1,6 @@
 from cereal import car
 from openpilot.common.conversions import Conversions as CV
-from openpilot.common.numpy_fast import clip
+from openpilot.common.numpy_fast import clip, interp
 from openpilot.common.realtime import DT_CTRL
 from opendbc.can.packer import CANPacker
 from openpilot.selfdrive.car import apply_driver_steer_torque_limits, common_fault_avoidance
@@ -55,6 +55,11 @@ class CarController:
     self.apply_steer_last = 0
     self.car_fingerprint = CP.carFingerprint
     self.last_button_frame = 0
+    
+    self.jerkStartLimit = 2.0
+    self.softHoldMode = 1
+    self.jerk_count = 0
+    
 
   def update(self, CC, CS, now_nanos):
     actuators = CC.actuators
@@ -141,25 +146,55 @@ class CarController:
 
       if not self.CP.openpilotLongitudinalControl:
         can_sends.extend(self.create_button_messages(CC, CS, use_clu11=True))
+      if self.CP.carFingerprint in (CAR.GENESIS_G90_2019, CAR.GENESIS_G90, CAR.K7):
+        can_sends.append(hyundaican.create_mdps12(self.packer, self.frame, CS.mdps12))
 
       if self.frame % 2 == 0 and self.CP.openpilotLongitudinalControl:
+        # ajouatom: calculate jerk, cb : reverse engineer from KONA EV
+        startingJerk = self.jerkStartLimit
+        jerkLimit = 5.0
+        self.jerk_count += DT_CTRL
+        jerk_max = interp(self.jerk_count, [0, 1.5, 2.5], [startingJerk, startingJerk, jerkLimit])
+        cb_upper = cb_lower = 0
+        if actuators.longControlState == LongCtrlState.off:
+          jerk_u = jerkLimit
+          jerk_l = jerkLimit          
+          self.jerk_count = 0
+        elif actuators.longControlState == LongCtrlState.stopping or hud_control.softHold:
+          jerk_u = 0.5
+          jerk_l = jerkLimit
+          self.jerk_count = 0
+        else:
+          jerk_u = jerk_max #min(max(0.5, jerk * 2.0), jerk_max)
+          jerk_l = jerk_max #min(max(1.0, -jerk * 2.0), jerk_max)
+          cb_upper = clip(0.9 + accel * 0.2, 0, 1.2)
+          cb_lower = clip(0.8 + accel * 0.2, 0, 1.2)
+        
         # TODO: unclear if this is needed
-        jerk = 3.0 if actuators.longControlState == LongCtrlState.pid else 1.0
-        use_fca = self.CP.flags & HyundaiFlags.USE_FCA.value
-        can_sends.extend(hyundaican.create_acc_commands(self.packer, CC.enabled, accel, jerk, int(self.frame / 2),
-                                                        hud_control.leadVisible, set_speed_in_units, stopping,
-                                                        CC.cruiseControl.override, use_fca, CS.out.cruiseState.available))
+        #jerk = 3.0 if actuators.longControlState == LongCtrlState.pid else 1.0
+        #use_fca = self.CP.flags & HyundaiFlags.USE_FCA.value
+        #can_sends.extend(hyundaican.create_acc_commands(self.packer, CC.enabled, accel, jerk, int(self.frame / 2),
+        #                                                hud_control.leadVisible, set_speed_in_units, stopping,
+        #                                                CC.cruiseControl.override, use_fca, CS.out.cruiseState.available))
+
+        can_sends.extend(hyundaican.create_acc_commands_mix_scc(self.CP, self.packer, CC.enabled, accel, jerk_u, jerk_l, int(self.frame / 2),
+                                                      hud_control, set_speed_in_units, stopping, CC, CS, self.softHoldMode, cb_upper, cb_lower, CS.out.cruiseState.available))
+        self.accel_last = accel
 
       # 20 Hz LFA MFA message
       if self.frame % 5 == 0 and self.CP.flags & HyundaiFlags.SEND_LFA.value:
         can_sends.append(hyundaican.create_lfahda_mfc(self.packer, CC.enabled))
 
+      sccBus = 2 if self.CP.flags & HyundaiFlags.SCC_BUS2.value else 0
       # 5 Hz ACC options
-      if self.frame % 20 == 0 and self.CP.openpilotLongitudinalControl:
-        can_sends.extend(hyundaican.create_acc_opt(self.packer))
+      if self.frame % 20 == 0 and self.CP.openpilotLongitudinalControl: 
+        if sccBus == 0:
+          can_sends.extend(hyundaican.create_acc_opt(self.packer))
+        elif CS.scc13 is not None:
+          can_sends.append(hyundaican.create_acc_opt_copy(CS, self.packer))
 
       # 2 Hz front radar options
-      if self.frame % 50 == 0 and self.CP.openpilotLongitudinalControl:
+      if self.frame % 50 == 0 and self.CP.openpilotLongitudinalControl  and sccBus == 0:
         can_sends.append(hyundaican.create_frt_radar_opt(self.packer))
 
     new_actuators = actuators.copy()

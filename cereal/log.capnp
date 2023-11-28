@@ -574,6 +574,9 @@ struct RadarState @0x9a185389d6fdd05f {
   leadOne @3 :LeadData;
   leadTwo @4 :LeadData;
   cumLagMs @5 :Float32;
+  leadsLeft @13 : List(LeadData);
+  leadsCenter @14 : List(LeadData);
+  leadsRight @15 : List(LeadData);
 
   struct LeadData {
     dRel @0 :Float32;
@@ -644,6 +647,7 @@ struct LiveTracks {
   currentTime @7 :Float32;
   stationary @8 :Bool;
   oncoming @9 :Bool;
+  vLat @10 :Float32;
 }
 
 struct ControlsState @0x97ff69c53601abf1 {
@@ -1083,7 +1087,7 @@ struct UiPlan {
 
 struct LateralPlan @0xe1e9318e2ae8b51e {
   modelMonoTime @31 :UInt64;
-  laneWidthDEPRECATED @0 :Float32;
+  laneWidth @0 :Float32;
   lProbDEPRECATED @5 :Float32;
   rProbDEPRECATED @7 :Float32;
   dPathPoints @20 :List(Float32);

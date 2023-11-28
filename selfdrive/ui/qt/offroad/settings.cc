@@ -56,6 +56,18 @@ TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
       "../assets/offroad/icon_disengage_on_accelerator.svg",
     },
     {
+      "SccConnectedBus2",
+      "SCC Module connected BUS2",
+      "",
+      "../assets/offroad/icon_warning.png",
+    },
+    {
+      "EnableRadarTracks",
+      "EnableRadarTracks",
+      "Using RadarTracks instead of SCC data. SANTAFE2022HEV",
+      "../assets/offroad/icon_warning.png",
+    },
+    {
       "IsLdwEnabled",
       tr("Enable Lane Departure Warnings"),
       tr("Receive alerts to steer back into the lane when your vehicle drifts over a detected lane line without a turn signal activated while driving over 31 mph (50 km/h)."),

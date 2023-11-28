@@ -46,6 +46,8 @@ def manager_init() -> None:
     ("LanguageSetting", "main_en"),
     ("OpenpilotEnabledToggle", "1"),
     ("LongitudinalPersonality", str(log.LongitudinalPersonality.standard)),
+    ("EnableRadarTracks", "0"),      
+    ("SccConnectedBus2", "0"),
   ]
   if not PC:
     default_params.append(("LastUpdateTime", datetime.datetime.utcnow().isoformat().encode('utf8')))
@@ -145,6 +147,8 @@ def manager_thread() -> None:
   write_onroad_params(False, params)
   ensure_running(managed_processes.values(), False, params=params, CP=sm['carParams'], not_run=ignore)
 
+  print_timer = 0
+
   started_prev = False
 
   while True:
@@ -167,7 +171,9 @@ def manager_thread() -> None:
 
     running = ' '.join("%s%s\u001b[0m" % ("\u001b[32m" if p.proc.is_alive() else "\u001b[31m", p.name)
                        for p in managed_processes.values() if p.proc)
-    print(running)
+    print_timer = (print_timer + 1)%10
+    if print_timer == 0:
+      print(running)
     cloudlog.debug(running)
 
     # send managerState

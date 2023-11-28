@@ -10,11 +10,13 @@ from openpilot.selfdrive.car.hyundai.hyundaicanfd import CanBus
 from openpilot.selfdrive.car.hyundai.values import HyundaiFlags, CAR, DBC, CAN_GEARS, CAMERA_SCC_CAR, \
                                                    CANFD_CAR, EV_CAR, HYBRID_CAR, Buttons, CarControllerParams
 from openpilot.selfdrive.car.interfaces import CarStateBase
+from openpilot.common.realtime import DT_CTRL
 
 PREV_BUTTON_SAMPLES = 8
 CLUSTER_SAMPLE_RATE = 20  # frames
 STANDSTILL_THRESHOLD = 12 * 0.03125 * CV.KPH_TO_MS
 
+GearShifter = car.CarState.GearShifter
 
 class CarState(CarStateBase):
   def __init__(self, CP):
@@ -51,13 +53,15 @@ class CarState(CarStateBase):
     self.cluster_speed_counter = CLUSTER_SAMPLE_RATE
 
     self.params = CarControllerParams(CP)
+    self.totalDistance = 0.0
+    self.speedLimitDistance = 0
 
   def update(self, cp, cp_cam):
     if self.CP.carFingerprint in CANFD_CAR:
       return self.update_canfd(cp, cp_cam)
 
     ret = car.CarState.new_message()
-    cp_cruise = cp_cam if self.CP.carFingerprint in CAMERA_SCC_CAR else cp
+    cp_cruise = cp_cam if self.CP.flags & HyundaiFlags.SCC_BUS2.value or self.CP.carFingerprint in CAMERA_SCC_CAR else cp
     self.is_metric = cp.vl["CLU11"]["CF_Clu_SPEED_UNIT"] == 0
     speed_conv = CV.KPH_TO_MS if self.is_metric else CV.MPH_TO_MS
 
@@ -98,6 +102,7 @@ class CarState(CarStateBase):
     ret.steeringTorqueEps = cp.vl["MDPS12"]["CR_Mdps_OutTq"]
     ret.steeringPressed = self.update_steering_pressed(abs(ret.steeringTorque) > self.params.STEER_THRESHOLD, 5)
     ret.steerFaultTemporary = cp.vl["MDPS12"]["CF_Mdps_ToiUnavail"] != 0 or cp.vl["MDPS12"]["CF_Mdps_ToiFlt"] != 0
+    ret.steerFaultTemporary = False
 
     # cruise state
     if self.CP.openpilotLongitudinalControl:
@@ -113,22 +118,33 @@ class CarState(CarStateBase):
       ret.cruiseState.nonAdaptive = cp_cruise.vl["SCC11"]["SCCInfoDisplay"] == 2.  # Shows 'Cruise Control' on dash
       ret.cruiseState.speed = cp_cruise.vl["SCC11"]["VSetDis"] * speed_conv
 
+      ret.cruiseGap = cp_cruise.vl["SCC11"]["TauGapSet"]
     # TODO: Find brake pressure
     ret.brake = 0
     ret.brakePressed = cp.vl["TCS13"]["DriverOverride"] == 2  # 2 includes regen braking by user on HEV/EV
     ret.brakeHoldActive = cp.vl["TCS15"]["AVH_LAMP"] == 2  # 0 OFF, 1 ERROR, 2 ACTIVE, 3 READY
     ret.parkingBrake = cp.vl["TCS13"]["PBRAKE_ACT"] == 1
     ret.accFaulted = cp.vl["TCS13"]["ACCEnable"] != 0  # 0 ACC CONTROL ENABLED, 1-3 ACC CONTROL DISABLED
+    ret.brakeLights = bool(cp.vl["TCS13"]["BrakeLight"] or ret.brakePressed)
+    ret.driverOverride = cp.vl["TCS13"]["DriverOverride"]
 
     if self.CP.carFingerprint in (HYBRID_CAR | EV_CAR):
       if self.CP.carFingerprint in HYBRID_CAR:
         ret.gas = cp.vl["E_EMS11"]["CR_Vcu_AccPedDep_Pos"] / 254.
+        ret.engineRpm = cp.vl["E_EMS11"]["N"] 
+        ret.motorRpm = cp.vl["ELECT_GEAR"]["Elect_Motor_Speed"] * 30
       else:
         ret.gas = cp.vl["E_EMS11"]["Accel_Pedal_Pos"] / 254.
+        ret.engineRpm = 0.0
+        ret.motorRpm = cp.vl["ELECT_GEAR"]["Elect_Motor_Speed"] * 30 # opkr, may multiply deceleration ratio in line with engine rpm
+      ret.chargeMeter = cp.vl["EV_Info"]["OPKR_EV_Charge_Level"] # opkr
       ret.gasPressed = ret.gas > 0
     else:
       ret.gas = cp.vl["EMS12"]["PV_AV_CAN"] / 100.
       ret.gasPressed = bool(cp.vl["EMS16"]["CF_Ems_AclAct"])
+      ret.engineRpm = 0 #cp.vl["EMS_366"]["N"]
+      ret.motorRpm = 0
+      ret.chargeMeter = 0
 
     # Gear Selection via Cluster - For those Kia/Hyundai which are not fully discovered, we can use the Cluster Indicator for Gear Selection,
     # as this seems to be standard over all cars, but is not the preferred method.
@@ -150,6 +166,13 @@ class CarState(CarStateBase):
       aeb_braking = cp_cruise.vl[aeb_src]["CF_VSM_DecCmdAct"] != 0 or cp_cruise.vl[aeb_src][aeb_sig] != 0
       ret.stockFcw = aeb_warning and not aeb_braking
       ret.stockAeb = aeb_warning and aeb_braking
+    elif self.CP.flags & HyundaiFlags.SCC_BUS2.value:
+      aeb_src = "FCA11" if self.CP.flags & HyundaiFlags.USE_FCA.value else "SCC12"
+      aeb_sig = "FCA_CmdAct" if self.CP.flags & HyundaiFlags.USE_FCA.value else "AEB_CmdAct"
+      aeb_warning = cp_cruise.vl[aeb_src]["CF_VSM_Warn"] != 0
+      aeb_braking = cp_cruise.vl[aeb_src]["CF_VSM_DecCmdAct"] != 0 or cp_cruise.vl[aeb_src][aeb_sig] != 0
+      ret.stockFcw = aeb_warning and not aeb_braking
+      ret.stockAeb = aeb_warning and aeb_braking
 
     if self.CP.enableBsm:
       ret.leftBlindspot = cp.vl["LCA11"]["CF_Lca_IndLeft"] != 0
@@ -163,6 +186,64 @@ class CarState(CarStateBase):
     self.cruise_buttons.extend(cp.vl_all["CLU11"]["CF_Clu_CruiseSwState"])
     self.prev_main_buttons = self.main_buttons[-1]
     self.main_buttons.extend(cp.vl_all["CLU11"]["CF_Clu_CruiseSwMain"])
+    self.mdps12 = copy.copy(cp.vl["MDPS12"])
+    
+    
+    ## ajouatom
+    tpms_unit = cp.vl["TPMS11"]["UNIT"] * 0.725 if int(cp.vl["TPMS11"]["UNIT"]) > 0 else 1.
+    ret.tpms.fl = tpms_unit * cp.vl["TPMS11"]["PRESSURE_FL"]
+    ret.tpms.fr = tpms_unit * cp.vl["TPMS11"]["PRESSURE_FR"]
+    ret.tpms.rl = tpms_unit * cp.vl["TPMS11"]["PRESSURE_RL"]
+    ret.tpms.rr = tpms_unit * cp.vl["TPMS11"]["PRESSURE_RR"]
+
+    self.scc11 = cp_cruise.vl["SCC11"] if "SCC11" in cp_cruise.vl else None
+    self.scc12 = cp_cruise.vl["SCC12"] if "SCC12" in cp_cruise.vl else None
+    self.scc13 = cp_cruise.vl["SCC13"] if "SCC13" in cp_cruise.vl else None
+    self.scc14 = cp_cruise.vl["SCC14"] if "SCC14" in cp_cruise.vl else None
+    cluSpeed = cp.vl["CLU11"]["CF_Clu_Vanz"]
+    decimal = cp.vl["CLU11"]["CF_Clu_VanzDecimal"]
+    if 0. < decimal < 0.5:
+      cluSpeed += decimal
+
+    ret.vEgoCluster = cluSpeed * speed_conv
+    vEgoClu, aEgoClu = self.update_clu_speed_kf(ret.vEgoCluster)
+    ret.vCluRatio = (ret.vEgo / vEgoClu) if (vEgoClu > 3. and ret.vEgo > 3.) else 1.0
+
+    self.totalDistance += ret.vEgo * DT_CTRL 
+    ret.totalDistance = self.totalDistance
+
+    if self.CP.flags & HyundaiFlags.NAVI_CLUSTER.value:
+      speedLimit = cp.vl["Navi_HU"]["SpeedLim_Nav_Clu"]
+      speedLimitCam = cp.vl["Navi_HU"]["SpeedLim_Nav_Cam"]
+      ret.speedLimit = speedLimit if speedLimit < 255 and speedLimitCam == 1 else 0
+      if ret.speedLimit>0 and not ret.gasPressed:
+        if self.speedLimitDistance <= self.totalDistance:
+          self.speedLimitDistance = self.totalDistance + ret.speedLimit * 6  
+        self.speedLimitDistance = max(self.totalDistance+1, self.speedLimitDistance) 
+      else:
+        self.speedLimitDistance = self.totalDistance
+      ret.speedLimitDistance = self.speedLimitDistance - self.totalDistance
+    else:
+      ret.speedLimit = 0
+      ret.speedLimitDistance = 0
+
+    ## ajouatom: wheel gap distance setting
+    if self.personalities_via_wheel:
+      # Sync with the onroad UI button
+      if self.params_memory.get_bool("PersonalityChangedViaUI"):
+        self.personality_profile = self.params.get_int("LongitudinalPersonality")
+        self.previous_personality_profile = self.personality_profile
+        self.params_memory.put_bool("PersonalityChangedViaUI", False)
+
+        self.distance_button = cp.vl_all["CLU11"]["CF_Clu_CruiseSwState"] == 3
+        if self.distance_button and not self.distance_previously_pressed:
+          self.personality_profile = (self.previous_personality_profile + 2) % 3
+        self.distance_previously_pressed = self.distance_button
+
+      if self.personality_profile != self.previous_personality_profile:
+        put_int_nonblocking("LongitudinalPersonality", self.personality_profile)
+        self.params_memory.put_bool("PersonalityChangedViaWheel", True)
+        self.previous_personality_profile = self.personality_profile
 
     # Check for cruise control button press
     if self.prev_main_buttons == 0 and self.main_buttons[-1] != 0:
@@ -270,6 +351,7 @@ class CarState(CarStateBase):
       ("CGW4", 5),
       ("WHL_SPD11", 50),
       ("SAS11", 100),
+      ("TPMS11", 5), 
     ]
 
     if not CP.openpilotLongitudinalControl and CP.carFingerprint not in CAMERA_SCC_CAR:
@@ -284,7 +366,10 @@ class CarState(CarStateBase):
       messages.append(("LCA11", 50))
 
     if CP.carFingerprint in (HYBRID_CAR | EV_CAR):
-      messages.append(("E_EMS11", 50))
+      messages += [
+        ("E_EMS11", 50),
+        ("EV_Info", 50),     
+      ]
     else:
       messages += [
         ("EMS12", 100),
@@ -300,6 +385,9 @@ class CarState(CarStateBase):
     else:
       messages.append(("LVR12", 100))
 
+    if CP.flags & HyundaiFlags.NAVI_CLUSTER.value:
+      messages.append(("Navi_HU", 5))
+
     return CANParser(DBC[CP.carFingerprint]["pt"], messages, 0)
 
   @staticmethod
@@ -310,6 +398,28 @@ class CarState(CarStateBase):
     messages = [
       ("LKAS11", 100)
     ]
+    if CP.flags & HyundaiFlags.SCC_BUS2.value:
+      messages += [
+        ("SCC11", 50),
+        ("SCC12", 50),
+      ]
+      if CP.flags & HyundaiFlags.HAS_SCC13.value:
+        messages += [
+          ("SCC13", 0),
+        ]
+      if CP.flags & HyundaiFlags.HAS_SCC14.value:
+        messages += [
+          ("SCC14", 50),
+        ]      
+      if CP.flags & HyundaiFlags.USE_FCA.value:
+        messages += [
+          ("FCA11", 50),
+        ]
+
+      if CP.flags & HyundaiFlags.HAS_LFAHDA.value:
+        messages += [("LFAHDA_MFC", 20)]
+
+      return CANParser(DBC[CP.carFingerprint]["pt"], messages, 2)
 
     if not CP.openpilotLongitudinalControl and CP.carFingerprint in CAMERA_SCC_CAR:
       messages += [

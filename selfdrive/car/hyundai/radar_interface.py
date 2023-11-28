@@ -3,7 +3,8 @@ import math
 from cereal import car
 from opendbc.can.parser import CANParser
 from openpilot.selfdrive.car.interfaces import RadarInterfaceBase
-from openpilot.selfdrive.car.hyundai.values import DBC
+from openpilot.selfdrive.car.hyundai.values import DBC, HyundaiFlags
+from openpilot.common.params import Params
 
 RADAR_START_ADDR = 0x500
 RADAR_MSG_COUNT = 32
@@ -11,11 +12,21 @@ RADAR_MSG_COUNT = 32
 # POC for parsing corner radars: https://github.com/commaai/openpilot/pull/24221/
 
 def get_radar_can_parser(CP):
-  if DBC[CP.carFingerprint]['radar'] is None:
+
+  enable_radar_tracks = Params().get_bool("EnableRadarTracks")
+  scc_radar = Params().get_bool("SccConnectedBus2") and not enable_radar_tracks
+  if scc_radar:
+    print("RadarInterface: SCCRadar...")
+    messages = [("SCC11", 50)]    
+    return CANParser(DBC[CP.carFingerprint]['pt'], messages, 2 if CP.flags & HyundaiFlags.SCC_BUS2.value else 0)
+ 
+  if DBC[CP.carFingerprint]['radar'] is None and not enable_radar_tracks:
     return None
 
+  print("RadarInterface: RadarTracks...")
   messages = [(f"RADAR_TRACK_{addr:x}", 50) for addr in range(RADAR_START_ADDR, RADAR_START_ADDR + RADAR_MSG_COUNT)]
-  return CANParser(DBC[CP.carFingerprint]['radar'], messages, 1)
+  #return CANParser(DBC[CP.carFingerprint]['radar'], messages, 1)
+  return CANParser('hyundai_kia_mando_front_radar_generated', messages, 1)
 
 
 class RadarInterface(RadarInterfaceBase):
@@ -27,9 +38,13 @@ class RadarInterface(RadarInterfaceBase):
 
     self.radar_off_can = CP.radarUnavailable
     self.rcp = get_radar_can_parser(CP)
+    
+    self.enable_radar_tracks = Params().get_bool("EnableRadarTracks")
+    self.scc_radar = Params().get_bool("SccConnectedBus2") and not self.enable_radar_tracks
+    self.trigger_msg = 0x420 if self.scc_radar else self.trigger_msg
 
   def update(self, can_strings):
-    if self.radar_off_can or (self.rcp is None):
+    if not self.enable_radar_tracks and (self.radar_off_can or (self.rcp is None)):
       return super().update(None)
 
     vls = self.rcp.update_strings(can_strings)
@@ -53,6 +68,32 @@ class RadarInterface(RadarInterfaceBase):
     if not self.rcp.can_valid:
       errors.append("canError")
     ret.errors = errors
+    
+    if self.scc_radar:
+      cpt = self.rcp.vl
+
+      valid = cpt["SCC11"]['ACC_ObjStatus']
+
+      for ii in range(1):
+        if valid:
+          if ii not in self.pts:
+            self.pts[ii] = car.RadarData.RadarPoint.new_message()
+            self.pts[ii].trackId = self.track_id
+            self.track_id += 1
+
+          self.pts[ii].dRel = cpt["SCC11"]['ACC_ObjDist']  # from front of car
+          self.pts[ii].yRel = -cpt["SCC11"]['ACC_ObjLatPos']  # in car frame's y axis, left is negative
+          self.pts[ii].vRel = cpt["SCC11"]['ACC_ObjRelSpd']
+          self.pts[ii].aRel = float('nan')
+          self.pts[ii].yvRel = float('nan')
+          self.pts[ii].measured = True
+
+        else:
+          if ii in self.pts:
+            del self.pts[ii]
+
+      ret.points = list(self.pts.values())
+      return ret
 
     for addr in range(RADAR_START_ADDR, RADAR_START_ADDR + RADAR_MSG_COUNT):
       msg = self.rcp.vl[f"RADAR_TRACK_{addr:x}"]

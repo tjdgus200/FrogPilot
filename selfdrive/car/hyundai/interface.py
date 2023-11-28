@@ -9,6 +9,8 @@ from openpilot.selfdrive.car.hyundai.radar_interface import RADAR_START_ADDR
 from openpilot.selfdrive.car import create_button_events, get_safety_config
 from openpilot.selfdrive.car.interfaces import CarInterfaceBase
 from openpilot.selfdrive.car.disable_ecu import disable_ecu
+from openpilot.common.params import Params  #ajouatom
+from selfdrive.car.isotp_parallel_query import IsoTpParallelQuery #ajouatom
 
 Ecu = car.CarParams.Ecu
 ButtonType = car.CarState.ButtonEvent.Type
@@ -60,6 +62,12 @@ class CarInterface(CarInterfaceBase):
       if 0x38d in fingerprint[0] or 0x38d in fingerprint[2]:
         ret.flags |= HyundaiFlags.USE_FCA.value
 
+      if 1290 in fingerprint[2]:
+        ret.flags |= HyundaiFlags.HAS_SCC13.value
+
+      if 905 in fingerprint[2]:
+        ret.flags |= HyundaiFlags.HAS_SCC14.value
+
     ret.steerActuatorDelay = 0.1  # Default delay
     ret.steerLimitTimer = 0.4
     CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
@@ -108,7 +116,7 @@ class CarInterface(CarInterfaceBase):
       ret.mass = 2060.
       ret.wheelbase = 3.01
       ret.steerRatio = 16.5
-      ret.minSteerSpeed = 60 * CV.KPH_TO_MS
+      #ret.minSteerSpeed = 60 * CV.KPH_TO_MS #ajouatom
     elif candidate in (CAR.KONA, CAR.KONA_EV, CAR.KONA_HEV, CAR.KONA_EV_2022, CAR.KONA_EV_2ND_GEN):
       ret.mass = {CAR.KONA_EV: 1685., CAR.KONA_HEV: 1425., CAR.KONA_EV_2022: 1743., CAR.KONA_EV_2ND_GEN: 1740.}.get(candidate, 1275.)
       ret.wheelbase = {CAR.KONA_EV_2ND_GEN: 2.66, }.get(candidate, 2.6)
@@ -120,7 +128,8 @@ class CarInterface(CarInterfaceBase):
       ret.steerRatio = 13.73  # Spec
       ret.tireStiffnessFactor = 0.385
       if candidate in (CAR.IONIQ, CAR.IONIQ_EV_LTD, CAR.IONIQ_PHEV_2019):
-        ret.minSteerSpeed = 32 * CV.MPH_TO_MS
+        #ret.minSteerSpeed = 32 * CV.MPH_TO_MS #ajouatom
+        pass
     elif candidate in (CAR.IONIQ_5, CAR.IONIQ_6):
       ret.mass = 1948
       ret.wheelbase = 2.97
@@ -256,6 +265,51 @@ class CarInterface(CarInterfaceBase):
       ret.wheelbase = 2.95
       ret.steerRatio = 14.14
 
+    elif candidate == CAR.TUCSON_TL_SCC:
+      ret.mass = 1594. #1730
+      ret.wheelbase = 2.67
+      ret.tireStiffnessFactor = 0.7
+      ret.centerToFront = ret.wheelbase * 0.4
+      ret.steerRatio = 14.00
+    elif candidate == CAR.KIA_SOUL_EV_SK3:
+      ret.steerRatio = 13.7  # average of the platforms
+      ret.mass = 1375.
+      ret.wheelbase = 2.6      
+    elif candidate in [CAR.GRANDEUR_IG, CAR.GRANDEUR_IG_HEV]:
+      ret.mass = 1570.
+      ret.wheelbase = 2.845
+      ret.steerRatio = 16.
+      ret.tireStiffnessFactor = 0.8
+      ret.centerToFront = ret.wheelbase * 0.385
+    elif candidate in [CAR.GRANDEUR_IG_FL, CAR.GRANDEUR_IG_FL_HEV]:
+      ret.mass = 1600.
+      ret.wheelbase = 2.885
+      ret.steerRatio = 17.
+      ret.tireStiffnessFactor = 0.8
+      ret.centerToFront = ret.wheelbase * 0.385
+    elif candidate == CAR.NEXO: # fix PolorBear - 22.06.05
+      ret.mass = 1885.
+      ret.wheelbase = 2.79
+      ret.steerRatio = 15.3
+      ret.tireStiffnessFactor = 0.385
+    elif candidate in [CAR.K7, CAR.K7_HEV]:
+      ret.mass = 1850.
+      ret.wheelbase = 2.855
+      ret.steerRatio = 15.5
+      ret.tireStiffnessFactor = 0.7
+    elif candidate == CAR.GENESIS_EQ900:
+      ret.mass = 2200
+      ret.wheelbase = 3.15
+      ret.steerRatio = 16.0
+      ret.steerActuatorDelay = 0.075
+    elif candidate == CAR.GENESIS_EQ900_L:
+      ret.mass = 2290
+      ret.wheelbase = 3.45
+    elif candidate == CAR.GENESIS_G90_2019:
+      ret.mass = 2150
+      ret.wheelbase = 3.16
+      
+
     # *** longitudinal control ***
     if candidate in CANFD_CAR:
       ret.longitudinalTuning.kpV = [0.1]
@@ -266,6 +320,18 @@ class CarInterface(CarInterfaceBase):
       ret.longitudinalTuning.kpV = [0.5]
       ret.longitudinalTuning.kiV = [0.0]
       ret.experimentalLongitudinalAvailable = candidate not in (UNSUPPORTED_LONGITUDINAL_CAR | CAMERA_SCC_CAR)
+
+      if 1348 in fingerprint[0]:
+        ret.flags |= HyundaiFlags.NAVI_CLUSTER.value
+      if 1157 in fingerprint[0] or 1157 in fingerprint[2]:
+        ret.flags |= HyundaiFlags.HAS_LFAHDA.value
+       
+      if Params().get_bool("SccConnectedBus2"):
+        ret.flags |= HyundaiFlags.SCC_BUS2.value
+      
+      print("***************************************************************************")
+      print("sccBus = ", 2 if ret.flags & HyundaiFlags.SCC_BUS2.value else 0)
+      ret.experimentalLongitudinalAvailable = True
     ret.openpilotLongitudinalControl = experimental_long and ret.experimentalLongitudinalAvailable
     ret.pcmCruise = not ret.openpilotLongitudinalControl
 
@@ -275,6 +341,12 @@ class CarInterface(CarInterfaceBase):
     ret.startAccel = 1.0
     ret.longitudinalActuatorDelayLowerBound = 0.5
     ret.longitudinalActuatorDelayUpperBound = 0.5
+
+    if Params().get_bool("EnableRadarTracks"):
+      ret.radarTimeStep = (1.0 / 20) # 20Hz  RadarTrack 20Hz
+    else:
+      ret.radarTimeStep = (1.0 / 50) # 50Hz   SCC11 50Hz
+    
 
     # *** feature detection ***
     if candidate in CANFD_CAR:
@@ -306,6 +378,10 @@ class CarInterface(CarInterfaceBase):
 
       if candidate in CAMERA_SCC_CAR:
         ret.safetyConfigs[0].safetyParam |= Panda.FLAG_HYUNDAI_CAMERA_SCC
+      if ret.flags & HyundaiFlags.SCC_BUS2.value:
+        ret.openpilotLongitudinalControl = True
+        ret.radarUnavailable = False
+        ret.safetyConfigs = [get_safety_config(car.CarParams.SafetyModel.hyundaiLegacy)]
 
     if ret.openpilotLongitudinalControl:
       ret.safetyConfigs[-1].safetyParam |= Panda.FLAG_HYUNDAI_LONG
@@ -324,11 +400,13 @@ class CarInterface(CarInterfaceBase):
 
   @staticmethod
   def init(CP, logcan, sendcan):
-    if CP.openpilotLongitudinalControl and not (CP.flags & HyundaiFlags.CANFD_CAMERA_SCC.value):
+    if CP.openpilotLongitudinalControl and not (CP.flags & HyundaiFlags.CANFD_CAMERA_SCC.value) and not (CP.flags & HyundaiFlags.SCC_BUS2.value):
       addr, bus = 0x7d0, 0
       if CP.flags & HyundaiFlags.CANFD_HDA2.value:
         addr, bus = 0x730, CanBus(CP).ECAN
       disable_ecu(logcan, sendcan, bus=bus, addr=addr, com_cont_req=b'\x28\x83\x01')
+    if Params().get_bool("EnableRadarTracks"): #ajouatom
+      enable_radar_tracks(CP, logcan, sendcan) 
 
     # for blinkers
     if CP.flags & HyundaiFlags.ENABLE_BLINKERS:
@@ -360,3 +438,33 @@ class CarInterface(CarInterfaceBase):
 
   def apply(self, c, now_nanos):
     return self.CC.update(c, self.CS, now_nanos)
+
+#ajouatom: Enable Radar tracks
+def enable_radar_tracks(CP, logcan, sendcan):
+  print("################ Try To Enable Radar Tracks ####################")
+  
+  sccBus = 2 if Params().get_bool("SccConnectedBus2") else 0
+  rdr_fw = None
+  rdr_fw_address = 0x7d0 #
+  try:
+    for i in range(40):
+      try:
+        query = IsoTpParallelQuery(sendcan, logcan, sccBus, [rdr_fw_address], [b'\x10\x07'], [b'\x50\x07'], debug=True)
+        for addr, dat in query.get_data(0.1).items(): # pylint: disable=unused-variable
+          print("ecu write data by id ...")
+          new_config = b"\x00\x00\x00\x01\x00\x01"
+          #new_config = b"\x00\x00\x00\x00\x00\x01"
+          dataId = b'\x01\x42'
+          WRITE_DAT_REQUEST = b'\x2e'
+          WRITE_DAT_RESPONSE = b'\x68'
+          query = IsoTpParallelQuery(sendcan, logcan, sccBus, [rdr_fw_address], [WRITE_DAT_REQUEST+dataId+new_config], [WRITE_DAT_RESPONSE], debug=True)
+          query.get_data(0)
+          print(f"Try {i+1}")
+          break
+        break
+      except Exception as e:
+        print(f"Failed {i}: {e}") 
+  except Exception as e:
+    print("##############  Failed to enable tracks" + str(e))
+  print("################ END Try to enable radar tracks")
+

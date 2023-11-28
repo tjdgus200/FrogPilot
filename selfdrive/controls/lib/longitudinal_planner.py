@@ -14,7 +14,7 @@ from openpilot.selfdrive.car.interfaces import ACCEL_MIN, ACCEL_MAX
 from openpilot.selfdrive.controls.conditional_experimental_mode import ConditionalExperimentalMode
 from openpilot.selfdrive.controls.speed_limit_controller import SpeedLimitController
 from openpilot.selfdrive.controls.lib.longcontrol import LongCtrlState
-from openpilot.selfdrive.controls.lib.longitudinal_mpc_lib.long_mpc import LongitudinalMpc
+from openpilot.selfdrive.controls.lib.longitudinal_mpc_lib.long_mpc import LongitudinalMpc, N
 from openpilot.selfdrive.controls.lib.longitudinal_mpc_lib.long_mpc import T_IDXS as T_IDXS_MPC
 from openpilot.selfdrive.controls.lib.drive_helpers import V_CRUISE_MAX, CONTROL_N, get_speed_error
 from openpilot.system.swaglog import cloudlog
@@ -142,6 +142,13 @@ class LongitudinalPlanner:
     v_cruise_kph = min(sm['controlsState'].vCruise, V_CRUISE_MAX)
     v_cruise = v_cruise_kph * CV.KPH_TO_MS
 
+    # neokii
+    vCluRatio = sm['carState'].vCluRatio
+    if vCluRatio > 0.5:
+      self.vCluRatio = vCluRatio
+      v_cruise *= vCluRatio
+      #v_cruise = int(v_cruise * CV.MS_TO_KPH + 0.25) * CV.KPH_TO_MS
+
     long_control_off = sm['controlsState'].longControlState == LongCtrlState.off
     force_slow_decel = sm['controlsState'].forceDecel
 
@@ -167,6 +174,10 @@ class LongitudinalPlanner:
       self.v_desired_filter.x = v_ego
       # Clip aEgo to cruise limits to prevent large accelerations when becoming active
       self.a_desired = clip(sm['carState'].aEgo, accel_limits[0], accel_limits[1])
+      
+      #ajouatom
+      self.mpc.prev_a = np.full(N+1, self.a_desired) ## mpc������ prev_a�� �����Ͽ� constraint�۵���.... pid off -> on�ÿ��� ���� constraint�� �۵����� �ʾƼ� ����־...
+      accel_limits_turns[0] = accel_limits_turns[0] = 0.0
 
     # Prevent divergence, smooth in current v_ego
     self.v_desired_filter.x = max(0.0, self.v_desired_filter.update(v_ego))

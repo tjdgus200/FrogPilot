@@ -52,6 +52,7 @@ def nativelauncher(pargs: List[str], cwd: str, name: str) -> None:
 
   # exec the process
   os.chdir(cwd)
+  print(pargs[0])
   os.execvp(pargs[0], pargs)
 
 
