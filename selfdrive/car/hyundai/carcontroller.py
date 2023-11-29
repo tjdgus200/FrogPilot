@@ -146,11 +146,16 @@ class CarController:
 
       if not self.CP.openpilotLongitudinalControl:
         can_sends.extend(self.create_button_messages(CC, CS, use_clu11=True))
+      elif not CC.enabled and hud_control.softHold: ## ajouatom: for softhold
+        print("carController softHold Enable send....")
+        can_sends.append(hyundaican.create_clu11_button(self.packer, self.frame, CS.clu11, Buttons.GAP_DIST, self.CP.carFingerprint))
+
       if self.CP.carFingerprint in (CAR.GENESIS_G90_2019, CAR.GENESIS_G90, CAR.K7):
         can_sends.append(hyundaican.create_mdps12(self.packer, self.frame, CS.mdps12))
 
       if self.frame % 2 == 0 and self.CP.openpilotLongitudinalControl:
         # ajouatom: calculate jerk, cb : reverse engineer from KONA EV
+        jerk = actuators.jerk
         startingJerk = self.jerkStartLimit
         jerkLimit = 5.0
         self.jerk_count += DT_CTRL
@@ -165,8 +170,8 @@ class CarController:
           jerk_l = jerkLimit
           self.jerk_count = 0
         else:
-          jerk_u = jerk_max #min(max(0.5, jerk * 2.0), jerk_max)
-          jerk_l = jerk_max #min(max(1.0, -jerk * 2.0), jerk_max)
+          jerk_u = min(max(0.5, jerk * 2.0), jerk_max)
+          jerk_l = min(max(1.0, -jerk * 2.0), jerk_max)
           cb_upper = clip(0.9 + accel * 0.2, 0, 1.2)
           cb_lower = clip(0.8 + accel * 0.2, 0, 1.2)
         

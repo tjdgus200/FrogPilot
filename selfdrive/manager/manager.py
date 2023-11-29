@@ -5,6 +5,7 @@ import signal
 import subprocess
 import sys
 import traceback
+from multiprocessing import Process
 from typing import List, Tuple, Union
 
 from cereal import log
@@ -16,7 +17,7 @@ from openpilot.common.text_window import TextWindow
 from openpilot.selfdrive.boardd.set_time import set_time
 from openpilot.system.hardware import HARDWARE, PC
 from openpilot.selfdrive.manager.helpers import unblock_stdout, write_onroad_params
-from openpilot.selfdrive.manager.process import ensure_running
+from openpilot.selfdrive.manager.process import ensure_running, launcher
 from openpilot.selfdrive.manager.process_config import managed_processes
 from openpilot.selfdrive.athena.registration import register, UNREGISTERED_DONGLE_ID
 from openpilot.system.swaglog import cloudlog, add_file_handler
@@ -128,6 +129,8 @@ def manager_cleanup() -> None:
 
 
 def manager_thread() -> None:
+
+  Process(name="road_speed_limiter", target=launcher, args=("openpilot.selfdrive.road_speed_limiter", "road_speed_limiter")).start()
   cloudlog.bind(daemon="manager")
   cloudlog.info("manager start")
   cloudlog.info({"environ": os.environ})

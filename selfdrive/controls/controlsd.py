@@ -462,6 +462,11 @@ class Controls:
     if self.sm['longitudinalPlan'].greenLight:
       self.events.add(EventName.greenLight)
 
+    #ajouatom
+    if not self.enabled and self.v_cruise_helper.softHoldActive and not self.events.contains(ET.NO_ENTRY): #ajouatom
+      print("softHold Enable button")
+      self.events.add(EventName.buttonEnable)
+
   def data_sample(self):
     """Receive data from sockets and update carState"""
 
@@ -516,7 +521,7 @@ class Controls:
   def state_transition(self, CS):
     """Compute conditional state transitions and execute actions on state transitions"""
 
-    self.v_cruise_helper.update_v_cruise(CS, self.enabled, self.is_metric, self.reverse_cruise_increase)
+    self.v_cruise_helper.update_v_cruise(CS, self.enabled, self.is_metric, self.reverse_cruise_increase, self.CC)
 
     # decrement the soft disable timer at every step, as it's reset on
     # entrance in SOFT_DISABLING state
@@ -666,7 +671,7 @@ class Controls:
       # accel PID loop
       pid_accel_limits = self.CI.get_pid_accel_limits(self.CP, CS.vEgo, self.v_cruise_helper.v_cruise_kph * CV.KPH_TO_MS)
       t_since_plan = (self.sm.frame - self.sm.rcv_frame['longitudinalPlan']) * DT_CTRL
-      actuators.accel = self.LoC.update(CC.longActive, CS, long_plan, pid_accel_limits, t_since_plan, CC)
+      actuators.accel, actuators.jerk = self.LoC.update(CC.longActive, CS, long_plan, pid_accel_limits, t_since_plan, CC)
 
       if len(long_plan.speeds):
         actuators.speed = long_plan.speeds[-1]
@@ -773,6 +778,13 @@ class Controls:
     hudControl.speedVisible = self.enabled
     hudControl.lanesVisible = self.enabled
     hudControl.leadVisible = self.sm['longitudinalPlan'].hasLead
+
+    ## ajouatom
+    hudControl.softHold = self.v_cruise_helper.softHoldActive and not self.events.contains(ET.NO_ENTRY)
+    hudControl.cruiseGap = self.CS.personality_profile + 1 
+    lead_one = self.sm['radarState'].leadOne
+    hudControl.objDist = int(lead_one.dRel) if lead_one.status else 0
+    hudControl.objRelSpd = lead_one.vRel if lead_one.status else 0
 
     hudControl.rightLaneVisible = CC.latActive
     hudControl.leftLaneVisible = CC.latActive

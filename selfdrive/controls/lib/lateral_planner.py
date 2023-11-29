@@ -80,6 +80,10 @@ class LateralPlanner:
     lateralPlan.laneWidthLeft = float(self.DH.lane_width_left)
     lateralPlan.laneWidthRight = float(self.DH.lane_width_right)
 
+    # ajouatom
+    lateralPlan.laneWidth = 3.0 #float(self.LP.lane_width)
+
+
     pm.send('lateralPlan', plan_send)
 
   def update_frogpilot_params(self, params):

@@ -53,6 +53,8 @@ class CarState(CarStateBase):
     self.cluster_speed_counter = CLUSTER_SAMPLE_RATE
 
     self.params = CarControllerParams(CP)
+    self.gear_shifter = GearShifter.drive # Gear_init for Nexo ?? unknown 21.02.23.LSW
+
     self.totalDistance = 0.0
     self.speedLimitDistance = 0
 
@@ -157,7 +159,27 @@ class CarState(CarStateBase):
     else:
       gear = cp.vl["LVR12"]["CF_Lvr_Gear"]
 
-    ret.gearShifter = self.parse_gear_shifter(self.shifter_values.get(gear))
+    if not self.CP.carFingerprint in (CAR.NEXO):
+      ret.gearShifter = self.parse_gear_shifter(self.shifter_values.get(gear))
+    else:
+      gear = cp.vl["ELECT_GEAR"]["Elect_Gear_Shifter"]
+      gear_disp = cp.vl["ELECT_GEAR"]
+
+      gear_shifter = GearShifter.unknown
+
+      if gear == 1546:  # Thank you for Neokii  # fix PolorBear 22.06.05
+        gear_shifter = GearShifter.drive
+      elif gear == 2314:
+        gear_shifter = GearShifter.neutral
+      elif gear == 2569:
+        gear_shifter = GearShifter.park
+      elif gear == 2566:
+        gear_shifter = GearShifter.reverse
+
+      if gear_shifter != GearShifter.unknown and self.gear_shifter != gear_shifter:
+        self.gear_shifter = gear_shifter
+
+      ret.gearShifter = self.gear_shifter
 
     if not self.CP.openpilotLongitudinalControl:
       aeb_src = "FCA11" if self.CP.flags & HyundaiFlags.USE_FCA.value else "SCC12"
@@ -235,10 +257,11 @@ class CarState(CarStateBase):
         self.previous_personality_profile = self.personality_profile
         self.params_memory.put_bool("PersonalityChangedViaUI", False)
 
-        self.distance_button = cp.vl_all["CLU11"]["CF_Clu_CruiseSwState"] == 3
-        if self.distance_button and not self.distance_previously_pressed:
-          self.personality_profile = (self.previous_personality_profile + 2) % 3
-        self.distance_previously_pressed = self.distance_button
+      self.distance_button = self.cruise_buttons[-1] == 3
+      if self.distance_button and not self.distance_previously_pressed:
+        self.personality_profile = (self.previous_personality_profile + 2) % 3
+        print("distance_button pressed=", self.personality_profile)
+      self.distance_previously_pressed = self.distance_button
 
       if self.personality_profile != self.previous_personality_profile:
         put_int_nonblocking("LongitudinalPersonality", self.personality_profile)

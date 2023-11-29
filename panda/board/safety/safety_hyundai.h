@@ -326,6 +326,14 @@ static int hyundai_tx_hook(CANPacket_t *to_send) {
       tx = 0;
     }
   }
+  // ajouatom: for softHold
+  else if ((addr == 0x4F1) && hyundai_longitudinal) {
+      int button = GET_BYTE(to_send, 0) & 0x7U;
+      if (button == 3 && !controls_allowed) {
+          controls_allowed = true;
+          tx = 0;
+      }
+  }
 // xxxpilot
   if(addr == 832)
     last_ts_lkas11_from_op = (tx == 0 ? 0 : microsecond_timer_get());

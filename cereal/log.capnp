@@ -2207,6 +2207,33 @@ struct Microphone {
   filteredSoundPressureWeightedDb @2 :Float32;
 }
 
+struct RoadLimitSpeed {
+    active @0 :Int16;
+    roadLimitSpeed @1 :Int16;
+    isHighway @2 :Bool;
+    camType @3 :Int16;
+    camLimitSpeedLeftDist @4 :Int16;
+    camLimitSpeed @5 :Int16;
+    sectionLimitSpeed @6 :Int16;
+    sectionLeftDist @7 :Int16;
+    sectionAvgSpeed @8 :Int16;
+    sectionLeftTime @9 :Int16;
+    sectionAdjustSpeed @10 :Bool;
+    camSpeedFactor @11 :Float32;
+
+    xTurnInfo @12 : Int32;
+    xDistToTurn @13 : Int32;
+    xSpdDist @14 : Int16;
+    xSpdLimit @15 : Int16;
+    xSignType @16 : Int16;
+    xRoadSignType @17 : Int16;
+    xRoadLimitSpeed @18 : Int16;
+    xRoadName @19 : Text;
+    xCmd @20 : Text;
+    xArg @21 : Text;
+    xIndex @22 : Int16;
+}
+
 struct Event {
   logMonoTime @0 :UInt64;  # nanoseconds
   valid @67 :Bool = true;
@@ -2295,6 +2322,8 @@ struct Event {
     # UI services
     userFlag @93 :UserFlag;
     uiDebug @102 :UIDebug;
+    # neokii
+    roadLimitSpeed @127 :RoadLimitSpeed;
 
     # *********** debug ***********
     testJoystick @52 :Joystick;

@@ -45,8 +45,8 @@ def plannerd_thread():
   lateral_planner = LateralPlanner(CP, debug=debug_mode)
 
   pm = messaging.PubMaster(['longitudinalPlan', 'lateralPlan', 'uiPlan'])
-  sm = messaging.SubMaster(['carControl', 'carState', 'controlsState', 'radarState', 'modelV2'],
-                           poll=['radarState', 'modelV2'], ignore_avg_freq=['radarState'])
+  sm = messaging.SubMaster(['carControl', 'carState', 'controlsState', 'radarState', 'modelV2', 'roadLimitSpeed'],
+                           poll=['radarState', 'modelV2', 'roadLimitSpeed'], ignore_avg_freq=['radarState'])
 
   lateral_planner.update_frogpilot_params(params)
   longitudinal_planner.update_frogpilot_params()

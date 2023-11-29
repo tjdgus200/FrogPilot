@@ -13,7 +13,7 @@ def long_control_state_trans(CP, active, long_control_state, v_ego, v_target,
   # Ignore cruise standstill if car has a gas interceptor
   cruise_standstill = cruise_standstill and not CP.enableGasInterceptor
   accelerating = v_target_1sec > (v_target + 0.01)
-  planned_stop = (v_target < CP.vEgoStopping and ## apilot: ³»¸®¸·, ½ÅÈ£Á¤Áö½Ã ÁúÁú °¡´Â Çö»ó... v_targetÀ¸·Î º¸¸é.. ±ŞÁ¤Áö, v_ego¸¦ º¸¸é ÁúÁú°¨..
+  planned_stop = (v_target < CP.vEgoStopping and ## apilot: ë‚´ë¦¬ë§‰, ì‹ í˜¸ì •ì§€ì‹œ ì§ˆì§ˆ ê°€ëŠ” í˜„ìƒ... v_targetìœ¼ë¡œ ë³´ë©´.. ê¸‰ì •ì§€, v_egoë¥¼ ë³´ë©´ ì§ˆì§ˆê°..
                   v_target_1sec < CP.vEgoStopping and
                   not accelerating)
   stay_stopped = (v_ego < CP.vEgoStopping and
@@ -32,7 +32,7 @@ def long_control_state_trans(CP, active, long_control_state, v_ego, v_target,
   else:
     if long_control_state in (LongCtrlState.off, LongCtrlState.pid):
       long_control_state = LongCtrlState.pid
-      if stopping_condition and a_target_now > -0.8:  ### pidÃâ·ÂÀÌ ±ŞÁ¤Áö(-accel) »óÅÂ¿¡¼­ stoppingÀ¸·Î µé¾î°¡¸é... Â÷·®ÀÌ ³Ê¹« ±ŞÇÏ°Ô ¼¶.. ±â´Ù·Áº¸ÀÚ.... ½ÃÇè 230911
+      if stopping_condition and a_target_now > -0.8:  ### pidì¶œë ¥ì´ ê¸‰ì •ì§€(-accel) ìƒíƒœì—ì„œ stoppingìœ¼ë¡œ ë“¤ì–´ê°€ë©´... ì°¨ëŸ‰ì´ ë„ˆë¬´ ê¸‰í•˜ê²Œ ì„¬.. ê¸°ë‹¤ë ¤ë³´ì.... ì‹œí—˜ 230911
         long_control_state = LongCtrlState.stopping
 
     elif long_control_state == LongCtrlState.stopping:
@@ -49,7 +49,7 @@ def long_control_state_trans(CP, active, long_control_state, v_ego, v_target,
 
     if softHold:
       long_control_state = LongCtrlState.stopping
-  return long_control_state
+  return long_control_state, planned_stop
 
 
 class LongControl:
@@ -75,6 +75,7 @@ class LongControl:
     if len(speeds) == CONTROL_N:
       v_target_now = interp(t_since_plan, ModelConstants.T_IDXS[:CONTROL_N], speeds)
       a_target_now = interp(t_since_plan, ModelConstants.T_IDXS[:CONTROL_N], long_plan.accels)
+      j_target = long_plan.jerks[0]
 
       v_target_lower = interp(self.CP.longitudinalActuatorDelayLowerBound + t_since_plan, ModelConstants.T_IDXS[:CONTROL_N], speeds)
       a_target_lower = 2 * (v_target_lower - v_target_now) / self.CP.longitudinalActuatorDelayLowerBound - a_target_now
@@ -91,13 +92,14 @@ class LongControl:
       v_target_now = 0.0
       v_target_1sec = 0.0
       a_target = 0.0
+      j_target = 0.0
 
     self.pid.neg_limit = accel_limits[0]
     self.pid.pos_limit = accel_limits[1]
 
     output_accel = self.last_output_accel
 
-    self.long_control_state = long_control_state_trans(self.CP, active, self.long_control_state, CS.vEgo,
+    self.long_control_state, planned_stop = long_control_state_trans(self.CP, active, self.long_control_state, CS.vEgo,
                                                        v_target, v_target_1sec, CS.brakePressed,
                                                        CS.cruiseState.standstill, CC.hudControl.softHold, a_target_now)
 
@@ -135,4 +137,4 @@ class LongControl:
 
     self.last_output_accel = clip(output_accel, accel_limits[0], accel_limits[1])
 
-    return self.last_output_accel
+    return self.last_output_accel, -0.5 if planned_stop else j_target

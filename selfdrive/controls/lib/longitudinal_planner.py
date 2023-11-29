@@ -176,7 +176,7 @@ class LongitudinalPlanner:
       self.a_desired = clip(sm['carState'].aEgo, accel_limits[0], accel_limits[1])
       
       #ajouatom
-      self.mpc.prev_a = np.full(N+1, self.a_desired) ## mpc������ prev_a�� �����Ͽ� constraint�۵���.... pid off -> on�ÿ��� ���� constraint�� �۵����� �ʾƼ� ����־...
+      self.mpc.prev_a = np.full(N+1, self.a_desired) ## mpc에서는 prev_a를 참고하여 constraint작동함.... pid off -> on시에는 현재 constraint가 작동하지 않아서 집어넣어봄...
       accel_limits_turns[0] = accel_limits_turns[0] = 0.0
 
     # Prevent divergence, smooth in current v_ego
@@ -220,7 +220,9 @@ class LongitudinalPlanner:
 
     # Pfeiferj's Speed Limit Controller
     if self.speed_limit_controller:
-      SpeedLimitController.update_current_max_velocity(carstate.cruiseState.speedLimit, v_cruise)
+      speed_limit = min(carstate.cruiseState.speedLimit, self.update_speed_apilot(sm, v_cruise))
+      SpeedLimitController.update_current_max_velocity(speed_limit, v_cruise)
+      #SpeedLimitController.update_current_max_velocity(carstate.cruiseState.speedLimit, v_cruise)
       desired_speed_limit = SpeedLimitController.desired_speed_limit
 
       # Override SLC upon gas pedal press and reset upon brake/cancel button
@@ -356,3 +358,89 @@ class LongitudinalPlanner:
     if self.vision_turn_controller:
       self.curve_sensitivity = self.params.get_int("CurveSensitivity") / 100
       self.turn_aggressiveness = self.params.get_int("TurnAggressiveness") / 100
+
+
+
+## ajouatom
+  def decelerate_for_speed_camera(self, safe_speed, safe_dist, current_speed, decel_rate, left_dist):
+
+    if left_dist <= safe_dist:
+      return safe_speed
+    temp = safe_speed*safe_speed + 2*(left_dist - safe_dist)/decel_rate
+    dV = (-safe_speed + math.sqrt(temp)) * decel_rate
+    apply_speed = min(250 , safe_speed + dV)
+    min_speed = current_speed - decel_rate * 2 * DT_CTRL
+    apply_speed = max(apply_speed, min_speed)
+    return apply_speed
+
+  def update_speed_apilot(self, sm, v_cruise):
+    CS = sm['carState']
+    v_ego = CS.vEgoCluster
+    msg = self.roadLimitSpeed = sm['roadLimitSpeed']
+
+    active = msg.active
+    self.ndaActive = 1 if active > 0 else 0
+    roadSpeed = clip(30, msg.roadLimitSpeed, 150.0)
+    camType = int(msg.camType)
+    xSignType = msg.xSignType
+
+    isSpeedBump = False
+    isSectionLimit = False
+    safeSpeed = 0
+    leftDist = 0
+    speedLimitType = 0
+    safeDist = 0
+    
+    self.autoNaviSpeedBumpSpeed = 35
+    self.autoNaviSpeedBumpTime = 1.0
+    self.autoNaviSpeedCtrlEnd = 7.0
+    self.autoNaviSpeedSafetyFactor = 1.05
+    self.autoNaviSpeedDecelRate = 1.0
+    self.autoNaviSpeedCtrl = 2
+    
+    if camType == 22 or xSignType == 22:
+      safeSpeed = self.autoNaviSpeedBumpSpeed
+      isSpeedBump = True
+
+    if msg.xSpdLimit > 0 and msg.xSpdDist > 0:
+      safeSpeed = msg.xSpdLimit if safeSpeed <= 0 else safeSpeed
+      leftDist = msg.xSpdDist
+      isSectionLimit = True if xSignType==165 or leftDist > 3000 or camType == 4 else False
+      isSectionLimit = False if leftDist < 50 else isSectionLimit
+      speedLimitType = 2 if not isSectionLimit else 3
+    elif msg.camLimitSpeed > 0 and msg.camLimitSpeedLeftDist>0:
+      safeSpeed = msg.camLimitSpeed
+      leftDist = msg.camLimitSpeedLeftDist
+      isSectionLimit = True if leftDist > 3000 or camType == 4 else False
+      isSectionLimit = False if leftDist < 50 else isSectionLimit
+      speedLimitType = 2 if not isSectionLimit else 3
+    elif CS.speedLimit > 0 and CS.speedLimitDistance > 0 and self.autoNaviSpeedCtrl >= 2:
+      safeSpeed = CS.speedLimit
+      leftDist = CS.speedLimitDistance
+      speedLimitType = 2 if leftDist > 1 else 3
+
+    if isSpeedBump:
+      speedLimitType = 1 
+      safeDist = self.autoNaviSpeedBumpTime * v_ego
+    elif safeSpeed>0 and leftDist>0:
+      safeDist = self.autoNaviSpeedCtrlEnd * v_ego
+
+    safeSpeed *= self.autoNaviSpeedSafetyFactor
+
+    log = ""
+    if isSectionLimit:
+      applySpeed = safeSpeed
+    elif leftDist > 0 and safeSpeed > 0 and safeDist > 0:
+      applySpeed = self.decelerate_for_speed_camera(safeSpeed/3.6, safeDist, v_cruise, self.autoNaviSpeedDecelRate, leftDist) * 3.6
+    else:
+      applySpeed = 255
+      
+    #log = "{:.1f}<{:.1f}/{:.1f} B{} A{:.1f}/{:.1f} N{:.1f}/{:.1f} C{:.1f}/{:.1f} V{:.1f}/{:.1f} ".format(
+    #              applySpeed, safeSpeed, leftDist, 1 if isSpeedBump else 0, 
+    #              msg.xSpdLimit, msg.xSpdDist,
+    #              msg.camLimitSpeed, msg.camLimitSpeedLeftDist,
+    #              CS.speedLimit, CS.speedLimitDistance,
+    #              apTbtSpeed, apTbtDistance)
+
+    #controls.debugText1 = log
+    return applySpeed * CV.KPH_TO_MS #, roadSpeed, leftDist, speedLimitType
