@@ -5,6 +5,8 @@ from openpilot.common.conversions import Conversions as CV
 from openpilot.common.numpy_fast import clip, interp
 from openpilot.common.realtime import DT_MDL
 from openpilot.selfdrive.modeld.constants import ModelConstants
+from openpilot.common.params import Params
+
 
 # WARNING: this value was determined based on the model's training distribution,
 #          model predictions above this speed can be unpredictable
@@ -226,7 +228,10 @@ class VCruiseHelper:
           v_cruise_kph = button_kph
       else:
         if button_type == ButtonType.accelCruise:
-          v_cruise_kph = self.v_cruise_speed_up(v_cruise_kph, 30)
+          if self.softHoldActive:
+            self.softHoldActive = False
+          else:
+            v_cruise_kph = self.v_cruise_speed_up(v_cruise_kph, 30)
         elif button_type == ButtonType.decelCruise:
           if v_cruise_kph <= v_ego_kph_set:
             v_cruise_kph = button_kph
@@ -237,12 +242,10 @@ class VCruiseHelper:
       self.softHoldActive = False
 
     if gas_tok:
-      print("gasTok active")
       v_cruise_kph = self.v_cruise_speed_up(v_cruise_kph, 30)
     elif self.gas_pressed_count > 0 and v_ego_kph_set > v_cruise_kph:
       v_cruise_kph = v_ego_kph_set
-    elif brake_hold_set:
-      print("softHold Active.....")
+    elif brake_hold_set and CS.vEgo < 0.1 and Params().get_int("SoftHoldMode"):
       self.softHoldActive = True
 
     v_cruise_kph = clip(v_cruise_kph, V_CRUISE_MIN, V_CRUISE_MAX)

@@ -11,6 +11,7 @@
 #include <QMouseEvent>
 
 #include "common/timing.h"
+#include "selfdrive/ui/paint.h"
 #include "selfdrive/ui/qt/util.h"
 #ifdef ENABLE_MAPS
 #include "selfdrive/ui/qt/maps/map_helpers.h"
@@ -199,7 +200,8 @@ void OnroadWindow::offroadTransition(bool offroad) {
   }
 #endif
 
-  alerts->updateAlert({});
+  //alerts->updateAlert({});
+  ui_update_alert({});
 }
 
 void OnroadWindow::primeChanged(bool prime) {
@@ -799,6 +801,7 @@ void AnnotatedCameraWidget::initializeGL() {
   qInfo() << "OpenGL renderer:" << QString((const char*)glGetString(GL_RENDERER));
   qInfo() << "OpenGL language version:" << QString((const char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
 
+  ui_nvg_init(uiState());
   prev_draw_t = millis_since_boot();
   setBackgroundColor(bg_colors[STATUS_DISENGAGED]);
 }
@@ -1194,9 +1197,9 @@ void AnnotatedCameraWidget::paintEvent(QPaintEvent *event) {
         }
       }
 
-      drawLaneLines(painter, s);
+      if(s->show_mode == 0) drawLaneLines(painter, s);
 
-      if (s->scene.longitudinal_control) {
+      if (s->show_mode == 0 && s->scene.longitudinal_control) {
         auto lead_one = radar_state.getLeadOne();
         auto lead_two = radar_state.getLeadTwo();
         if (lead_one.getStatus()) {
@@ -1209,17 +1212,20 @@ void AnnotatedCameraWidget::paintEvent(QPaintEvent *event) {
     }
 
     // DMoji
-    if (!hideBottomIcons && (sm.rcv_frame("driverStateV2") > s->scene.started_frame) && !muteDM) {
+    if (s->show_dm_info == 1 && !hideBottomIcons && (sm.rcv_frame("driverStateV2") > s->scene.started_frame) && !muteDM) {
       update_dmonitoring(s, sm["driverStateV2"].getDriverStateV2(), dm_fade_state, rightHandDM);
       drawDriverState(painter, s);
     }
 
-    drawHud(painter);
+    if(s->show_mode == 0) drawHud(painter);
+    else ui_draw(s, width(), height());
   }
 
   double cur_draw_t = millis_since_boot();
   double dt = cur_draw_t - prev_draw_t;
   fps = fps_filter.update(1. / dt * 1000);
+  extern int g_fps;
+  g_fps = fps;
   if (fps < 15) {
     LOGW("slow frame rate: %.2f fps", fps);
   }
@@ -1230,11 +1236,11 @@ void AnnotatedCameraWidget::paintEvent(QPaintEvent *event) {
   auto m = msg.initEvent().initUiDebug();
   m.setDrawTimeMillis(cur_draw_t - start_draw_t);
   pm->send("uiDebug", msg);
+  ui_update_params(uiState());
 }
 
 void AnnotatedCameraWidget::showEvent(QShowEvent *event) {
   CameraWidget::showEvent(event);
-
   ui_update_params(uiState());
   prev_draw_t = millis_since_boot();
 }

@@ -7,6 +7,7 @@ from openpilot.selfdrive.car import apply_driver_steer_torque_limits, common_fau
 from openpilot.selfdrive.car.hyundai import hyundaicanfd, hyundaican
 from openpilot.selfdrive.car.hyundai.hyundaicanfd import CanBus
 from openpilot.selfdrive.car.hyundai.values import HyundaiFlags, Buttons, CarControllerParams, CANFD_CAR, CAR
+from openpilot.common.params import Params
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
 LongCtrlState = car.CarControl.Actuators.LongControlState
@@ -65,6 +66,7 @@ class CarController:
     actuators = CC.actuators
     hud_control = CC.hudControl
 
+    self.softHoldMode = Params().get_int("SoftHoldMode")
     # steering torque
     new_steer = int(round(actuators.steer * self.params.STEER_MAX))
     apply_steer = apply_driver_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, self.params)
@@ -147,7 +149,6 @@ class CarController:
       if not self.CP.openpilotLongitudinalControl:
         can_sends.extend(self.create_button_messages(CC, CS, use_clu11=True))
       elif not CC.enabled and hud_control.softHold: ## ajouatom: for softhold
-        print("carController softHold Enable send....")
         can_sends.append(hyundaican.create_clu11_button(self.packer, self.frame, CS.clu11, Buttons.GAP_DIST, self.CP.carFingerprint))
 
       if self.CP.carFingerprint in (CAR.GENESIS_G90_2019, CAR.GENESIS_G90, CAR.K7):

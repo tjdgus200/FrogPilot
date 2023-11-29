@@ -11,6 +11,7 @@
 #include <QFuture>
 #include <QPolygonF>
 #include <QTransform>
+#include "nanovg.h"
 
 #include "cereal/messaging/messaging.h"
 #include "common/modeldata.h"
@@ -125,6 +126,10 @@ static std::map<cereal::ControlsState::AlertStatus, QColor> alert_colors = {
   {cereal::ControlsState::AlertStatus::FROGPILOT, QColor(0x17, 0x86, 0x44, 0xf1)},
 };
 
+// ajouatom
+typedef struct {
+    float x, y, d, v, y_rel, v_lat;
+} lead_vertex_data;
 typedef struct UIScene {
   bool calibration_valid = false;
   bool calibration_wide_valid  = false;
@@ -139,10 +144,15 @@ typedef struct UIScene {
   QPolygonF track_vertices;
   QPolygonF lane_line_vertices[4];
   QPolygonF road_edge_vertices[2];
+  QPolygonF lane_barrier_vertices[2];
+  QPointF path_end_left_vertices[2];
+  QPointF path_end_right_vertices[2];
+  float max_distance;
 
   // lead
   QPointF lead_vertices[2];
-
+  bool lead_radar[2] = {false, false};
+  std::vector<lead_vertex_data> lead_vertices_side;
   // DMoji state
   float driver_pose_vals[3];
   float driver_pose_diff[3];
@@ -232,6 +242,8 @@ public:
   inline bool hasPrime() const { return prime_type != PrimeType::UNKNOWN && prime_type != PrimeType::NONE; }
 
   int fb_w = 0, fb_h = 0;
+  NVGcontext *vg;
+  std::map<std::string, int> images;
 
   std::unique_ptr<SubMaster> sm;
 
@@ -241,6 +253,30 @@ public:
   QString language;
 
   QTransform car_space_transform;
+  bool show_debug = false;
+  int show_datetime = 1;
+  bool show_tpms = true;
+  int show_accel = 2;
+  bool show_steer_rotate = true;
+  int show_path_end = 1;
+  int show_steer_mode = 0;
+  bool show_device_stat = true;
+  bool show_conn_info = true;
+  int  show_lane_info = 2;
+  bool show_blind_spot = true;
+  int show_gap_info = 1;
+  int show_dm_info = -1;
+  int show_radar_info = 0;
+  int show_mode = 1;
+  float show_z_offset = 1.22;
+  int show_path_mode = 0;
+  int show_path_color = 14;
+  int show_path_mode_cruise_off = 0;
+  int show_path_color_cruise_off = 14;
+  int show_path_mode_lane = 0;
+  int show_path_color_lane = 14;
+  float show_path_width = 1.0;
+  int show_plot_mode = 0;
 
 signals:
   void uiUpdate(const UIState &s);

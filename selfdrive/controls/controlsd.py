@@ -464,7 +464,6 @@ class Controls:
 
     #ajouatom
     if not self.enabled and self.v_cruise_helper.softHoldActive and not self.events.contains(ET.NO_ENTRY): #ajouatom
-      print("softHold Enable button")
       self.events.add(EventName.buttonEnable)
 
   def data_sample(self):

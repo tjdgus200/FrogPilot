@@ -30,6 +30,7 @@ static bool calib_frame_to_full_frame(const UIState *s, float in_x, float in_y, 
   QPointF point = s->car_space_transform.map(QPointF{KEp.v[0] / KEp.v[2], KEp.v[1] / KEp.v[2]});
   if (clip_region.contains(point)) {
     *out = point;
+    if(std::isnan(point.x()) || std::isnan(point.y())) return false;
     return true;
   }
   return false;
@@ -45,38 +46,347 @@ int get_path_length_idx(const cereal::XYZTData::Reader &line, const float path_h
 }
 
 void update_leads(UIState *s, const cereal::RadarState::Reader &radar_state, const cereal::XYZTData::Reader &line) {
+  float max_distance = s->scene.max_distance;
+  int idx = get_path_length_idx(line, max_distance);
+  float y = line.getY()[idx];
+  float z = line.getZ()[idx];
   for (int i = 0; i < 2; ++i) {
     auto lead_data = (i == 0) ? radar_state.getLeadOne() : radar_state.getLeadTwo();
     if (lead_data.getStatus()) {
-      float z = line.getZ()[get_path_length_idx(line, lead_data.getDRel())];
+      //float z = line.getZ()[get_path_length_idx(line, lead_data.getDRel())];
+      z = line.getZ()[get_path_length_idx(line, lead_data.getDRel())];
       calib_frame_to_full_frame(s, lead_data.getDRel(), -lead_data.getYRel(), z + 1.22, &s->scene.lead_vertices[i]);
+      //calib_frame_to_full_frame(s, lead_data.getDRel(), (i == 0) ? lead_one.getY()[0] : -lead_data.getYRel(), z + 1.22, &s->scene.lead_vertices[i]);
+      s->scene.lead_radar[i] = lead_data.getRadar();
+      max_distance = lead_data.getDRel();
+      y = -lead_data.getYRel();
     }
+    else
+      s->scene.lead_radar[i] = false;
+      
+    calib_frame_to_full_frame(s, max_distance, y - 1.2, z + 1.22, &s->scene.path_end_left_vertices[i]);
+    calib_frame_to_full_frame(s, max_distance, y + 1.2, z + 1.22, &s->scene.path_end_right_vertices[i]);
+  }
+
+  s->scene.lead_vertices_side.clear();
+  for (auto const& rs : { radar_state.getLeadsLeft(), radar_state.getLeadsRight(), radar_state.getLeadsCenter() }) {
+      for (auto const& l : rs) {
+          lead_vertex_data vd;
+          QPointF vtmp;
+          z = line.getZ()[get_path_length_idx(line, l.getDRel())];
+          calib_frame_to_full_frame(s, l.getDRel(), -l.getYRel(), z + 0.61, &vtmp);
+          vd.x = vtmp.x();
+          vd.y = vtmp.y();
+          vd.d = l.getDRel();
+          vd.v = l.getVLeadK();
+          vd.y_rel = l.getYRel();
+          vd.v_lat = l.getVLat();
+          s->scene.lead_vertices_side.push_back(vd);
+      }
   }
 }
+template <class T>
+float interp(float x, std::initializer_list<T> x_list, std::initializer_list<T> y_list, bool extrapolate)
+{
+    std::vector<T> xData(x_list);
+    std::vector<T> yData(y_list);
+    int size = xData.size();
 
-void update_line_data(const UIState *s, const cereal::XYZTData::Reader &line,
-                      float y_off, float z_off, QPolygonF *pvd, int max_idx, bool allow_invert=true) {
-  const auto line_x = line.getX(), line_y = line.getY(), line_z = line.getZ();
-  QPolygonF left_points, right_points;
-  left_points.reserve(max_idx + 1);
-  right_points.reserve(max_idx + 1);
-
-  for (int i = 0; i <= max_idx; i++) {
-    // highly negative x positions  are drawn above the frame and cause flickering, clip to zy plane of camera
-    if (line_x[i] < 0) continue;
-    QPointF left, right;
-    bool l = calib_frame_to_full_frame(s, line_x[i], line_y[i] - y_off, line_z[i] + z_off, &left);
-    bool r = calib_frame_to_full_frame(s, line_x[i], line_y[i] + y_off, line_z[i] + z_off, &right);
-    if (l && r) {
-      // For wider lines the drawn polygon will "invert" when going over a hill and cause artifacts
-      if (!allow_invert && left_points.size() && left.y() > left_points.back().y()) {
-        continue;
-      }
-      left_points.push_back(left);
-      right_points.push_front(right);
+    int i = 0;
+    if (x >= xData[size - 2]) {
+        i = size - 2;
     }
-  }
-  *pvd = left_points + right_points;
+    else {
+        while (x > xData[i + 1]) i++;
+    }
+    T xL = xData[i], yL = yData[i], xR = xData[i + 1], yR = yData[i + 1];
+    if (!extrapolate) {
+        if (x < xL) yR = yL;
+        if (x > xR) yL = yR;
+    }
+
+    T dydx = (yR - yL) / (xR - xL);
+    return yL + dydx * (x - xL);
+}
+template <class T>
+float interp(float x, const T* x_list, const T* y_list, size_t size, bool extrapolate)
+{
+    int i = 0;
+    if (x >= x_list[size - 2]) {
+        i = size - 2;
+    }
+    else {
+        while (x > x_list[i + 1]) i++;
+    }
+    T xL = x_list[i], yL = y_list[i], xR = x_list[i + 1], yR = y_list[i + 1];
+    if (!extrapolate) {
+        if (x < xL) yR = yL;
+        if (x > xR) yL = yR;
+    }
+
+    T dydx = (yR - yL) / (xR - xL);
+    return yL + dydx * (x - xL);
+}
+void update_line_data(const UIState* s, const cereal::XYZTData::Reader& line,
+    float y_off, float z_off_left, float z_off_right, QPolygonF* pvd, int max_idx, bool allow_invert = true, float y_shift = 0.0) {
+    const auto line_x = line.getX(), line_y = line.getY(), line_z = line.getZ();
+    QPolygonF left_points, right_points;
+    left_points.reserve(max_idx + 1);
+    right_points.reserve(max_idx + 1);
+
+    //printf("%.1f,%.1f,%.1f\n", line_x[0], line_y[0], line_z[0]);
+
+    for (int i = 0; i <= max_idx; i++) {
+        // highly negative x positions  are drawn above the frame and cause flickering, clip to zy plane of camera
+        if (line_x[i] < 0) continue;
+        QPointF left, right;
+        bool l = calib_frame_to_full_frame(s, line_x[i], line_y[i] - y_off + y_shift, line_z[i] + z_off_left, &left);
+        bool r = calib_frame_to_full_frame(s, line_x[i], line_y[i] + y_off + y_shift, line_z[i] + z_off_right, &right);
+        if (l && r) {
+            // For wider lines the drawn polygon will "invert" when going over a hill and cause artifacts
+            if (!allow_invert && left_points.size() && left.y() > left_points.back().y()) {
+                continue;
+            }
+            left_points.push_back(left);
+            right_points.push_front(right);
+        }
+    }
+    *pvd = left_points + right_points;
+}
+void update_line_data2(const UIState* s, const cereal::XYZTData::Reader& line,
+    float width_apply, float z_off_start, float z_off_end, QPolygonF* pvd, int max_idx, bool allow_invert = true) {
+    const auto line_x = line.getX(), line_y = line.getY(), line_z = line.getZ();
+    QPolygonF left_points, right_points;
+    left_points.reserve(max_idx + 1);
+    right_points.reserve(max_idx + 1);
+
+    for (int i = 0; i <= max_idx; i++) {
+        // highly negative x positions  are drawn above the frame and cause flickering, clip to zy plane of camera
+        if (line_x[i] < 0) continue;
+        float z_off = interp<float>((float)line_x[i], { 0.0f, 100.0 }, { z_off_start, z_off_end }, false);
+        float y_off = interp<float>(z_off, { -3.0f, 0.0f, 3.0f }, { 1.5f, 0.5f, 1.5f }, false);
+        y_off *= width_apply;
+
+        QPointF left, right;
+        bool l = calib_frame_to_full_frame(s, line_x[i], line_y[i] - y_off, line_z[i] + z_off, &left);
+        bool r = calib_frame_to_full_frame(s, line_x[i], line_y[i] + y_off, line_z[i] + z_off, &right);
+        if (l && r) {
+            // For wider lines the drawn polygon will "invert" when going over a hill and cause artifacts
+            if (!allow_invert && left_points.size() && left.y() > left_points.back().y()) {
+                continue;
+            }
+            left_points.push_back(left);
+            right_points.push_front(right);
+        }
+    }
+    *pvd = left_points + right_points;
+}
+void update_line_data_dist(const UIState* s, const cereal::XYZTData::Reader& line,
+    float width_apply, float z_off_start, float z_off_end, QPolygonF* pvd, float max_dist, bool allow_invert = true) {
+    const auto line_x = line.getX(), line_y = line.getY(), line_z = line.getZ();
+    QPolygonF left_points, right_points;
+    left_points.reserve(40 + 1);
+    right_points.reserve(40 + 1);
+    float idxs[33], line_xs[33], line_ys[33], line_zs[33];
+    float   x_prev = 0;
+    for (int i = 0; i < 33; i++) {
+        idxs[i] = (float)i;
+        if (i>0 && line_x[i] < x_prev) {
+            //printf("plan data error.\n");
+            line_xs[i] = x_prev;
+        }
+        else line_xs[i] = line_x[i];
+        x_prev = line_xs[i];
+        line_ys[i] = line_y[i];
+        line_zs[i] = line_z[i]; 
+    }
+
+    float   dist = 2.0, dist_dt = 1.;
+    bool    exit = false;
+    //printf("\ndist = ");
+    for (int i = 0; !exit; i++, dist = dist + dist*0.15) {
+        dist_dt += (i*0.05);
+        if (dist >= max_dist) {
+            dist = max_dist;
+            exit = true;
+        }
+        //printf("%.0f ", dist);
+        float z_off = interp<float>(dist, { 0.0f, 100.0 }, { z_off_start, z_off_end }, false);
+        float y_off = interp<float>(z_off, { -3.0f, 0.0f, 3.0f }, { 1.5f, 0.5f, 1.5f }, false);
+        y_off *= width_apply;
+        float  idx = interp<float>(dist, line_xs, idxs, 33, false);
+        if (idx >= 33) break;
+        float line_y1 = interp<float>(idx, idxs, line_ys, 33, false);
+        float line_z1 = interp<float>(idx, idxs, line_zs, 33, false);
+
+        QPointF left, right;
+        bool l = calib_frame_to_full_frame(s, dist, line_y1 - y_off, line_z1 + z_off, &left);
+        bool r = calib_frame_to_full_frame(s, dist, line_y1 + y_off, line_z1 + z_off, &right);
+        if (l && r) {
+            // For wider lines the drawn polygon will "invert" when going over a hill and cause artifacts
+            if (!allow_invert && left_points.size() && left.y() > left_points.back().y()) {
+                //printf("invert...\n");
+                continue;
+            }
+            left_points.push_back(left);
+            right_points.push_front(right);
+        }
+        //else printf("range out..\n");
+    }
+    *pvd = left_points + right_points;
+}
+float dist_function(float t, float max_dist) {
+    float dist = 3.0 * pow(1.2, t);
+    return (dist >= max_dist)? max_dist: dist;
+}
+
+void update_line_data_dist3(const UIState* s, const cereal::XYZTData::Reader& line,
+    float width_apply, float z_off_start, float z_off_end, QPolygonF* pvd, float max_dist, bool allow_invert = true) {
+    const auto line_x = line.getX(), line_y = line.getY(), line_z = line.getZ();
+    QPolygonF left_points, right_points;
+    left_points.reserve(40 + 1);
+    right_points.reserve(40 + 1);
+
+
+    // comma의 데이터는 x,y,z 점들로 이루어짐. 
+    float idxs[33], line_xs[33], line_ys[33], line_zs[33];
+    float   x_prev = 0;
+    for (int i = 0; i < 33; i++) {
+        idxs[i] = (float)i;
+        if (i > 0 && line_x[i] < x_prev) {
+            //printf("plan data error.\n");
+            line_xs[i] = x_prev;
+        }
+        else line_xs[i] = line_x[i];
+        x_prev = line_xs[i];
+        line_ys[i] = line_y[i];
+        line_zs[i] = line_z[i];
+    }
+    SubMaster& sm = *(s->sm);
+    auto lp = sm["lateralPlan"].getLateralPlan();
+    //int show_path_color = (lp.getUseLaneLines()) ? s->show_path_color_lane : s->show_path_color;
+    int show_path_mode = (lp.getUseLaneLines()) ? s->show_path_mode_lane : s->show_path_mode;
+    auto controls_state = sm["controlsState"].getControlsState();
+    bool longActive = controls_state.getEnabled();
+    if (longActive == false) {
+        show_path_mode = s->show_path_mode_cruise_off;
+    }
+    auto    car_state = sm["carState"].getCarState();
+
+    //float   accel = car_state.getAEgo();
+    float   v_ego = car_state.getVEgoCluster();
+    float   v_ego_kph = v_ego * MS_TO_KPH;
+
+    static float    pos_t = 0.0;
+    float           pos_t_start = 0.0;
+    float           pos_t_max = 24.0;
+
+    //v_ego_kph = 60.;
+    float   dt = (v_ego_kph * 0.01);
+    float   dt_max = 1.0;
+    if (show_path_mode >= 10) dt_max = 0.6;
+    if (dt > dt_max) dt = dt_max;
+    else {
+        if (v_ego_kph < 1) pos_t = 4.0;
+        else if (dt < 0.2) dt = 0.2;
+    }
+    pos_t += dt;
+    if (pos_t > pos_t_max) pos_t = pos_t_start + (pos_t - pos_t_max); 
+
+    float   d, t;
+    float   draw_t[50];
+    int     draw_t_n = 0;
+    float   dist = 0.0;
+
+    if (show_path_mode == 9) {
+        draw_t[draw_t_n++] = pos_t;
+        d = 3.0;
+        t = draw_t[draw_t_n - 1];
+        draw_t[draw_t_n++] = ((t + d) > pos_t_max) ? (t + d) - pos_t_max : t + d;
+        d = 10.0;
+        t = draw_t[draw_t_n - 1];
+        draw_t[draw_t_n++] = ((t + d) > pos_t_max) ? (t + d) - pos_t_max : t + d;
+        d = 3.0;
+        t = draw_t[draw_t_n - 1];
+        draw_t[draw_t_n++] = ((t + d) > pos_t_max) ? (t + d) - pos_t_max : t + d;
+    }
+    else if (show_path_mode == 10) {
+        draw_t[draw_t_n++] = pos_t;
+        for (int i = 0; i < 7; i++) {
+            d = 3.0;
+            t = draw_t[draw_t_n - 1];
+            draw_t[draw_t_n++] = ((t + d) > pos_t_max) ? (t + d) - pos_t_max : t + d;
+        }
+    }
+    else if (show_path_mode == 11) {
+        draw_t[draw_t_n++] = pos_t;
+        for (int i = 0; i < 5; i++) {
+            d = 3.0;
+            t = draw_t[draw_t_n - 1];
+            draw_t[draw_t_n++] = ((t + d) > pos_t_max) ? (t + d) - pos_t_max : t + d;
+        }
+    }
+    else if (show_path_mode == 12) {
+        draw_t[draw_t_n++] = pos_t;
+        int n = (int)(v_ego_kph * 0.058 - 0.5);
+        if (n < 0) n = 0;
+        else if (n > 7) n = 7;
+        
+        for (int i = 0; i < n; i++) {
+            d = 3.0;
+            t = draw_t[draw_t_n - 1];
+            draw_t[draw_t_n++] = ((t + d) > pos_t_max) ? (t + d) - pos_t_max : t + d;
+        }
+    }
+
+    int     draw_t_idx = 0;
+    float   temp = draw_t[0];
+    for (int i = 0; i < draw_t_n; i++) {
+        if (draw_t[i] < temp) {
+            draw_t_idx = i;
+            temp = draw_t[i];
+        }
+    }
+    bool exit = false;
+    for (int i = 0; i <= draw_t_n && !exit; i++) {
+        if(i==draw_t_n) exit = true;
+        else {
+            t = draw_t[draw_t_idx];
+            draw_t_idx = (draw_t_idx + 1) % draw_t_n;
+            if (t < 3.0) continue;
+            if (dist_function(t, max_dist) == max_dist) exit = true;
+        }
+        for (int j = 2; j >= 0; j--) {
+            if (exit) dist = dist_function(100, max_dist);
+            else dist = dist_function(t - j * 1.0, max_dist);
+            float z_off = interp<float>(dist, { 0.0f, 100.0 }, { z_off_start, z_off_end }, false);
+            float y_off = interp<float>(z_off, { -3.0f, 0.0f, 3.0f }, { 1.5f, 0.5f, 1.5f }, false);
+            y_off *= width_apply;
+            float  idx = interp<float>(dist, line_xs, idxs, 33, false);
+            if (idx >= 33) {
+                printf("index... %.1f\n", idx);
+                break;
+            }
+            float line_y1 = interp<float>(idx, idxs, line_ys, 33, false);
+            float line_z1 = interp<float>(idx, idxs, line_zs, 33, false);
+
+            QPointF left, right;
+            bool l = calib_frame_to_full_frame(s, dist, line_y1 - y_off, line_z1 + z_off, &left);
+            bool r = calib_frame_to_full_frame(s, dist, line_y1 + y_off, line_z1 + z_off, &right);
+            if (l && r) {
+                // For wider lines the drawn polygon will "invert" when going over a hill and cause artifacts
+                //if (!allow_invert && left_points.size() && left.y() > left_points.back().y()) {
+                //    printf("iiiii dist=%.1f, t=%.1f, i=%d, j=%d\n", dist, t, i,j);
+                    //continue;
+                //}
+                left_points.push_back(left);
+                right_points.push_front(right);
+            }
+            //else printf("calib_frame_to_full_frame.... error\n");
+            if (exit) break;
+        }
+    }
+    *pvd = left_points + right_points;
 }
 
 void update_model(UIState *s,
@@ -89,6 +399,14 @@ void update_model(UIState *s,
   }
   float max_distance = scene.unlimited_road_ui_length ? plan_position.getX()[TRAJECTORY_SIZE - 1] : std::clamp(plan_position.getX()[TRAJECTORY_SIZE - 1],
                                                                                                                MIN_DRAW_DISTANCE, MAX_DRAW_DISTANCE);
+  auto lead_one = (*s->sm)["radarState"].getRadarState().getLeadOne();
+  if (lead_one.getStatus()) {
+      //const float lead_d = lead_one.getDRel() * 2.;
+      //max_distance = std::clamp((float)(lead_d - fmin(lead_d * 0.35, 10.)), 0.0f, max_distance);
+      const float lead_d = lead_one.getDRel();
+      max_distance = std::clamp((float)lead_d, 0.0f, max_distance);
+  }
+  scene.max_distance = max_distance;
 
   // update lane lines
   const auto lane_lines = model.getLaneLines();
@@ -96,34 +414,53 @@ void update_model(UIState *s,
   int max_idx = get_path_length_idx(lane_lines[0], max_distance);
   for (int i = 0; i < std::size(scene.lane_line_vertices); i++) {
     scene.lane_line_probs[i] = lane_line_probs[i];
-    update_line_data(s, lane_lines[i], scene.custom_road_ui ? scene.lane_line_width * scene.lane_line_probs[i] : 0.025 * scene.lane_line_probs[i], 0, &scene.lane_line_vertices[i], max_idx);
+    update_line_data(s, lane_lines[i], scene.custom_road_ui ? scene.lane_line_width * scene.lane_line_probs[i] : 0.025 * scene.lane_line_probs[i], 0, 0, &scene.lane_line_vertices[i], max_idx);
   }
+  // lane barriers for blind spot
+  int max_idx_barrier = get_path_length_idx(plan_position, 40.0);
+  update_line_data(s, plan_position, 0, 1.2 - 0.05, 1.2 - 0.6, &scene.lane_barrier_vertices[0], max_idx_barrier, false, -1.7); // 차선폭을 알면 좋겠지만...
+  update_line_data(s, plan_position, 0, 1.2 - 0.05, 1.2 - 0.6, &scene.lane_barrier_vertices[1], max_idx_barrier, false, 1.7);
 
   // update road edges
   const auto road_edges = model.getRoadEdges();
   const auto road_edge_stds = model.getRoadEdgeStds();
   for (int i = 0; i < std::size(scene.road_edge_vertices); i++) {
     scene.road_edge_stds[i] = road_edge_stds[i];
-    update_line_data(s, road_edges[i], scene.custom_road_ui ? scene.road_edge_width : 0.025, 0, &scene.road_edge_vertices[i], max_idx);
+    update_line_data(s, road_edges[i], scene.custom_road_ui ? scene.road_edge_width : 0.025, 0, 0, &scene.road_edge_vertices[i], max_idx);
   }
 
   // update path
-  auto lead_one = (*s->sm)["radarState"].getRadarState().getLeadOne();
-  if (lead_one.getStatus()) {
-    const float lead_d = lead_one.getDRel() * 2.;
-    max_distance = std::clamp((float)(lead_d - fmin(lead_d * 0.35, 10.)), 0.0f, max_distance);
-  }
+  //auto lead_one = (*s->sm)["radarState"].getRadarState().getLeadOne();
+  //if (lead_one.getStatus()) {
+  //  const float lead_d = lead_one.getDRel() * 2.;
+  //  max_distance = std::clamp((float)(lead_d - fmin(lead_d * 0.35, 10.)), 0.0f, max_distance);
+  //}
+  int show_path_mode = s->show_path_mode;
+  SubMaster& sm = *(s->sm);
+  auto controls_state = sm["controlsState"].getControlsState();
+  bool longActive = controls_state.getEnabled();
+  if (longActive == false) show_path_mode = s->show_path_mode_cruise_off;
   max_idx = get_path_length_idx(plan_position, max_distance);
-  update_line_data(s, plan_position, scene.custom_road_ui ? scene.path_width * (1 - scene.path_edge_width / 100) : 0.9, 1.22, &scene.track_vertices, max_idx, false);
+  if(s->show_mode == 0) {
+  update_line_data(s, plan_position, scene.custom_road_ui ? scene.path_width * (1 - scene.path_edge_width / 100) : 0.9, 1.22, 1.22, &scene.track_vertices, max_idx, false);
 
   // update path edges
-  update_line_data(s, plan_position, scene.custom_road_ui ? scene.path_width : 0, 1.22, &scene.track_edge_vertices, max_idx, false);
+  update_line_data(s, plan_position, scene.custom_road_ui ? scene.path_width : 0, 1.22, 1.22, &scene.track_edge_vertices, max_idx, false);
 
   // update left adjacent path
-  update_line_data(s, lane_lines[4], scene.blind_spot_path ? scene.lane_width_left / 2 : 0, 0, &scene.track_left_adjacent_lane_vertices, max_idx);
+  update_line_data(s, lane_lines[4], scene.blind_spot_path ? scene.lane_width_left / 2 : 0, 0, 0, &scene.track_left_adjacent_lane_vertices, max_idx);
 
   // update right adjacent path
-  update_line_data(s, lane_lines[5], scene.blind_spot_path ? scene.lane_width_right / 2 : 0, 0, &scene.track_right_adjacent_lane_vertices, max_idx);
+  update_line_data(s, lane_lines[5], scene.blind_spot_path ? scene.lane_width_right / 2 : 0, 0, 0, &scene.track_right_adjacent_lane_vertices, max_idx);
+  }
+  else if (show_path_mode == 0) {
+      update_line_data2(s, plan_position, s->show_path_width, 0.8, s->show_z_offset, &scene.track_vertices, max_idx);
+  }
+  else if(show_path_mode < 9 || show_path_mode == 13 || show_path_mode == 14 || show_path_mode == 15)
+    update_line_data_dist(s, plan_position, s->show_path_width, 0.8, s->show_z_offset, &scene.track_vertices, max_distance, false);
+  else
+    update_line_data_dist3(s, plan_position, s->show_path_width, 0.8, s->show_z_offset, &scene.track_vertices, max_distance, false);
+
 }
 
 void update_dmonitoring(UIState *s, const cereal::DriverStateV2::Reader &driverstate, float dm_fade_state, bool is_rhd) {
@@ -316,6 +653,58 @@ void ui_update_params(UIState *s) {
   scene.rotating_wheel = params.getBool("RotatingWheel");
   scene.screen_brightness = params.getInt("ScreenBrightness");
   scene.wheel_icon = params.getInt("WheelIcon");
+
+
+  
+  static int updateSeq = 0;
+  if (updateSeq++ > 100) updateSeq = 0;
+  switch(updateSeq) {
+  case 0:
+      s->scene.is_metric = params.getBool("IsMetric");
+      s->scene.map_on_left = params.getBool("NavSettingLeftSide");
+      s->show_debug = params.getBool("ShowDebugUI");
+      break;
+  case 10:
+      s->show_datetime = std::atoi(params.get("ShowDateTime").c_str());
+      s->show_mode = std::atoi(params.get("ShowHudMode").c_str());
+      s->show_steer_rotate = std::atoi(params.get("ShowSteerRotate").c_str());
+      break;
+  case 20:
+      s->show_path_end = std::atoi(params.get("ShowPathEnd").c_str());;
+      s->show_accel = std::atoi(params.get("ShowAccelRpm").c_str());;
+      s->show_tpms = std::atoi(params.get("ShowTpms").c_str());;
+      break;
+  case 30:
+      s->show_steer_mode = std::atoi(params.get("ShowSteerMode").c_str());;
+      s->show_device_stat = std::atoi(params.get("ShowDeviceState").c_str());;
+      s->show_conn_info = std::atoi(params.get("ShowConnInfo").c_str());;
+      break;
+  case 40:
+      s->show_lane_info = std::atoi(params.get("ShowLaneInfo").c_str());;
+      s->show_blind_spot = std::atoi(params.get("ShowBlindSpot").c_str());;
+      s->show_gap_info = std::atoi(params.get("ShowGapInfo").c_str());;
+      break;
+  case 50:
+      s->show_dm_info = std::atoi(params.get("ShowDmInfo").c_str());;
+      s->show_radar_info = std::atoi(params.get("ShowRadarInfo").c_str());;
+      s->show_z_offset = std::atof(params.get("ShowZOffset").c_str()) / 100.;
+      break;
+  case 60:
+      s->show_path_mode = std::atoi(params.get("ShowPathMode").c_str());;
+      s->show_path_color = std::atoi(params.get("ShowPathColor").c_str());;
+      s->show_path_mode_lane = 0;//std::atoi(params.get("ShowPathModeLane").c_str());;
+      break;
+  case 70:
+      s->show_path_color_lane = 0;//std::atoi(params.get("ShowPathColorLane").c_str());;
+      s->show_path_width = std::atof(params.get("ShowPathWidth").c_str()) / 100.;
+      s->show_plot_mode = std::atoi(params.get("ShowPlotMode").c_str());
+      break;
+  case 80:
+      s->show_path_mode_cruise_off = std::atoi(params.get("ShowPathModeCruiseOff").c_str());;
+      s->show_path_color_cruise_off = std::atoi(params.get("ShowPathColorCruiseOff").c_str());;
+      break;
+  }
+
 }
 
 void UIState::updateStatus() {
@@ -347,7 +736,8 @@ UIState::UIState(QObject *parent) : QObject(parent) {
     "modelV2", "controlsState", "liveCalibration", "radarState", "deviceState", "roadCameraState",
     "pandaStates", "carParams", "driverMonitoringState", "carState", "liveLocationKalman", "driverStateV2",
     "wideRoadCameraState", "managerState", "navInstruction", "navRoute", "uiPlan", "carControl",
-    "gpsLocationExternal", "lateralPlan", "longitudinalPlan"
+    "gpsLocationExternal", "lateralPlan", "longitudinalPlan",
+    "liveParameters", "roadLimitSpeed", "liveTorqueParameters",
   });
 
   language = QString::fromStdString(params.get("LanguageSetting"));

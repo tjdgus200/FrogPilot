@@ -8,7 +8,7 @@ from cereal import log
 import cereal.messaging as messaging
 from openpilot.common.conversions import Conversions as CV
 from openpilot.common.filter_simple import FirstOrderFilter
-from openpilot.common.realtime import DT_MDL
+from openpilot.common.realtime import DT_MDL, DT_CTRL
 from openpilot.selfdrive.modeld.constants import ModelConstants
 from openpilot.selfdrive.car.interfaces import ACCEL_MIN, ACCEL_MAX
 from openpilot.selfdrive.controls.conditional_experimental_mode import ConditionalExperimentalMode

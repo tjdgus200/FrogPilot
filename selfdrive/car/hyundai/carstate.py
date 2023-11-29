@@ -11,6 +11,7 @@ from openpilot.selfdrive.car.hyundai.values import HyundaiFlags, CAR, DBC, CAN_G
                                                    CANFD_CAR, EV_CAR, HYBRID_CAR, Buttons, CarControllerParams
 from openpilot.selfdrive.car.interfaces import CarStateBase
 from openpilot.common.realtime import DT_CTRL
+from openpilot.common.params import put_bool_nonblocking, put_int_nonblocking
 
 PREV_BUTTON_SAMPLES = 8
 CLUSTER_SAMPLE_RATE = 20  # frames
@@ -260,7 +261,6 @@ class CarState(CarStateBase):
       self.distance_button = self.cruise_buttons[-1] == 3
       if self.distance_button and not self.distance_previously_pressed:
         self.personality_profile = (self.previous_personality_profile + 2) % 3
-        print("distance_button pressed=", self.personality_profile)
       self.distance_previously_pressed = self.distance_button
 
       if self.personality_profile != self.previous_personality_profile:
