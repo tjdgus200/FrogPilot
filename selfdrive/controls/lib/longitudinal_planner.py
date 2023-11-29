@@ -8,7 +8,7 @@ from cereal import log
 import cereal.messaging as messaging
 from openpilot.common.conversions import Conversions as CV
 from openpilot.common.filter_simple import FirstOrderFilter
-from openpilot.common.realtime import DT_MDL, DT_CTRL
+from openpilot.common.realtime import DT_MDL
 from openpilot.selfdrive.modeld.constants import ModelConstants
 from openpilot.selfdrive.car.interfaces import ACCEL_MIN, ACCEL_MAX
 from openpilot.selfdrive.controls.conditional_experimental_mode import ConditionalExperimentalMode
@@ -362,15 +362,15 @@ class LongitudinalPlanner:
 
 
 ## ajouatom
-  def decelerate_for_speed_camera(self, safe_speed, safe_dist, current_speed, decel_rate, left_dist):
+  def decelerate_for_speed_camera(self, safe_speed, safe_dist, prev_apply_speed, decel_rate, left_dist):
 
     if left_dist <= safe_dist:
       return safe_speed
     temp = safe_speed*safe_speed + 2*(left_dist - safe_dist)/decel_rate
     dV = (-safe_speed + math.sqrt(temp)) * decel_rate
     apply_speed = min(250 , safe_speed + dV)
-    min_speed = current_speed - decel_rate * 2 * DT_CTRL
-    apply_speed = max(apply_speed, min_speed)
+    #min_speed = prev_apply_speed - (decel_rate * 1.2) * 2 * DT_MDL
+    #apply_speed = max(apply_speed, min_speed)
     return apply_speed
 
   def update_speed_apilot(self, sm, v_cruise):
@@ -391,11 +391,11 @@ class LongitudinalPlanner:
     speedLimitType = 0
     safeDist = 0
     
-    self.autoNaviSpeedBumpSpeed = 35
-    self.autoNaviSpeedBumpTime = 1.0
-    self.autoNaviSpeedCtrlEnd = 7.0
-    self.autoNaviSpeedSafetyFactor = 1.05
-    self.autoNaviSpeedDecelRate = 1.0
+    self.autoNaviSpeedBumpSpeed = float(self.params.get_int(AutoNaviSpeedBumpSpeed))
+    self.autoNaviSpeedBumpTime = float(self.params.get_int(autoNaviSpeedBumpTime))
+    self.autoNaviSpeedCtrlEnd = float(self.params.get_int(autoNaviSpeedCtrlEnd))
+    self.autoNaviSpeedSafetyFactor = float(self.params.get_int(autoNaviSpeedSafetyFactor)) * 0.01
+    self.autoNaviSpeedDecelRate = float(self.params.get_int(autoNaviSpeedDecelRate)) * 0.01
     self.autoNaviSpeedCtrl = 2
     
     if camType == 22 or xSignType == 22:
@@ -431,16 +431,20 @@ class LongitudinalPlanner:
     if isSectionLimit:
       applySpeed = safeSpeed
     elif leftDist > 0 and safeSpeed > 0 and safeDist > 0:
+      #HW: v_cruise값을 넣으면 안됨... 이전 적용값을 넣어야하는데... 최소감속량을 말함..
       applySpeed = self.decelerate_for_speed_camera(safeSpeed/3.6, safeDist, v_cruise, self.autoNaviSpeedDecelRate, leftDist) * 3.6
     else:
       applySpeed = 255
-      
-    #log = "{:.1f}<{:.1f}/{:.1f} B{} A{:.1f}/{:.1f} N{:.1f}/{:.1f} C{:.1f}/{:.1f} V{:.1f}/{:.1f} ".format(
-    #              applySpeed, safeSpeed, leftDist, 1 if isSpeedBump else 0, 
-    #              msg.xSpdLimit, msg.xSpdDist,
-    #              msg.camLimitSpeed, msg.camLimitSpeedLeftDist,
-    #              CS.speedLimit, CS.speedLimitDistance,
-    #              apTbtSpeed, apTbtDistance)
 
+    apTbtSpeed = apTbtDistance = 0
+    log = "{:.1f}<{:.1f}/{:.1f},{:.1f} B{} A{:.1f}/{:.1f} N{:.1f}/{:.1f} C{:.1f}/{:.1f} V{:.1f}/{:.1f} ".format(
+                  applySpeed, safeSpeed, leftDist, safeDist,
+                  1 if isSpeedBump else 0, 
+                  msg.xSpdLimit, msg.xSpdDist,
+                  msg.camLimitSpeed, msg.camLimitSpeedLeftDist,
+                  CS.speedLimit, CS.speedLimitDistance,
+                  apTbtSpeed, apTbtDistance)
+    if applySpeed < 200:
+      print(log)
     #controls.debugText1 = log
     return applySpeed * CV.KPH_TO_MS #, roadSpeed, leftDist, speedLimitType

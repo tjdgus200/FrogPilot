@@ -211,7 +211,7 @@ ParamController(AggressiveJerk, "AggressiveJerk", "Jerk Value", "Set the jerk va
 
 ParamController(AggressiveFollow, "AggressiveFollow", "Time", "Set the following distance for the 'Aggressive Personality'.\n\nValue represents the time (in seconds) to follow the lead vehicle.\n\nStock has a value of 1.25.", "../assets/aggressive.png",
   return QString::number(params.getInt("AggressiveFollow") / 10.0) + " sec";,
-  return std::clamp(v, 10, 50);
+  return std::clamp(v, 8, 50);
 )
 
 ParamController(CameraView, "CameraView", "Camera View (Cosmetic Only)", "Set your preferred camera view for the onroad UI. This toggle is purely cosmetic and will not affect openpilot's use of the other cameras.", "../assets/offroad/icon_camera.png",

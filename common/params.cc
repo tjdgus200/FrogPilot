@@ -235,6 +235,11 @@ std::unordered_map<std::string, uint32_t> keys = {
     { "ShowPathColorLane", PERSISTENT },
     { "ShowPathWidth", PERSISTENT },
     { "ShowPlotMode", PERSISTENT },
+    { "AutoNaviSpeedCtrlEnd", PERSISTENT },
+    { "AutoNaviSpeedBumpTime", PERSISTENT },
+    { "AutoNaviSpeedBumpSpeed", PERSISTENT },
+    { "AutoNaviSpeedDecelRate", PERSISTENT },
+    { "AutoNaviSpeedSafetyFactor", PERSISTENT },
     { "SoftHoldMode", PERSISTENT },
 
     // FrogPilot parameters
