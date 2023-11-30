@@ -860,16 +860,17 @@ void DrawApilot::drawDateTime(const UIState* s) {
         time_t now = time(nullptr);
         struct tm* local = localtime(&now);
 
-        int nav_y = 170 + 40;
+        int y = 180;
+        int nav_y = y + 40;
 
         if (s->show_datetime == 1 || s->show_datetime == 2) {
             strftime(str, sizeof(str), "%H:%M", local);
-            ui_draw_text(s, 170, 170, str, 100, COLOR_WHITE, BOLD, 3.0f, 8.0f);
+            ui_draw_text(s, 170, y, str, 100, COLOR_WHITE, BOLD, 3.0f, 8.0f);
 
         }
         if (s->show_datetime == 1 || s->show_datetime == 3) {
             strftime(str, sizeof(str), "%m-%d-%a", local);
-            ui_draw_text(s, 170, 170 + 70, str, 60, COLOR_WHITE, BOLD, 3.0f, 8.0f);
+            ui_draw_text(s, 170, y + 70, str, 60, COLOR_WHITE, BOLD, 3.0f, 8.0f);
             nav_y += 70;
         }
         nvgTextAlign(s->vg, NVG_ALIGN_LEFT | NVG_ALIGN_BOTTOM);
@@ -963,13 +964,14 @@ void DrawApilot::drawConnInfo(const UIState* s) {
         int hda_speedLimit = car_state.getSpeedLimit();
         int hda_speedLimitDistance = car_state.getSpeedLimitDistance();
         int naviCluster = 0;// HW: (int)car_params.getNaviCluster();
-        if (sccBus) ui_draw_image(s, { 30, 20, 120, 54 }, "ic_scc2", 1.0f);
-        if (activeNDA >= 200) ui_draw_image(s, { 30 + 135, 20, 120, 54 }, "ic_apn", 1.0f);
+        int y = 30;
+        if (sccBus) ui_draw_image(s, { 30, y, 120, 54 }, "ic_scc2", 1.0f);
+        if (activeNDA >= 200) ui_draw_image(s, { 30 + 135, y, 120, 54 }, "ic_apn", 1.0f);
         else if (hda_speedLimit > 0 && hda_speedLimitDistance > 0) ui_draw_image(s, { 30 + 135, 20, 120, 54 }, "ic_hda", 1.0f);
-        else if (activeNDA >= 100) ui_draw_image(s, { 30 + 135, 20, 120, 54 }, "ic_apm", 1.0f);
-        else if (activeNDA % 100 > 0) ui_draw_image(s, { 30 + 135, 20, 120, 54 }, "ic_nda", 1.0f);
-        else if (naviCluster > 0) ui_draw_image(s, { 30 + 135, 20, 120, 54 }, "ic_hda", 1.0f);
-        if (radar_tracks) ui_draw_image(s, { 30 + 135 * 2, 20, 240, 54 }, "ic_radartracks", 1.0f);
+        else if (activeNDA >= 100) ui_draw_image(s, { 30 + 135, y, 120, 54 }, "ic_apm", 1.0f);
+        else if (activeNDA % 100 > 0) ui_draw_image(s, { 30 + 135, y, 120, 54 }, "ic_nda", 1.0f);
+        else if (naviCluster > 0) ui_draw_image(s, { 30 + 135, y, 120, 54 }, "ic_hda", 1.0f);
+        if (radar_tracks) ui_draw_image(s, { 30 + 135 * 2, y, 240, 54 }, "ic_radartracks", 1.0f);
     }
 }
 void DrawApilot::drawGapInfo(const UIState* s, int x, int y) {
@@ -1782,11 +1784,11 @@ void DrawApilot::drawDeviceState(UIState* s, bool show) {
     int g = interp<float>(cpuTemp, { 50.f, 90.f }, { 255.f, 200.f }, false);
     NVGcolor textColor = nvgRGBA(r, g, 200, 255);
     if (s->fb_w > 1200 && show) {
-        ui_draw_text(s, s->fb_w - 20, 35, str, 35, textColor, BOLD);
+        ui_draw_text(s, s->fb_w - 20, 45, str, 35, textColor, BOLD);
         float engineRpm = car_state.getEngineRpm();
         float motorRpm = car_state.getMotorRpm();
         sprintf(str, "FPS: %d, %s: %.0f CHARGE: %.0f%%                      ", g_fps, (motorRpm > 0.0) ? "MOTOR" : "RPM", (motorRpm > 0.0) ? motorRpm : engineRpm, car_state.getChargeMeter());
-        ui_draw_text(s, s->fb_w - 20, 90, str, 35, textColor, BOLD);
+        ui_draw_text(s, s->fb_w - 20, 100, str, 35, textColor, BOLD);
     }
     nvgTextAlign(s->vg, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM);
     ui_draw_text(s, s->fb_w - 20, s->fb_h - 15, ip_address, 30, COLOR_WHITE, BOLD, 0.0f, 0.0f);
