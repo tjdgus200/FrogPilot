@@ -391,11 +391,11 @@ class LongitudinalPlanner:
     speedLimitType = 0
     safeDist = 0
     
-    self.autoNaviSpeedBumpSpeed = float(self.params.get_int(AutoNaviSpeedBumpSpeed))
-    self.autoNaviSpeedBumpTime = float(self.params.get_int(autoNaviSpeedBumpTime))
-    self.autoNaviSpeedCtrlEnd = float(self.params.get_int(autoNaviSpeedCtrlEnd))
-    self.autoNaviSpeedSafetyFactor = float(self.params.get_int(autoNaviSpeedSafetyFactor)) * 0.01
-    self.autoNaviSpeedDecelRate = float(self.params.get_int(autoNaviSpeedDecelRate)) * 0.01
+    self.autoNaviSpeedBumpSpeed = float(self.params.get_int("AutoNaviSpeedBumpSpeed"))
+    self.autoNaviSpeedBumpTime = float(self.params.get_int("AutoNaviSpeedBumpTime"))
+    self.autoNaviSpeedCtrlEnd = float(self.params.get_int("AutoNaviSpeedCtrlEnd"))
+    self.autoNaviSpeedSafetyFactor = float(self.params.get_int("AutoNaviSpeedSafetyFactor")) * 0.01
+    self.autoNaviSpeedDecelRate = float(self.params.get_int("AutoNaviSpeedDecelRate")) * 0.01
     self.autoNaviSpeedCtrl = 2
     
     if camType == 22 or xSignType == 22:
