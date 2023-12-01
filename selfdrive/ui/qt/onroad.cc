@@ -97,7 +97,8 @@ void OnroadWindow::updateState(const UIState &s) {
 
   QColor bgColor = bg_colors[s.status];
   Alert alert = Alert::get(*(s.sm), s.scene.started_frame);
-  alerts->updateAlert(alert);
+  //alerts->updateAlert(alert);
+  ui_update_alert(alert);
 
   if (s.scene.map_on_left) {
     split->setDirection(QBoxLayout::LeftToRight);
@@ -524,7 +525,7 @@ void AnnotatedCameraWidget::updateState(const UIState &s) {
   const auto nav_instruction = sm["navInstruction"].getNavInstruction();
 
   // Handle older routes where vCruiseCluster is not set
-  float v_cruise =  cs.getVCruiseCluster() == 0.0 ? cs.getVCruise() : cs.getVCruiseCluster();
+  float v_cruise = cs.getVCruiseCluster() == 0.0 ? cs.getVCruise() : cs.getVCruiseCluster();
   setSpeed = cs_alive ? v_cruise : SET_SPEED_NA;
   is_cruise_set = setSpeed > 0 && (int)setSpeed != SET_SPEED_NA;
   if (is_cruise_set && !s.scene.is_metric) {
@@ -1218,7 +1219,16 @@ void AnnotatedCameraWidget::paintEvent(QPaintEvent *event) {
     }
 
     if(s->show_mode == 0) drawHud(painter);
-    else ui_draw(s, width(), height());
+    else {
+        // Lead following logics
+        if (leadInfo) {
+            drawLeadInfo(painter);
+        }
+        // FrogPilot status bar
+        drawStatusBar(painter);
+
+        ui_draw(s, width(), height());
+    }
   }
 
   double cur_draw_t = millis_since_boot();
