@@ -18,7 +18,21 @@ CAMERA_CANCEL_DELAY_FRAMES = 10
 # Enforce a minimum interval between steering messages to avoid a fault
 MIN_STEER_MSG_INTERVAL_MS = 15
 
+def actuator_hystereses(final_pedal, pedal_steady, pedal_hyst_gap_param = 0.01):
+  # hyst params... TODO: move these to VehicleParams
+      # don't change pedal command for small oscillations within this value
+  # pedal_hyst_gap= 0.01
+  pedal_hyst_gap= pedal_hyst_gap_param
+  # for small pedal oscillations within pedal_hyst_gap, don't change the pedal command
+  if math.isclose(final_pedal, 0.0):
+    pedal_steady = 0.
+  elif final_pedal > pedal_steady + pedal_hyst_gap:
+    pedal_steady = final_pedal - pedal_hyst_gap
+  elif final_pedal < pedal_steady - pedal_hyst_gap:
+    pedal_steady = final_pedal + pedal_hyst_gap
+  final_pedal = pedal_steady
 
+  return final_pedal, pedal_steady
 class CarController:
   def __init__(self, dbc_name, CP, VM):
     self.CP = CP
@@ -45,6 +59,9 @@ class CarController:
     # FrogPilot variables
     self.use_ev_tables = False
 
+    #for BoltEV pedal
+    self.pedal_steady = 0.
+
   def update_frogpilot_variables(self, params):
     self.use_ev_tables = params.get_bool("EVTable")
 
@@ -52,15 +69,19 @@ class CarController:
   def calc_pedal_command(accel: float, long_active: bool) -> float:
     if not long_active: return 0.
 
-    zero = 0.1429  # 40/256
+    zero = 0.1429  # 1/7
     if accel > 0.:
       # Scales the accel from 0-1 to 0.156-1
       pedal_gas = clip(((1 - zero) * accel + zero), 0., 1.)
+
     else:
       # if accel is negative, -0.1 -> 0.015625
       pedal_gas = clip(zero + accel, 0., zero)  # Make brake the same size as gas, but clip to regen
 
-    return pedal_gas
+    #apply Low pass filter
+    pedal_gas_lpf, self.pedal_steady = actuator_hystereses(pedal_gas, self.pedal_steady, 0.01)
+
+    return pedal_gas_lpf
 
 
   def update(self, CC, CS, now_nanos):
