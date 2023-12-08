@@ -66,22 +66,19 @@ class CarController:
     self.use_ev_tables = params.get_bool("EVTable")
 
   @staticmethod
-  def calc_pedal_command(accel: float, long_active: bool) -> float:
+  def calc_pedal_command(accel: float, long_active: bool, car_velocity: int) -> float:
     if not long_active: return 0.
 
-    zero = 0.1429  # 1/7
-    if accel > 0.:
-      # Scales the accel from 0-1 to 0.156-1
-      pedal_gas = clip(((1 - zero) * accel + zero), 0., 1.)
+    accGain = 0.1429  # This value is the result of testing by several users.
 
-    else:
-      # if accel is negative, -0.1 -> 0.015625
-      pedal_gas = clip(zero + accel, 0., zero)  # Make brake the same size as gas, but clip to regen
+    DecelZero = interp(car_velocity, [0., 3, 10, 15, 30], [0, 0.185, 0.245, 0.25, 0.280])
+    AccelZero = interp(car_velocity, [0., 3, 10, 15, 30], [0, 0.130, 0.185, 0.215, 0.280])
+    ZeroRatio = interp(accel, [-3.5, 2], [1.0, 0.0])
+    zero = DecelZero * ZeroRatio + AccelZero * (1 - ZeroRatio)
 
-    #apply Low pass filter
-    pedal_gas_lpf, self.pedal_steady = actuator_hystereses(pedal_gas, self.pedal_steady, 0.01)
+    pedal_gas = clip((zero + accel * accGain), 0.0, 1.0)
 
-    return pedal_gas_lpf
+    return pedal_gas
 
 
   def update(self, CC, CS, now_nanos):
@@ -157,7 +154,7 @@ class CarController:
             self.apply_gas = self.params.INACTIVE_REGEN
           if self.CP.carFingerprint in CC_ONLY_CAR:
             # gas interceptor only used for full long control on cars without ACC
-            interceptor_gas_cmd = self.calc_pedal_command(actuators.accel, CC.longActive)
+            interceptor_gas_cmd = self.calc_pedal_command(actuators.accel, CC.longActive, CS.out.vEgo)
 
         if CC.cruiseControl.resume and actuators.longControlState == LongCtrlState.starting:
           interceptor_gas_cmd = self.params.SNG_INTERCEPTOR_GAS
