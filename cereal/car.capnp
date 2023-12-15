@@ -456,6 +456,9 @@ struct CarControl {
 
       # Other
       goat @19;
+
+      # NDA
+      speedDown @20;
     }
   }
 
