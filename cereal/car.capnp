@@ -133,6 +133,9 @@ struct CarEvent @0x9b1657f34caf3ad3 {
     turningRight @132;
     vCruise69 @133;
 
+    # NDA Neokii
+    slowingDownSpeedSound @134;
+
     radarCanErrorDEPRECATED @15;
     communityFeatureDisallowedDEPRECATED @62;
     radarCommIssueDEPRECATED @67;
@@ -368,6 +371,7 @@ struct CarControl {
     speed @6: Float32; # m/s
     accel @4: Float32; # m/s^2
     longControlState @5: LongControlState;
+
     regenPaddle @9: Bool;
 
     enum LongControlState @0xe40f3a917d908282{
@@ -430,6 +434,8 @@ struct CarControl {
       fart @9;
       firefox @10;
       noice @11;
+
+      speedDown @9;
     }
   }
 

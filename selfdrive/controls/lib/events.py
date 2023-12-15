@@ -1089,6 +1089,13 @@ EVENTS: Dict[int, Dict[str, Union[Alert, AlertCallbackType]]] = {
       AlertStatus.frogpilot, AlertSize.small,
       Priority.LOW, VisualAlert.none, AudibleAlert.noice, 2.),
   },
+  EventName.slowingDownSpeedSound: {
+    ET.PERMANENT: Alert(
+      "Slowing down",
+      "",
+      AlertStatus.normal, AlertSize.none,
+      Priority.LOW, VisualAlert.none, AudibleAlert.speedDown, 2.),
+  },
 }
 
 
