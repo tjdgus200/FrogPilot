@@ -221,7 +221,7 @@ class Controls:
     # controlsd is driven by can recv, expected at 100Hz
     self.rk = Ratekeeper(100, print_delay_threshold=None)
     self.prof = Profiler(False)  # off by default
-
+    self.regenPressed = False
     self.update_frogpilot_params()
 
   def set_initial_state(self):
@@ -518,6 +518,11 @@ class Controls:
 
   def state_transition(self, CS):
     """Compute conditional state transitions and execute actions on state transitions"""
+    #regen state
+    if CS.regenPressed:
+      self.regenPressed = True
+    else:
+      self.regenPressed = False
 
     self.v_cruise_helper.update_v_cruise(CS, self.enabled, self.is_metric, self.reverse_cruise_increase)
 
