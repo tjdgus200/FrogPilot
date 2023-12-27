@@ -226,6 +226,13 @@ private:
   const UIScene &scene;
 
 protected:
+  // NDA neokii
+  QPixmap ic_nda;
+  QPixmap ic_hda;
+  QPixmap ic_nda2;
+  QPixmap ic_hda2;
+  void drawRoadLimitSpeed(QPainter &p);
+
   void paintGL() override;
   void initializeGL() override;
   void showEvent(QShowEvent *event) override;
