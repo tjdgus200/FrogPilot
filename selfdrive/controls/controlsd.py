@@ -2,13 +2,14 @@
 import os
 import math
 import time
+import threading
 from typing import SupportsFloat
 
 from cereal import car, log, custom
 from openpilot.common.numpy_fast import clip
 from openpilot.common.realtime import config_realtime_process, Priority, Ratekeeper, DT_CTRL
 from openpilot.common.profiler import Profiler
-from openpilot.common.params import Params, put_nonblocking, put_bool_nonblocking
+from openpilot.common.params import Params
 import cereal.messaging as messaging
 from cereal.visionipc import VisionIpcClient, VisionStreamType
 from openpilot.common.conversions import Conversions as CV
@@ -29,7 +30,6 @@ from openpilot.selfdrive.controls.lib.events import Events, ET
 from openpilot.selfdrive.controls.lib.alertmanager import AlertManager, set_offroad_alert
 from openpilot.selfdrive.controls.lib.vehicle_model import VehicleModel
 from openpilot.system.hardware import HARDWARE
-from selfdrive.road_speed_limiter import SpeedLimiter
 
 SOFT_DISABLE_TIME = 3  # seconds
 LDW_MIN_SPEED = 31 * CV.MPH_TO_MS
@@ -108,8 +108,7 @@ class Controls:
     else:
       self.CI, self.CP, self.CS = CI, CI.CP, CI.CS
 
-    self.joystick_enabled = self.params.get_bool("JoystickDebugMode")
-    self.joystick_mode = self.joystick_enabled or self.CP.notCar
+    self.joystick_mode = self.params.get_bool("JoystickDebugMode")
 
     # set alternative experiences from parameters
     self.disengage_on_accelerator = self.params.get_bool("DisengageOnAccelerator")
@@ -153,8 +152,8 @@ class Controls:
     # Write CarParams for radard
     cp_bytes = self.CP.to_bytes()
     self.params.put("CarParams", cp_bytes)
-    put_nonblocking("CarParamsCache", cp_bytes)
-    put_nonblocking("CarParamsPersistent", cp_bytes)
+    self.params.put_nonblocking("CarParamsCache", cp_bytes)
+    self.params.put_nonblocking("CarParamsPersistent", cp_bytes)
 
     # cleanup old params
     if not self.CP.experimentalLongitudinalAvailable:
@@ -204,14 +203,6 @@ class Controls:
     self.recalibrating_seen = False
     self.nn_alert_shown = False
 
-    # NDA neokii
-    self.v_cruise_kph_limit = 0
-    # self.slowing_down = False
-    self.slowing_down_sound_alert = False
-    self.second = 0.0
-    self.autoNaviSpeedCtrlStart = float(Params().get("AutoNaviSpeedCtrlStart"))
-    self.autoNaviSpeedCtrlEnd = float(Params().get("AutoNaviSpeedCtrlEnd"))
-
     self.can_log_mono_time = 0
 
     self.startup_event = get_startup_event(car_recognized, controller_available, len(self.CP.carFw) > 0)
@@ -226,20 +217,12 @@ class Controls:
         set_offroad_alert("Offroad_NoFirmware", True)
     elif self.CP.passive:
       self.events.add(EventName.dashcamMode, static=True)
-    elif self.joystick_mode:
-      self.events.add(EventName.joystickDebug, static=True)
-      self.startup_event = None
 
     # controlsd is driven by can recv, expected at 100Hz
     self.rk = Ratekeeper(100, print_delay_threshold=None)
     self.prof = Profiler(False)  # off by default
-
-    self.update_frogpilot_params()
     self.regenPressed = False
-
-  def reset(self):
-    # self.slowing_down = False
-    self.slowing_down_sound_alert = False
+    self.update_frogpilot_params()
 
   def set_initial_state(self):
     if REPLAY:
@@ -255,6 +238,11 @@ class Controls:
     """Compute onroadEvents from carState"""
 
     self.events.clear()
+
+    # Add joystick event, static on cars, dynamic on nonCars
+    if self.joystick_mode:
+      self.events.add(EventName.joystickDebug)
+      self.startup_event = None
 
     # Add startup event
     if self.startup_event is not None:
@@ -372,14 +360,6 @@ class Controls:
       if log.PandaState.FaultType.relayMalfunction in pandaState.faults:
         self.events.add(EventName.relayMalfunction)
 
-    # NDA neokii
-    self.second += DT_CTRL
-    if self.second > 1.0:
-      self.autoNaviSpeedCtrlStart = float(Params().get("AutoNaviSpeedCtrlStart"))
-      self.autoNaviSpeedCtrlEnd = float(Params().get("AutoNaviSpeedCtrlEnd"))
-
-      self.second = 0.0
-
     # Handle HW and system malfunctions
     # Order is very intentional here. Be careful when modifying this.
     # All events here should at least have NO_ENTRY and SOFT_DISABLE.
@@ -432,7 +412,7 @@ class Controls:
     else:
       self.logged_comm_issue = None
 
-    if not (self.CP.notCar and self.joystick_enabled):
+    if not (self.CP.notCar and self.joystick_mode):
       if not self.sm['lateralPlan'].mpcSolutionValid:
         self.events.add(EventName.plannerError)
       if not self.sm['liveLocationKalman'].posenetOK:
@@ -459,8 +439,8 @@ class Controls:
     stock_long_is_braking = self.enabled and not self.CP.openpilotLongitudinalControl and CS.aEgo < -1.25
     model_fcw = self.sm['modelV2'].meta.hardBrakePredicted and not CS.brakePressed and not stock_long_is_braking
     planner_fcw = self.sm['longitudinalPlan'].fcw and self.enabled
-    # if planner_fcw or model_fcw:
-    #   self.events.add(EventName.fcw)
+    if planner_fcw or model_fcw:
+      self.events.add(EventName.fcw)
 
     for m in messaging.drain_sock(self.log_sock, wait_for_one=False):
       try:
@@ -511,7 +491,7 @@ class Controls:
 
         self.initialized = True
         self.set_initial_state()
-        put_bool_nonblocking("ControlsReady", True)
+        self.params.put_bool_nonblocking("ControlsReady", True)
 
     # Check for CAN timeout
     if not can_strs:
@@ -538,32 +518,13 @@ class Controls:
 
   def state_transition(self, CS):
     """Compute conditional state transitions and execute actions on state transitions"""
+    #regen state
     if CS.regenPressed:
       self.regenPressed = True
-    else :
+    else:
       self.regenPressed = False
 
     self.v_cruise_helper.update_v_cruise(CS, self.enabled, self.is_metric, self.reverse_cruise_increase)
-
-    # NDA neokii
-    apply_limit_speed, road_limit_speed, left_dist, first_started, limit_log = SpeedLimiter.instance().get_max_speed(CS,
-                                                                                                                     self.v_cruise_helper.v_cruise_kph,
-                                                                                                                     self.autoNaviSpeedCtrlStart,
-                                                                                                                     self.autoNaviSpeedCtrlEnd)
-    if apply_limit_speed >= 20:
-      self.v_cruise_kph_limit = min(apply_limit_speed, self.v_cruise_helper.v_cruise_kph)
-
-      if CS.vEgo * CV.MS_TO_KPH > apply_limit_speed:
-        #  self.events.add(EventName.slowingDownSpeedSound)
-
-        # if not self.slowing_down:
-        #   self.slowing_down_sound_alert = True
-        #   self.slowing_down = True
-        self.slowing_down_sound_alert = True
-
-    else:
-      self.reset()
-      self.v_cruise_kph_limit = self.v_cruise_helper.v_cruise_kph
 
     # decrement the soft disable timer at every step, as it's reset on
     # entrance in SOFT_DISABLING state
@@ -778,8 +739,8 @@ class Controls:
           left_deviation = steering_value > 0 and dpath_points[0] < -0.20
           right_deviation = steering_value < 0 and dpath_points[0] > 0.20
 
-          # if left_deviation or right_deviation:
-          #   self.events.add(EventName.steerSaturated)
+          if left_deviation or right_deviation:
+            self.events.add(EventName.steerSaturated)
 
     # Ensure no NaNs/Infs
     for p in ACTUATOR_FIELDS:
@@ -815,7 +776,7 @@ class Controls:
       CC.cruiseControl.resume = self.enabled and CS.cruiseState.standstill and speeds[-1] > 0.1
 
     hudControl = CC.hudControl
-    hudControl.setSpeed = float(self.v_cruise_kph_limit * CV.KPH_TO_MS)
+    hudControl.setSpeed = float(self.v_cruise_helper.v_cruise_cluster_kph * CV.KPH_TO_MS)
     hudControl.speedVisible = self.enabled
     hudControl.lanesVisible = self.enabled
     hudControl.leadVisible = self.sm['longitudinalPlan'].hasLead
@@ -902,7 +863,7 @@ class Controls:
     controlsState.engageable = not self.events.contains(ET.NO_ENTRY)
     controlsState.longControlState = self.LoC.long_control_state
     controlsState.vPid = float(self.LoC.v_pid)
-    controlsState.vCruise = float(self.v_cruise_kph_limit)
+    controlsState.vCruise = float(self.v_cruise_helper.v_cruise_kph)
     controlsState.vCruiseCluster = float(self.v_cruise_helper.v_cruise_cluster_kph)
     controlsState.upAccelCmd = float(self.LoC.pid.p)
     controlsState.uiAccelCmd = float(self.LoC.pid.i)
@@ -967,13 +928,6 @@ class Controls:
     start_time = time.monotonic()
     self.prof.checkpoint("Ratekeeper", ignore=True)
 
-    self.is_metric = self.params.get_bool("IsMetric")
-    if self.CP.openpilotLongitudinalControl:
-      if self.conditional_experimental_mode:
-        self.experimental_mode = self.sm['frogpilotLongitudinalPlan'].conditionalExperimental
-      else:
-        self.experimental_mode = self.params.get_bool("ExperimentalMode") or self.params_memory.get_bool("SLCExperimentalMode")
-
     # Sample data from sockets and get a carState
     CS = self.data_sample()
     cloudlog.timestamp("Data sampled")
@@ -998,15 +952,35 @@ class Controls:
 
     self.CS_prev = CS
 
-  def controlsd_thread(self):
-    while True:
-      self.step()
-      self.rk.monitor_time()
-      self.prof.display()
+  def params_thread(self, evt):
+    while not evt.is_set():
+      self.is_metric = self.params.get_bool("IsMetric")
+      if self.CP.openpilotLongitudinalControl:
+        if self.conditional_experimental_mode:
+          self.experimental_mode = self.sm['frogpilotLongitudinalPlan'].conditionalExperimental
+        else:
+          self.experimental_mode = self.params.get_bool("ExperimentalMode") or self.params_memory.get_bool("SLCExperimentalMode")
+      if self.CP.notCar:
+        self.joystick_mode = self.params.get_bool("JoystickDebugMode")
+      time.sleep(0.1)
 
-      # Update FrogPilot parameters
-      if self.params_memory.get_bool("FrogPilotTogglesUpdated"):
-        self.update_frogpilot_params()
+  def controlsd_thread(self):
+    e = threading.Event()
+    t = threading.Thread(target=self.params_thread, args=(e, ))
+    try:
+      t.start()
+      while True:
+        self.step()
+        self.rk.monitor_time()
+        self.prof.display()
+
+        # Update FrogPilot parameters
+        if self.params_memory.get_bool("FrogPilotTogglesUpdated"):
+          self.update_frogpilot_params()
+
+    except SystemExit:
+      e.set()
+      t.join()
 
   def update_frogpilot_params(self):
     for obj in [self.CI, self.CS]:

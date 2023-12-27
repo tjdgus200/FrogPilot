@@ -118,9 +118,6 @@ struct CarEvent @0x9b1657f34caf3ad3 {
     paramsdTemporaryError @50;
     paramsdPermanentError @119;
 
-    # NDA Neokii
-    slowingDownSpeedSound @126;
-
     radarCanErrorDEPRECATED @15;
     communityFeatureDisallowedDEPRECATED @62;
     radarCommIssueDEPRECATED @67;
@@ -413,8 +410,6 @@ struct CarControl {
       prompt @6;
       promptRepeat @7;
       promptDistracted @8;
-
-      speedDown @9;
     }
   }
 
