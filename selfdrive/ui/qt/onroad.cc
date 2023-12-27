@@ -1899,23 +1899,3 @@ void AnnotatedCameraWidget::drawTurnSignals(QPainter &p) {
     drawSignal(turnSignalRight, rightSignalXPosition, true, blindSpotRight);
   }
 }
-void AnnotatedCameraWidget::drawBrakeRegen(QPainter &painter){
-  painter.save();
-
-  int offset = UI_BORDER_SIZE + btn_size / 2 + 25;  //UI_BORDER_SIZE = 30, btn_size = 192
-  int xOffset = compass && map_settings_btn->isEnabled() ? (rightHandDM ? -350 : 350) + (onroadAdjustableProfiles ? 75 : 0) : offset + (onroadAdjustableProfiles ? 275 : 0);
-  int x = rightHandDM ? width() - xOffset : xOffset;
-  int y = height() - offset;
-
-  const SubMaster &sm = *(uiState()->sm);
-
-  auto car_control = sm["carControl"].getCarControl();
-
-  //regen Paddle
-  bool regen_valid = car_control.getActuators().getRegenPaddle();
-  float img_alpha = regen_valid ? 1.0 : 0.15;
-  float bg_alpha = regen_valid ? 0.3 : 0.1;
-  drawIcon(painter, QPoint(x + 96, y), ic_regenPaddle, QColor(0, 0, 0, (255 * bg_alpha)), img_alpha);
-
-  painter.restore();
-}
