@@ -48,8 +48,8 @@ def manager_init() -> None:
     ("LanguageSetting", "main_en"),
     ("OpenpilotEnabledToggle", "1"),
     ("LongitudinalPersonality", str(log.LongitudinalPersonality.standard)),
-    ("AutoNaviSpeedCtrlStart", "25"),
-    ("AutoNaviSpeedCtrlEnd", "15"),
+    ("AutoNaviSpeedCtrlStart", "22"),
+    ("AutoNaviSpeedCtrlEnd", "11"),
   ]
   if not PC:
     default_params.append(("LastUpdateTime", datetime.datetime.utcnow().isoformat().encode('utf8')))
