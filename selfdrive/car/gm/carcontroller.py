@@ -103,23 +103,12 @@ class CarController():
       self.comma_pedal = 0.0 # Must be set by zero, or cannot re-acceling when stopped. - jc01rho.
 
     elif CS.adaptive_Cruise:
-      # ConstAccel = interp(CS.out.vEgo, [18.0 * CV.KPH_TO_MS, 100.0 * CV.KPH_TO_MS], [0.17, 0.245])
-      # accelFomula = ((actuators.accel-ConstAccel) / 8.0)
-      # accelFomula = round(accelFomula,3)
-      #
-      # self.comma_pedal_original = clip (interp(actuators.accel, [-0.775, 0.00, 0.20], [0.0, ConstAccel, ConstAccel + 0.0125]) + accelFomula , 0., 1.)
-      #
-      # self.pedal_hyst_gap = interp(CS.out.vEgo, [40.0 * CV.KPH_TO_MS, 100.0 * CV.KPH_TO_MS], [0.01, 0.006])
-      # self.pedal_final, self.pedal_steady = actuator_hystereses(self.comma_pedal_original, self.pedal_steady, self.pedal_hyst_gap)
-      # self.comma_pedal = clip(self.pedal_final, 0., 1.)
-      self.pedal_gas_max = interp(CS.out.vEgo, [0.0, 5, 30], [0.2725, 0.3275, 0.3650])
-
-      accGain = 0.1429
-      accGain3 = interp(actuators.accel, [-3.5, 2], [0.185, 0.130])
-      accGain10 = interp(actuators.accel, [-3.5, 2], [0.245, 0.185])
-      accGain15 = interp(actuators.accel, [-3.5, 2], [0.25, 0.215])
-      zero = interp(CS.out.vEgo, [0., 3, 10, 15, 30], [0, accGain3, accGain10, accGain15, 0.280])
-
+      # Boltpilot pedal
+      accGain = 0.1429  # This value is the result of testing by several users.
+      DecelZero = interp(CS.out.vEgo, [0., 3, 10, 15, 30], [0.0, 0.190, 0.245, 0.25, 0.280])
+      AccelZero = interp(CS.out.vEgo, [0., 3, 10, 15, 30], [0.0, 0.130, 0.180, 0.210, 0.280])
+      ZeroRatio = interp(actuators.accel, [-3.0, 1.7], [1.0, 0.0])
+      zero = DecelZero * ZeroRatio + AccelZero * (1 - ZeroRatio)
       self.comma_pedal = clip((actuators.accel * accGain + zero), 0., 1.)
 
       #self.pedal_hyst_gap = interp(CS.out.vEgo, [40.0 * CV.KPH_TO_MS, 100.0 * CV.KPH_TO_MS], [0.01, 0.0050])
