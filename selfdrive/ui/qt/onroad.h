@@ -12,6 +12,7 @@
 #include "selfdrive/ui/qt/widgets/cameraview.h"
 
 #include "selfdrive/frogpilot/screenrecorder/screenrecorder.h"
+#include <QTimer>
 
 const int btn_size = 192;
 const int img_size = (btn_size / 4) * 3;
@@ -226,6 +227,13 @@ private:
   const UIScene &scene;
 
 protected:
+  // NDA neokii
+  QPixmap ic_nda;
+  QPixmap ic_hda;
+  QPixmap ic_nda2;
+  QPixmap ic_hda2;
+  void drawRoadLimitSpeed(QPainter &p);
+
   void paintGL() override;
   void initializeGL() override;
   void showEvent(QShowEvent *event) override;
