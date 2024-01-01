@@ -232,7 +232,9 @@ protected:
   QPixmap ic_hda;
   QPixmap ic_nda2;
   QPixmap ic_hda2;
+  QPixmap ic_regenPaddle;
   void drawRoadLimitSpeed(QPainter &p);
+  void drawBrakeRegen(QPainter &painter);
 
   void paintGL() override;
   void initializeGL() override;
@@ -249,6 +251,12 @@ protected:
 
   double prev_draw_t = 0;
   FirstOrderFilter fps_filter;
+
+  const int radius = 192;
+  const int img_size = (radius / 2) * 1.5;
+
+  uint64_t last_update_params;
+
 };
 
 // container for all onroad widgets
