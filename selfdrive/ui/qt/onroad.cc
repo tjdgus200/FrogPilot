@@ -466,7 +466,7 @@ AnnotatedCameraWidget::AnnotatedCameraWidget(VisionStreamType type, QWidget* par
   ic_hda = QPixmap("../assets/images/img_hda.png");
   ic_nda2 = QPixmap("../assets/images/img_nda2.png");
   ic_hda2 = QPixmap("../assets/images/img_hda2.png");
-  ic_regenPaddle = QPixmap("../assets/images/img_regen.png", {img_size + 5, img_size + 5});
+  ic_regenPaddle = QPixmap("../assets/images/img_regen.png");
 
   // Initialize FrogPilot widgets
   initializeFrogPilotWidgets();
