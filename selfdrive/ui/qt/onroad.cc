@@ -1898,14 +1898,14 @@ void AnnotatedCameraWidget::drawBrakeRegen(QPainter &p){
   int x = rightHandDM ? width() - xOffset : xOffset;
   int y = height() - offset;
 
-  // base icon
-  int offset = UI_BORDER_SIZE + btn_size / 2;
-  offset += alwaysOnLateral || conditionalExperimental || roadNameUI ? 25 : 0;
-  int x = rightHandDM ? width() - offset : offset;
-  x += onroadAdjustableProfiles ? 250 : 0;
-  int y = height() - offset;
-  float opacity = dmActive ? 0.65 : 0.2;
-  drawIcon(p, QPoint(x, y), dm_img, blackColor(70), opacity);
+//  // base icon
+//  int offset = UI_BORDER_SIZE + btn_size / 2;
+//  offset += alwaysOnLateral || conditionalExperimental || roadNameUI ? 25 : 0;
+//  int x = rightHandDM ? width() - offset : offset;
+//  x += onroadAdjustableProfiles ? 250 : 0;
+//  int y = height() - offset;
+//  float opacity = dmActive ? 0.65 : 0.2;
+//  drawIcon(p, QPoint(x, y), dm_img, blackColor(70), opacity);
 
   const SubMaster &sm = *(uiState()->sm);
   auto car_control = sm["carControl"].getCarControl();
