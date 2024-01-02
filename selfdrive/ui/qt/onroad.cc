@@ -466,8 +466,7 @@ AnnotatedCameraWidget::AnnotatedCameraWidget(VisionStreamType type, QWidget* par
   ic_hda = QPixmap("../assets/images/img_hda.png");
   ic_nda2 = QPixmap("../assets/images/img_nda2.png");
   ic_hda2 = QPixmap("../assets/images/img_hda2.png");
-  ic_regenPaddle = loadPixmap("../assets/images/img_regen.png").scaled(img_size, img_size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-
+  ic_regenPaddle = QPixmap("../assets/images/img_regen.png");
 
   // Initialize FrogPilot widgets
   initializeFrogPilotWidgets();
@@ -1891,13 +1890,22 @@ void AnnotatedCameraWidget::drawRoadLimitSpeed(QPainter &p) {
 
   p.restore();
 }
-void AnnotatedCameraWidget::drawBrakeRegen(QPainter &painter){
-  painter.save();
+void AnnotatedCameraWidget::drawBrakeRegen(QPainter &p){
+  p.save();
 
   int offset = UI_BORDER_SIZE + btn_size / 2 + 25;  //UI_BORDER_SIZE = 30, btn_size = 192
   int xOffset = compass && map_settings_btn->isEnabled() ? (rightHandDM ? -350 : 350) + (onroadAdjustableProfiles ? 75 : 0) : offset + (onroadAdjustableProfiles ? 275 : 0);
   int x = rightHandDM ? width() - xOffset : xOffset;
   int y = height() - offset;
+
+//  // base icon
+//  int offset = UI_BORDER_SIZE + btn_size / 2;
+//  offset += alwaysOnLateral || conditionalExperimental || roadNameUI ? 25 : 0;
+//  int x = rightHandDM ? width() - offset : offset;
+//  x += onroadAdjustableProfiles ? 250 : 0;
+//  int y = height() - offset;
+//  float opacity = dmActive ? 0.65 : 0.2;
+//  drawIcon(p, QPoint(x, y), dm_img, blackColor(70), opacity);
 
   const SubMaster &sm = *(uiState()->sm);
   auto car_control = sm["carControl"].getCarControl();
@@ -1906,7 +1914,7 @@ void AnnotatedCameraWidget::drawBrakeRegen(QPainter &painter){
   bool regen_valid = car_control.getActuators().getRegenPaddle();
   float img_alpha = regen_valid ? 1.0 : 0.15;
   float bg_alpha = regen_valid ? 0.3 : 0.1;
-  drawIcon(painter, QPoint(x + 96, y), ic_regenPaddle, QColor(0, 0, 0, (255 * bg_alpha)), img_alpha);
+  drawIcon(p, QPoint(x + 96, y), ic_regenPaddle, QColor(0, 0, 0, (255 * bg_alpha)), img_alpha);
 
-  painter.restore();
+  p.restore();
 }
