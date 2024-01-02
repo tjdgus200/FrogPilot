@@ -234,7 +234,7 @@ protected:
   QPixmap ic_hda2;
   QPixmap ic_regenPaddle;
   void drawRoadLimitSpeed(QPainter &p);
-  void drawBrakeRegen(QPainter &painter);
+  void drawBrakeRegen(QPainter &p);
 
   void paintGL() override;
   void initializeGL() override;
