@@ -190,6 +190,7 @@ private:
   bool slcOverridden;
   bool turnSignalLeft;
   bool turnSignalRight;
+  bool useSI;
   double maxAcceleration;
   float cruiseAdjustment;
   float desiredFollow;
