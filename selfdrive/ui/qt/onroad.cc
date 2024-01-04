@@ -467,6 +467,7 @@ AnnotatedCameraWidget::AnnotatedCameraWidget(VisionStreamType type, QWidget* par
   ic_hda = QPixmap("../assets/images/img_hda.png");
   ic_nda2 = QPixmap("../assets/images/img_nda2.png");
   ic_hda2 = QPixmap("../assets/images/img_hda2.png");
+  ic_regenPaddle = QPixmap("../assets/images/img_regen.png");
 
   // Initialize FrogPilot widgets
   initializeFrogPilotWidgets();
@@ -1892,14 +1893,23 @@ void AnnotatedCameraWidget::drawRoadLimitSpeed(QPainter &p) {
 }
 void AnnotatedCameraWidget::drawBrakeRegen(QPainter &p){
   p.save();
-  const SubMaster &sm = *(uiState()->sm);
-  const auto car_control = sm["carControl"].getCarControl();
 
   int offset = UI_BORDER_SIZE + btn_size / 2 + 25;  //UI_BORDER_SIZE = 30, btn_size = 192
-  offset += alwaysOnLateral || conditionalExperimental || roadNameUI ? 25 : 0;
-  int x = rightHandDM ? width() - offset : offset;
-  x += onroadAdjustableProfiles ? 250 : 0;
+  int xOffset = compass && map_settings_btn->isEnabled() ? (rightHandDM ? -350 : 350) + (onroadAdjustableProfiles ? 75 : 0) : offset + (onroadAdjustableProfiles ? 275 : 0);
+  int x = rightHandDM ? width() - xOffset : xOffset;
   int y = height() - offset;
+
+//  // base icon
+//  int offset = UI_BORDER_SIZE + btn_size / 2;
+//  offset += alwaysOnLateral || conditionalExperimental || roadNameUI ? 25 : 0;
+//  int x = rightHandDM ? width() - offset : offset;
+//  x += onroadAdjustableProfiles ? 250 : 0;
+//  int y = height() - offset;
+//  float opacity = dmActive ? 0.65 : 0.2;
+//  drawIcon(p, QPoint(x, y), dm_img, blackColor(70), opacity);
+
+  const SubMaster &sm = *(uiState()->sm);
+  auto car_control = sm["carControl"].getCarControl();
 
   //regen Paddle
   bool regen_valid = car_control.getActuators().getRegenPaddle();
