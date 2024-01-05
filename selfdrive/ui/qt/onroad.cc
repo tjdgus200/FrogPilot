@@ -653,7 +653,7 @@ void AnnotatedCameraWidget::drawHud(QPainter &p) {
   // NDA neokii
   drawRoadLimitSpeed(p);
   // regen paddle working
-  // drawBrakeRegen(p);
+  drawBrakeRegen(p);
 }
 
 void AnnotatedCameraWidget::drawText(QPainter &p, int x, int y, const QString &text, int alpha) {
