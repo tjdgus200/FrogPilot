@@ -1895,11 +1895,12 @@ void AnnotatedCameraWidget::drawBrakeRegen(QPainter &p){
   const SubMaster &sm = *(uiState()->sm);
   const auto car_control = sm["carControl"].getCarControl();
 
-  int offset = UI_BORDER_SIZE + btn_size / 2 + 25;  //UI_BORDER_SIZE = 30, btn_size = 192
-  offset += alwaysOnLateral || conditionalExperimental || roadNameUI ? 100 : 0;
+  int offset = UI_BORDER_SIZE + btn_size / 2;  //UI_BORDER_SIZE = 30, btn_size = 192
+  offset += alwaysOnLateral || conditionalExperimental || roadNameUI ? 25 : 0;
   int x = rightHandDM ? width() - offset : offset;
   x += onroadAdjustableProfiles ? 250 : 0;
-  int y = height() - offset +25;
+  x += !muteDM ? 250 : 0;
+  int y = height() - offset;
 
   //regen Paddle
   bool regen_valid = car_control.getActuators().getRegenPaddle();

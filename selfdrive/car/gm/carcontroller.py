@@ -121,7 +121,7 @@ class CarController:
     if self.CP.openpilotLongitudinalControl:
       # Gas/regen, brakes, and UI commands - all at 25Hz
       #regen paddle
-      if CC.longActive and actuators.accel < -1.5:
+      if CC.longActive and actuators.accel < -1.3:
         can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN))
         actuators.regenPaddle = True  # for icon
       else:
