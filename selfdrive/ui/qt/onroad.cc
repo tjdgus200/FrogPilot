@@ -1905,7 +1905,7 @@ void AnnotatedCameraWidget::drawBrakeRegen(QPainter &p){
   bool regen_valid = car_control.getActuators().getRegenPaddle();
   float img_alpha = regen_valid ? 1.0 : 0.15;
   float bg_alpha = regen_valid ? 0.3 : 0.1;
-  drawIcon(p, QPoint(x, ), ic_regenPaddle, QColor(0, 0, 0, (255 * bg_alpha)), img_alpha);
+  drawIcon(p, QPoint(x, y), ic_regenPaddle, QColor(0, 0, 0, (255 * bg_alpha)), img_alpha);
 
   p.restore();
 }
