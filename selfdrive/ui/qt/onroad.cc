@@ -461,7 +461,7 @@ AnnotatedCameraWidget::AnnotatedCameraWidget(VisionStreamType type, QWidget* par
   main_layout->addWidget(map_settings_btn, 0, Qt::AlignBottom | Qt::AlignRight);
 
   dm_img = loadPixmap("../assets/img_driver_face.png", {img_size + 5, img_size + 5});
-  ic_regenPaddle = loadPixmap("../assets/images/img_regen.png", {img_size, img_size});
+  ic_regenPaddle = loadPixmap("../assets/images/img_regen.png", {img_size+5, img_size+5});
   // NDA neokii
   ic_nda = QPixmap("../assets/images/img_nda.png");
   ic_hda = QPixmap("../assets/images/img_hda.png");
@@ -1896,7 +1896,7 @@ void AnnotatedCameraWidget::drawBrakeRegen(QPainter &p){
   const auto car_control = sm["carControl"].getCarControl();
 
   int offset = UI_BORDER_SIZE + btn_size / 2 + 25;  //UI_BORDER_SIZE = 30, btn_size = 192
-  offset += alwaysOnLateral || conditionalExperimental || roadNameUI ? 25 : 0;
+  offset += alwaysOnLateral || conditionalExperimental || roadNameUI ? 75 : 0;
   int x = rightHandDM ? width() - offset : offset;
   x += onroadAdjustableProfiles ? 250 : 0;
   int y = height() - offset;
