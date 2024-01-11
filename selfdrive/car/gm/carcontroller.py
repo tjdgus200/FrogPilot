@@ -64,12 +64,11 @@ class CarController:
   def calc_pedal_command(accel: float, long_active: bool, car_velocity) -> float:
     if not long_active: return 0.
     # Boltpilot pedal
-    accGain = 0.1429  # This value is the result of testing by several users.
-    DecelZero = interp(car_velocity, [0., 3, 10, 15, 30], [0.08, 0.185, 0.245, 0.255, 0.280])
-    AccelZero = interp(car_velocity, [0., 3, 10, 15, 30], [0.08, 0.130, 0.185, 0.215, 0.280])
-    ZeroRatio = interp(accel, [-3.5, 2.0], [1.0, 0.0])
-    zero = DecelZero * ZeroRatio + AccelZero * (1 - ZeroRatio)
-    pedal_gas = clip((zero + accel * accGain), 0.0, 1.0)
+    if accel > 0:
+      pedaloffset = interp(car_velocity, [0., 3, 6, 30], [0.0, 0.190, 0.22, 0.280])
+    else:
+      pedaloffset = interp(car_velocity, [0., 3, 6, 30], [0.15, 0.190, 0.22, 0.280])
+    pedal_gas = clip((pedaloffset + accel * accGain), 0.0, 1.0)
 
     return pedal_gas
 
@@ -121,7 +120,7 @@ class CarController:
     if self.CP.openpilotLongitudinalControl:
       # Gas/regen, brakes, and UI commands - all at 25Hz
       #regen paddle
-      if CC.longActive and actuators.accel < -1.3:
+      if CC.longActive and actuators.accel < -0.3:
         can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN))
         actuators.regenPaddle = True  # for icon
       else:
