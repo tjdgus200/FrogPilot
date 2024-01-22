@@ -13,6 +13,8 @@
 #include "common/watchdog.h"
 #include "system/hardware/hw.h"
 
+#include "selfdrive/frogpilot/ui/frogpilot_functions.h"
+
 #define BACKLIGHT_DT 0.05
 #define BACKLIGHT_TS 10.00
 
@@ -120,11 +122,10 @@ void update_model(UIState *s,
   // update path edges
   update_line_data(s, plan_position, scene.model_ui ? scene.path_width : 0, 1.22, &scene.track_edge_vertices, max_idx, false);
 
-  // update left adjacent path
-  update_line_data(s, lane_lines[4], scene.blind_spot_path ? scene.lane_width_left / 2 : 0, 0, &scene.track_left_adjacent_lane_vertices, max_idx);
-
-  // update right adjacent path
-  update_line_data(s, lane_lines[5], scene.blind_spot_path ? scene.lane_width_right / 2 : 0, 0, &scene.track_right_adjacent_lane_vertices, max_idx);
+  // update adjacent paths
+  for (int i = 4; i <= 5; i++) {
+    update_line_data(s, lane_lines[i], scene.blind_spot_path ? (i == 4 ? scene.lane_width_left : scene.lane_width_right) / 2 : 0, 0, &scene.track_adjacent_vertices[i], max_idx);
+  }
 }
 
 void update_dmonitoring(UIState *s, const cereal::DriverStateV2::Reader &driverstate, float dm_fade_state, bool is_rhd) {
@@ -253,7 +254,6 @@ static void update_state(UIState *s) {
       scene.obstacle_distance = frogpilotLongitudinalPlan.getSafeObstacleDistance();
       scene.obstacle_distance_stock = frogpilotLongitudinalPlan.getSafeObstacleDistanceStock();
       scene.stopped_equivalence = frogpilotLongitudinalPlan.getStoppedEquivalenceFactor();
-      scene.stopped_equivalence_stock = frogpilotLongitudinalPlan.getStoppedEquivalenceFactorStock();
     }
     if (scene.speed_limit_controller) {
       scene.speed_limit = frogpilotLongitudinalPlan.getSlcSpeedLimit();
@@ -308,6 +308,7 @@ void ui_update_params(UIState *s) {
   scene.lead_info = scene.custom_onroad_ui && params.getBool("LeadInfo");
   scene.road_name_ui = scene.custom_onroad_ui && params.getBool("RoadNameUI");
   scene.show_fps = scene.custom_onroad_ui && params.getBool("ShowFPS");
+  scene.use_si = scene.custom_onroad_ui && params.getBool("UseSI");
 
   scene.custom_theme = params.getBool("CustomTheme");
   scene.custom_colors = scene.custom_theme ? params.getInt("CustomColors") : 0;
@@ -328,8 +329,8 @@ void ui_update_params(UIState *s) {
   scene.personalities_via_screen = (params.getInt("AdjustablePersonalities") == 2 || params.getInt("AdjustablePersonalities") == 3);
 
   scene.rotating_wheel = params.getBool("RotatingWheel");
+  scene.screen_brightness = params.getInt("ScreenBrightness");
   scene.speed_limit_controller = params.getBool("SpeedLimitController");
-
   scene.wheel_icon = params.getInt("WheelIcon");
 }
 
@@ -382,6 +383,8 @@ UIState::UIState(QObject *parent) : QObject(parent) {
   wifi = new WifiManager(this);
 
   scene.screen_brightness = params.getInt("ScreenBrightness");
+
+  setDefaultParams();
 }
 
 void UIState::update() {

@@ -823,10 +823,10 @@ void AnnotatedCameraWidget::drawLaneLines(QPainter &painter, const UIState *s) {
 
   painter.setBrush(bs);
   if (blindSpotLeft) {
-    painter.drawPolygon(scene.track_left_adjacent_lane_vertices);
+    painter.drawPolygon(scene.track_adjacent_vertices[4]);
   }
   if (blindSpotRight) {
-    painter.drawPolygon(scene.track_right_adjacent_lane_vertices);
+    painter.drawPolygon(scene.track_adjacent_vertices[5]);
   }
 
   // paint adjacent lane paths
@@ -868,8 +868,8 @@ void AnnotatedCameraWidget::drawLaneLines(QPainter &painter, const UIState *s) {
     };
 
     // Paint lanes
-    paintLane(painter, scene.track_left_adjacent_lane_vertices, laneWidthLeft, blindSpotLeft);
-    paintLane(painter, scene.track_right_adjacent_lane_vertices, laneWidthRight, blindSpotRight);
+    paintLane(painter, scene.track_adjacent_vertices[4], laneWidthLeft, blindSpotLeft);
+    paintLane(painter, scene.track_adjacent_vertices[5], laneWidthRight, blindSpotRight);
   }
 
   painter.restore();
@@ -967,7 +967,7 @@ void AnnotatedCameraWidget::drawLead(QPainter &painter, const cereal::RadarState
     constexpr float toKmph = 3.6f;
 
     // Metric speed conversion
-    if (is_metric) {
+    if (is_metric || useSI) {
       lead_speed *= toKmph;
     } else {
     // US imperial conversion
@@ -1198,9 +1198,9 @@ void AnnotatedCameraWidget::updateFrogPilotWidgets(QPainter &p) {
   slcSpeedLimit = scene.speed_limit;
   slcSpeedLimitOffset = scene.speed_limit_offset * (is_metric ? MS_TO_KPH : MS_TO_MPH);
   stoppedEquivalence = scene.stopped_equivalence;
-  stoppedEquivalenceStock = scene.stopped_equivalence_stock;
   turnSignalLeft = scene.turn_signal_left;
   turnSignalRight = scene.turn_signal_right;
+  useSI = scene.use_si;
 
   if (!showDriverCamera) {
     if (leadInfo) {
@@ -1407,7 +1407,7 @@ void AnnotatedCameraWidget::drawLeadInfo(QPainter &p) {
   constexpr float toMph = 2.23694f;
 
   // Metric speed conversion
-  if (!is_metric) {
+  if (!(is_metric || useSI)) {
     // US imperial conversion
     unit_a = " ft/s²";
     unit_d = mapOpen ? "ft" : "feet";
@@ -1470,7 +1470,6 @@ void AnnotatedCameraWidget::drawLeadInfo(QPainter &p) {
                            + p.fontMetrics().horizontalAdvance(obstacleText)
                            + p.fontMetrics().horizontalAdvance(createDiffText(obstacleDistance, obstacleDistanceStock))
                            + p.fontMetrics().horizontalAdvance(stopText)
-                           + p.fontMetrics().horizontalAdvance(createDiffText(stoppedEquivalence, stoppedEquivalenceStock))
                            + p.fontMetrics().horizontalAdvance(followText);
 
   int textStartPos = adjustedRect.x() + (adjustedRect.width() - totalTextWidth) / 2;
@@ -1487,7 +1486,6 @@ void AnnotatedCameraWidget::drawLeadInfo(QPainter &p) {
   drawText(obstacleText, Qt::white);
   drawText(createDiffText(obstacleDistance, obstacleDistanceStock), (obstacleDistance - obstacleDistanceStock) > 0 ? Qt::green : Qt::red);
   drawText(stopText, Qt::white);
-  drawText(createDiffText(stoppedEquivalence, stoppedEquivalenceStock), (stoppedEquivalence - stoppedEquivalenceStock) > 0 ? Qt::green : Qt::red);
   drawText(followText, Qt::white);
 
   p.restore();

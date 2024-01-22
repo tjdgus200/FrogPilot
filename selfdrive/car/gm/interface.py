@@ -7,9 +7,11 @@ from openpilot.common.conversions import Conversions as CV
 from openpilot.common.params import Params
 from openpilot.selfdrive.car import create_button_events, get_safety_config
 from openpilot.selfdrive.car.gm.radar_interface import RADAR_HEADER_MSG
-from openpilot.selfdrive.car.gm.values import CAR, CruiseButtons, CarControllerParams, EV_CAR, CAMERA_ACC_CAR, CanBus, GMFlags, CC_ONLY_CAR, SDGM_CAR
+from openpilot.selfdrive.car.gm.values import CAR, CruiseButtons, CarControllerParams, EV_CAR, CAMERA_ACC_CAR, CanBus, GMFlags, CC_ONLY_CAR, SDGM_CAR, SLOW_ACC
 from openpilot.selfdrive.car.interfaces import CarInterfaceBase, TorqueFromLateralAccelCallbackType, FRICTION_THRESHOLD
 from openpilot.selfdrive.controls.lib.drive_helpers import get_friction
+
+params = Params()
 
 ButtonType = car.CarState.ButtonEvent.Type
 EventName = car.CarEvent.EventName
@@ -24,6 +26,7 @@ ACCELERATOR_POS_MSG = 0xbe
 CAM_MSG = 0x320  # AEBCmd
                  # TODO: Is this always linked to camera presence?
 PEDAL_MSG = 0x201
+BSM_MSG = 0x142
 
 NON_LINEAR_TORQUE_PARAMS = {
   CAR.BOLT_EUV: [2.6531724862969748, 1.0, 0.1919764879840985, 0.009054123646805178],
@@ -35,8 +38,11 @@ NON_LINEAR_TORQUE_PARAMS = {
 
 class CarInterface(CarInterfaceBase):
   @staticmethod
-  def get_pid_accel_limits(CP, current_speed, cruise_speed):
-    return CarControllerParams.ACCEL_MIN, CarControllerParams.ACCEL_MAX
+  def get_pid_accel_limits(CP, current_speed, cruise_speed, sport_plus):
+    if sport_plus:
+      return CarControllerParams.ACCEL_MIN, CarControllerParams.ACCEL_MAX_PLUS
+    else:
+      return CarControllerParams.ACCEL_MIN, CarControllerParams.ACCEL_MAX
 
   # Determined by iteratively plotting and minimizing error for f(angle, speed) = steer.
   @staticmethod
@@ -81,7 +87,8 @@ class CarInterface(CarInterfaceBase):
     ret.autoResumeSng = False
     ret.enableGasInterceptor = PEDAL_MSG in fingerprint[0]
 
-    useEVTables = Params().get_bool("EVTable")
+    useGasRegenCmd = params.get_bool("GasRegenCmd")
+    useEVTables = params.get_bool("EVTable")
 
     if candidate in EV_CAR:
       ret.transmissionType = TransmissionType.direct
@@ -109,6 +116,9 @@ class CarInterface(CarInterfaceBase):
       ret.stoppingDecelRate = 2.0  # reach brake quickly after enabling
       ret.vEgoStopping = 0.25
       ret.vEgoStarting = 0.25
+
+      if candidate in SLOW_ACC and useGasRegenCmd:
+        ret.longitudinalTuning.kpV = [1.5, 1.125]
 
       if experimental_long:
         ret.pcmCruise = False
@@ -261,6 +271,8 @@ class CarInterface(CarInterfaceBase):
       ret.steerRatio = 16.3
       ret.centerToFront = ret.wheelbase * 0.5
       ret.tireStiffnessFactor = 1.0
+      if useGasRegenCmd:
+        ret.stopAccel = -0.25
       # On the Bolt, the ECM and camera independently check that you are either above 5 kph or at a stop
       # with foot on brake to allow engagement, but this platform only has that check in the camera.
       # TODO: check if this is split by EV/ICE with more platforms in the future
@@ -279,6 +291,15 @@ class CarInterface(CarInterfaceBase):
       ret.mass = 1345.
       ret.wheelbase = 2.64
       ret.steerRatio = 16.8
+      ret.centerToFront = ret.wheelbase * 0.4
+      ret.tireStiffnessFactor = 1.0
+      ret.steerActuatorDelay = 0.2
+      CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
+
+    elif candidate == CAR.TRAX:
+      ret.mass = 1365.
+      ret.wheelbase = 2.7
+      ret.steerRatio = 16.4
       ret.centerToFront = ret.wheelbase * 0.4
       ret.tireStiffnessFactor = 1.0
       ret.steerActuatorDelay = 0.2
@@ -331,7 +352,7 @@ class CarInterface(CarInterfaceBase):
         ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_PEDAL_LONG
         # Note: Low speed, stop and go not tested. Should be fairly smooth on highway
         ret.longitudinalTuning.kpBP = [5., 35.]
-        ret.longitudinalTuning.kpV = [0.1833, 0.1667]
+        ret.longitudinalTuning.kpV = [0.1677, 0.1500]
         ret.longitudinalTuning.kiBP = [0., 35.0]
         ret.longitudinalTuning.kiV = [0.05, 0.05]
         ret.longitudinalTuning.kf = 0.15
@@ -372,6 +393,9 @@ class CarInterface(CarInterfaceBase):
 
     if ACCELERATOR_POS_MSG not in fingerprint[CanBus.POWERTRAIN]:
       ret.flags |= GMFlags.NO_ACCELERATOR_POS_MSG.value
+
+    # Detect if BSM message is present
+    ret.enableBsm = BSM_MSG in fingerprint[CanBus.POWERTRAIN]
 
     return ret
 
@@ -427,5 +451,5 @@ class CarInterface(CarInterfaceBase):
 
     return ret
 
-  def apply(self, c, now_nanos):
+  def apply(self, c, now_nanos, sport_plus):
     return self.CC.update(c, self.CS, now_nanos)
