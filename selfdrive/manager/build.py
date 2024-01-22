@@ -26,15 +26,14 @@ def build(spinner: Spinner, dirty: bool = False, minimal: bool = False) -> None:
   if nproc is None:
     nproc = 2
 
-  # extra_args = ["--minimal"] if minimal else []
+  extra_args = ["--minimal"] if minimal else []
 
   # building with all cores can result in using too
   # much memory, so retry with less parallelism
   compile_output: List[bytes] = []
   for n in (nproc, nproc/2, 1):
     compile_output.clear()
-    # scons: subprocess.Popen = subprocess.Popen(["scons", f"-j{int(n)}", "--cache-populate", *extra_args], cwd=BASEDIR, env=env, stderr=subprocess.PIPE)
-    scons: subprocess.Popen = subprocess.Popen(["scons", f"-j{int(n)}", "--cache-populate"], cwd=BASEDIR, env=env, stderr=subprocess.PIPE)
+    scons: subprocess.Popen = subprocess.Popen(["scons", f"-j{int(n)}", "--cache-populate", *extra_args], cwd=BASEDIR, env=env, stderr=subprocess.PIPE)
     assert scons.stderr is not None
 
     # Read progress from stderr and update spinner

@@ -55,9 +55,6 @@ def enable_dm(started, params, CP: car.CarParams) -> bool:
 def enable_logging(started, params, CP: car.CarParams) -> bool:
   return not (params.get_bool("FireTheBabysitter") and params.get_bool("NoLogging"))
 
-def not_prime(started, params, CP: car.CarParams) -> bool:
-  return params.get_int("PrimeType") == 0
-
 def osm(started, params, CP: car.CarParams) -> bool:
   return params.get_bool("RoadNameUI") or params.get_bool("SpeedLimitController")
 
@@ -106,8 +103,6 @@ procs = [
   NativeProcess("bridge", "cereal/messaging", ["./bridge"], notcar),
   PythonProcess("webrtcd", "system.webrtc.webrtcd", notcar),
   PythonProcess("webjoystick", "tools.bodyteleop.web", notcar),
-# NDA neokii
-  PythonProcess("road_speed_limiter", "selfdrive.road_speed_limiter", always_run),
 
   # FrogPilot processes
   PythonProcess("fleet_manager", "selfdrive.frogpilot.fleetmanager.fleet_manager", always_run),
