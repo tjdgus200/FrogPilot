@@ -237,9 +237,14 @@ class Controls:
 
     # controlsd is driven by can recv, expected at 100Hz
     self.rk = Ratekeeper(100, print_delay_threshold=None)
-
+    # self.prof = Profiler(False)  # off by default
     self.regenPressed = False
-    
+    self.update_frogpilot_params()
+
+  def reset(self):
+    # self.slowing_down = False
+    self.slowing_down_sound_alert = False
+
   def set_initial_state(self):
     if REPLAY:
       controls_state = Params().get("ReplayControlsState")
