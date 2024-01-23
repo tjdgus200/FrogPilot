@@ -80,7 +80,7 @@ class CarController:
     pedal_gas = clip((pedaloffset + accel), 0.0, 1.0)
 
     return pedal_gas
-    return pedal_gas
+    
 
 
   def update(self, CC, CS, now_nanos):

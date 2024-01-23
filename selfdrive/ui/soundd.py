@@ -13,6 +13,7 @@ from openpilot.common.params import Params
 from openpilot.common.realtime import Ratekeeper
 from openpilot.common.retry import retry
 from openpilot.common.swaglog import cloudlog
+from openpilot.system.hardware import PC
 
 from openpilot.system import micd
 
@@ -43,6 +44,8 @@ sound_list: Dict[int, Tuple[str, Optional[int], float]] = {
   AudibleAlert.warningImmediate: ("warning_immediate.wav", None, MAX_VOLUME),
 
   AudibleAlert.firefox: ("firefox.wav", None, MAX_VOLUME),
+
+  AudibleAlert.speedDown: ("prompt_distracted.wav", 3, MAX_VOLUME),
 }
 
 def check_controls_timeout_alert(sm):

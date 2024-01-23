@@ -118,6 +118,9 @@ struct CarEvent @0x9b1657f34caf3ad3 {
     paramsdTemporaryError @50;
     paramsdPermanentError @119;
 
+    # NDA Neokii
+    slowingDownSpeedSound @120;
+
     radarCanErrorDEPRECATED @15;
     communityFeatureDisallowedDEPRECATED @62;
     radarCommIssueDEPRECATED @67;
@@ -150,6 +153,8 @@ struct CarEvent @0x9b1657f34caf3ad3 {
 
 struct CarState {
   events @13 :List(CarEvent);
+
+  regenPressed @48 :Bool; #this is regen button only
 
   # CAN health
   canValid @26 :Bool;       # invalid counter/checksums
@@ -353,6 +358,8 @@ struct CarControl {
     accel @4: Float32; # m/s^2
     longControlState @5: LongControlState;
 
+    regenPaddle @9: Bool;
+
     enum LongControlState @0xe40f3a917d908282{
       off @0;
       pid @1;
@@ -409,6 +416,8 @@ struct CarControl {
       promptDistracted @8;
 
       firefox @9;
+
+      speedDown @10;
     }
   }
 
