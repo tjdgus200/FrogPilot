@@ -672,10 +672,10 @@ void AnnotatedCameraWidget::drawHud(QPainter &p) {
 
   // current speed
   if (!hideSpeed) {
-    p.setFont(InterFont(176, QFont::Bold));
+    p.setFont(InterFont(230, QFont::Bold));
     drawText(p, rect().center().x(), 210, speedStr);
-    p.setFont(InterFont(66));
-    drawText(p, rect().center().x(), 290, speedUnit, 200);
+    p.setFont(InterFont(64));
+    drawText(p, rect().center().x(), 280, speedUnit, 200);
   }
 
   p.restore();

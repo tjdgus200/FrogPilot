@@ -12,6 +12,7 @@
 #include "selfdrive/ui/qt/widgets/cameraview.h"
 
 #include "selfdrive/frogpilot/screenrecorder/screenrecorder.h"
+#include <QTimer>
 
 const int btn_size = 192;
 const int img_size = (btn_size / 4) * 3;
