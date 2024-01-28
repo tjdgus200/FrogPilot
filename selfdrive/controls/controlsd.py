@@ -8,7 +8,6 @@ from typing import SupportsFloat
 from cereal import car, log, custom
 from openpilot.common.numpy_fast import clip
 from openpilot.common.realtime import config_realtime_process, Priority, Ratekeeper, DT_CTRL
-from openpilot.common.profiler import Profiler
 from openpilot.common.params import Params
 import cereal.messaging as messaging
 from cereal.visionipc import VisionIpcClient, VisionStreamType
@@ -81,12 +80,14 @@ class Controls:
     # FrogPilot variables
     self.params = Params()
     self.params_memory = Params("/dev/shm/params")
-    self.FPCC = custom.FrogPilotCarControl.new_message()
 
     fire_the_babysitter = self.params.get_bool("FireTheBabysitter")
     mute_dm = fire_the_babysitter and self.params.get_bool("MuteDM")
 
+    self.random_event_triggered = False
     self.stopped_for_light_previously = False
+
+    self.random_event_timer = 0
 
     ignore = self.sensor_packets + ['testJoystick']
     if SIMULATION:
@@ -137,6 +138,7 @@ class Controls:
     self.is_ldw_enabled = self.params.get_bool("IsLdwEnabled")
     openpilot_enabled_toggle = self.params.get_bool("OpenpilotEnabledToggle")
     passive = self.params.get_bool("Passive") or not openpilot_enabled_toggle
+    self.update_frogpilot_params()
 
     # detect sound card presence and ensure successful init
     sounds_available = HARDWARE.get_sound_card_online()
@@ -169,6 +171,7 @@ class Controls:
 
     self.CC = car.CarControl.new_message()
     self.CS_prev = car.CarState.new_message()
+    self.FPCC = custom.FrogPilotCarControl.new_message()
     self.AM = AlertManager()
     self.events = Events()
 
@@ -234,7 +237,7 @@ class Controls:
 
     # controlsd is driven by can recv, expected at 100Hz
     self.rk = Ratekeeper(100, print_delay_threshold=None)
-    self.prof = Profiler(False)  # off by default
+    # self.prof = Profiler(False)  # off by default
     self.regenPressed = False
     self.update_frogpilot_params()
 
@@ -464,8 +467,8 @@ class Controls:
     stock_long_is_braking = self.enabled and not self.CP.openpilotLongitudinalControl and CS.aEgo < -1.25
     model_fcw = self.sm['modelV2'].meta.hardBrakePredicted and not CS.brakePressed and not stock_long_is_braking
     planner_fcw = self.sm['longitudinalPlan'].fcw and self.enabled
-    # if planner_fcw or model_fcw:
-    #   self.events.add(EventName.fcw)
+    if planner_fcw or model_fcw:
+      self.events.add(EventName.fcw)
 
     for m in messaging.drain_sock(self.log_sock, wait_for_one=False):
       try:
@@ -490,10 +493,10 @@ class Controls:
     # Green light alert
     if self.green_light_alert and self.enabled:
       stopped_for_light = self.sm['frogpilotLongitudinalPlan'].redLight and CS.standstill
-      green_light = not stopped_for_light and self.stopped_for_light_previously and not CS.gasPressed
+      green_light = not stopped_for_light and self.stopped_for_light_previously
       self.stopped_for_light_previously = stopped_for_light
 
-      if green_light:
+      if green_light and not CS.gasPressed:
         self.events.add(FrogPilotEventName.greenLight)
 
     # kans: events for roadSpeedLimiter
@@ -555,12 +558,12 @@ class Controls:
   def state_transition(self, CS):
     """Compute conditional state transitions and execute actions on state transitions"""
     #regen state
-    if CS.regenPressed:
-      self.regenPressed = True
-    else:
-      self.regenPressed = False
+    # if CS.regenPressed:
+    #   self.regenPressed = True
+    # else:
+    #   self.regenPressed = False
 
-    self.v_cruise_helper.update_v_cruise(CS, self.enabled, self.is_metric, self.reverse_cruise_increase)
+    self.v_cruise_helper.update_v_cruise(CS, self.enabled, self.is_metric, self.reverse_cruise_increase, self.set_speed_offset)
     # NDA neokii
     apply_limit_speed, road_limit_speed, left_dist, first_started, limit_log = SpeedLimiter.instance().get_max_speed(CS, self.v_cruise_helper.v_cruise_kph, self.autoNaviSpeedCtrlStart, self.autoNaviSpeedCtrlEnd)
     if apply_limit_speed >= 20:
@@ -577,6 +580,8 @@ class Controls:
     else:
       self.reset()
       self.v_cruise_kph_limit = self.v_cruise_helper.v_cruise_kph
+      
+
 
     # decrement the soft disable timer at every step, as it's reset on
     # entrance in SOFT_DISABLING state
@@ -665,7 +670,7 @@ class Controls:
     # Update VehicleModel
     lp = self.sm['liveParameters']
     x = max(lp.stiffnessFactor, 0.1)
-    sr = max(lp.steerRatio, 0.1)
+    sr = max(self.steer_ratio, 0.1)
     self.VM.update_params(x, sr)
 
     # Update Torque Params
@@ -679,21 +684,33 @@ class Controls:
     long_plan = self.sm['longitudinalPlan']
     frogpilot_long_plan = self.sm['frogpilotLongitudinalPlan']
 
+    # Reset the Random Event flag
+    if self.random_event_triggered:
+      self.random_event_timer += 1
+      if self.random_event_timer >= 400:
+        self.random_event_triggered = False
+        self.random_event_timer = 0
+        self.params_memory.remove("CurrentRandomEvent")
+
     CC = car.CarControl.new_message()
     CC.enabled = self.enabled
 
+    # Update Experimental Mode
+    if self.conditional_experimental_mode:
+      self.experimental_mode = self.sm['frogpilotLongitudinalPlan'].conditionalExperimental
+
     # Gear Check
     gear = car.CarState.GearShifter
-    self.FPCC.drivingGear = CS.gearShifter not in (gear.neutral, gear.park, gear.reverse, gear.unknown)
+    driving_gear = CS.gearShifter not in (gear.neutral, gear.park, gear.reverse, gear.unknown)
 
-    signal_check = not ((CS.leftBlinker or CS.rightBlinker) and self.pause_lateral_on_signal and CS.vEgo < LANE_CHANGE_SPEED_MIN)
+    signal_check = not ((CS.leftBlinker or CS.rightBlinker) and CS.vEgo < self.pause_lateral_on_signal and not CS.standstill)
 
     # Always on lateral
     if self.always_on_lateral:
       self.lateral_allowed &= CS.cruiseState.available
       self.lateral_allowed |= CS.cruiseState.enabled or (CS.cruiseState.available and self.always_on_lateral_main)
 
-      self.FPCC.alwaysOnLateral = self.lateral_allowed and self.FPCC.drivingGear and signal_check
+      self.FPCC.alwaysOnLateral = self.lateral_allowed and driving_gear and signal_check
       if self.FPCC.alwaysOnLateral:
         self.current_alert_types.append(ET.WARNING)
 
@@ -776,8 +793,13 @@ class Controls:
         turning = abs(lac_log.desiredLateralAccel) > 1.0
         good_speed = CS.vEgo > 5
         max_torque = abs(self.last_actuators.steer) > 0.99
-        if undershooting and turning and good_speed and max_torque:
-          lac_log.active and self.events.add(FrogPilotEventName.frogSteerSaturated if self.goat_scream else EventName.steerSaturated)
+        if undershooting and turning and good_speed and max_torque and not self.random_event_triggered:
+          if self.sm.frame % 10000 == 0:
+            lac_log.active and self.events.add(FrogPilotEventName.firefoxSteerSaturated)
+            self.params_memory.put_int("CurrentRandomEvent", 1)
+            self.random_event_triggered = True
+          else:
+            lac_log.active and self.events.add(FrogPilotEventName.frogSteerSaturated if self.goat_scream else EventName.steerSaturated)
       elif lac_log.saturated:
         dpath_points = lat_plan.dPathPoints
         if len(dpath_points):
@@ -791,8 +813,8 @@ class Controls:
           left_deviation = steering_value > 0 and dpath_points[0] < -0.20
           right_deviation = steering_value < 0 and dpath_points[0] > 0.20
 
-          # if left_deviation or right_deviation:
-          #   self.events.add(EventName.steerSaturated)
+          if left_deviation or right_deviation:
+            self.events.add(EventName.steerSaturated)
 
     # Ensure no NaNs/Infs
     for p in ACTUATOR_FIELDS:
@@ -828,13 +850,13 @@ class Controls:
       CC.cruiseControl.resume = self.enabled and CS.cruiseState.standstill and speeds[-1] > 0.1
 
     hudControl = CC.hudControl
-    hudControl.setSpeed = float(self.v_cruise_kph_limit * CV.KPH_TO_MS)
+    hudControl.setSpeed = float(self.v_cruise_helper.v_cruise_cluster_kph * CV.KPH_TO_MS)
     hudControl.speedVisible = self.enabled
     hudControl.lanesVisible = self.enabled
     hudControl.leadVisible = self.sm['longitudinalPlan'].hasLead
 
-    hudControl.rightLaneVisible = CC.latActive
-    hudControl.leftLaneVisible = CC.latActive
+    hudControl.rightLaneVisible = True
+    hudControl.leftLaneVisible = True
 
     recent_blinker = (self.sm.frame - self.last_blinker_frame) * DT_CTRL < 5.0  # 5s blinker cooldown
     ldw_allowed = self.is_ldw_enabled and CS.vEgo > LDW_MIN_SPEED and not recent_blinker \
@@ -915,7 +937,7 @@ class Controls:
     controlsState.engageable = not self.events.contains(ET.NO_ENTRY)
     controlsState.longControlState = self.LoC.long_control_state
     controlsState.vPid = float(self.LoC.v_pid)
-    controlsState.vCruise = float(self.v_cruise_kph_limit)
+    controlsState.vCruise = float(self.v_cruise_helper.v_cruise_kph)
     controlsState.vCruiseCluster = float(self.v_cruise_helper.v_cruise_cluster_kph)
     controlsState.upAccelCmd = float(self.LoC.pid.p)
     controlsState.uiAccelCmd = float(self.LoC.pid.i)
@@ -978,12 +1000,10 @@ class Controls:
 
   def step(self):
     start_time = time.monotonic()
-    self.prof.checkpoint("Ratekeeper", ignore=True)
 
     # Sample data from sockets and get a carState
     CS = self.data_sample()
     cloudlog.timestamp("Data sampled")
-    self.prof.checkpoint("Sample")
 
     self.update_events(CS)
     cloudlog.timestamp("Events updated")
@@ -991,35 +1011,23 @@ class Controls:
     if not self.CP.passive and self.initialized:
       # Update control state
       self.state_transition(CS)
-      self.prof.checkpoint("State transition")
 
     # Compute actuators (runs PID loops and lateral MPC)
     CC, lac_log = self.state_control(CS)
 
-    self.prof.checkpoint("State Control")
-
     # Publish data
     self.publish_logs(CS, start_time, CC, lac_log)
-    self.prof.checkpoint("Sent")
 
     self.CS_prev = CS
 
   def params_thread(self, evt):
     while not evt.is_set():
       self.is_metric = self.params.get_bool("IsMetric")
-      if self.CP.openpilotLongitudinalControl:
-        if self.conditional_experimental_mode:
-          self.experimental_mode = self.sm['frogpilotLongitudinalPlan'].conditionalExperimental
-          time.sleep(0.01)
-        else:
-          self.experimental_mode = self.params.get_bool("ExperimentalMode") or self.params_memory.get_bool("SLCExperimentalMode")
-          time.sleep(0.1)
+      if self.CP.openpilotLongitudinalControl and not self.conditional_experimental_mode:
+        self.experimental_mode = self.params.get_bool("ExperimentalMode") or self.params_memory.get_bool("SLCExperimentalMode")
       if self.CP.notCar:
         self.joystick_mode = self.params.get_bool("JoystickDebugMode")
-
-      # Update FrogPilot parameters
-      if self.params_memory.get_bool("FrogPilotTogglesUpdated"):
-        self.update_frogpilot_params()
+      time.sleep(0.1)
 
   def controlsd_thread(self):
     e = threading.Event()
@@ -1029,7 +1037,11 @@ class Controls:
       while True:
         self.step()
         self.rk.monitor_time()
-        self.prof.display()
+
+        # Update FrogPilot parameters
+        if self.params_memory.get_bool("FrogPilotTogglesUpdated"):
+          updateFrogPilotParams = threading.Thread(target=self.update_frogpilot_params)
+          updateFrogPilotParams.start()
 
     except SystemExit:
       e.set()
@@ -1043,15 +1055,25 @@ class Controls:
     self.average_desired_curvature = self.params.get_bool("AverageCurvature")
     self.conditional_experimental_mode = self.params.get_bool("ConditionalExperimental")
 
-    self.custom_theme = self.params.get_bool("CustomTheme")
-    self.custom_sounds = self.params.get_int("CustomSounds") if self.custom_theme else 0
-    self.frog_sounds = self.custom_sounds == 1
-    self.goat_scream = self.params.get_bool("GoatScream") and self.frog_sounds
+    custom_theme = self.params.get_bool("CustomTheme")
+    custom_sounds = self.params.get_int("CustomSounds") if custom_theme else 0
+    frog_sounds = custom_sounds == 1
+    self.goat_scream = self.params.get_bool("GoatScream") and frog_sounds
 
     self.green_light_alert = self.params.get_bool("GreenLightAlert")
-    self.pause_lateral_on_signal = self.params.get_bool("PauseLateralOnSignal")
-    self.reverse_cruise_increase = self.params.get_bool("ReverseCruise")
-    self.sport_plus = self.params.get_int("AccelerationProfile") == 3
+
+    lateral_tune = self.params.get_bool("LateralTune")
+    self.steer_ratio = self.params.get_float("SteerRatioStock")
+
+    longitudinal_tune = self.params.get_bool("LongitudinalTune")
+    self.sport_plus = self.params.get_int("AccelerationProfile") == 3 and longitudinal_tune
+
+    quality_of_life = self.params.get_bool("QOLControls")
+    self.pause_lateral_on_signal = self.params.get_int("PauseLateralOnSignal") * (CV.KPH_TO_MS if self.is_metric else CV.MPH_TO_MS) if quality_of_life else 0
+    self.reverse_cruise_increase = self.params.get_bool("ReverseCruise") and quality_of_life
+    self.set_speed_offset = self.params.get_int("SetSpeedOffset") * (1 if self.is_metric else CV.MPH_TO_KPH) if quality_of_life else 0
+
+    self.random_events = self.params.get_bool("RandomEvents")
 
 def main():
   controls = Controls()

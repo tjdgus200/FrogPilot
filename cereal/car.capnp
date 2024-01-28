@@ -357,6 +357,7 @@ struct CarControl {
     speed @6: Float32; # m/s
     accel @4: Float32; # m/s^2
     longControlState @5: LongControlState;
+
     regenPaddle @9: Bool;
 
     enum LongControlState @0xe40f3a917d908282{
@@ -414,7 +415,9 @@ struct CarControl {
       promptRepeat @7;
       promptDistracted @8;
 
-      speedDown @9;
+      firefox @9;
+
+      speedDown @10;
     }
   }
 

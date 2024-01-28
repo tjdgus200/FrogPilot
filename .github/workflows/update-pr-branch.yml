@@ -1,4 +1,4 @@
-name: Overwrite MAKE-PRS-HERE Branch with FrogPilot
+name: Merge FrogPilot into MAKE-PRS-HERE
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - FrogPilot
 
 jobs:
-  overwrite-branch:
+  merge-branch:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -14,16 +14,19 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Overwrite MAKE-PRS-HERE with FrogPilot
+      - name: Apply changes from FrogPilot to MAKE-PRS-HERE
         run: |
-          git checkout FrogPilot
-          git pull
+          git config user.name "FrogAi"
+          git config user.email "91348155+FrogAi@users.noreply.github.com"
+          git fetch origin
           git checkout MAKE-PRS-HERE
-          git reset --hard FrogPilot
-          git push origin MAKE-PRS-HERE --force
+          git checkout FrogPilot -- .
+          DATE_STR=$(TZ="America/Phoenix" date +"%B %d, %Y Update")
+          git commit -am "${DATE_STR}"
+          git push origin MAKE-PRS-HERE
         env:
-          GIT_COMMITTER_NAME: FrogAi
-          GIT_COMMITTER_EMAIL: 91348155+FrogAi@users.noreply@github.com
           GIT_AUTHOR_NAME: FrogAi
-          GIT_AUTHOR_EMAIL: 91348155+FrogAi@users.noreply@github.com
+          GIT_AUTHOR_EMAIL: 91348155+FrogAi@users.noreply.github.com
+          GIT_COMMITTER_NAME: FrogAi
+          GIT_COMMITTER_EMAIL: 91348155+FrogAi@users.noreply.github.com
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

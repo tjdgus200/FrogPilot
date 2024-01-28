@@ -12,15 +12,11 @@
 #include "selfdrive/ui/qt/widgets/cameraview.h"
 
 #include "selfdrive/frogpilot/screenrecorder/screenrecorder.h"
-#include <QTimer>
 
 const int btn_size = 192;
 const int img_size = (btn_size / 4) * 3;
 
 // FrogPilot global variables
-static bool reverseCruise;
-static bool showSLCOffset;
-static bool speedHidden;
 static double fps;
 
 // ***** onroad widgets *****
@@ -39,7 +35,7 @@ private:
   Alert alert = {};
 
   // FrogPilot variables
-  const UIScene &scene;
+  UIScene &scene;
 };
 
 class Compass : public QWidget {
@@ -82,15 +78,15 @@ private:
   bool engageable;
 
   // FrogPilot variables
+  UIScene &scene;
+
+  std::map<int, QPixmap> wheelImages;
+
+  bool firefoxRandomEventTriggered;
   bool rotatingWheel;
   int steeringAngleDeg;
   int wheelIcon;
   int y_offset;
-
-  std::map<int, QPixmap> wheelImages;
-
-  Params paramsMemory{"/dev/shm/params"};
-  const UIScene &scene;
 };
 
 
@@ -120,7 +116,8 @@ private:
 
   Params params;
   Params paramsMemory{"/dev/shm/params"};
-  const UIScene &scene;
+
+  UIScene &scene;
 
   int personalityProfile = 0;
 
@@ -173,6 +170,16 @@ private:
   void updateFrogPilotWidgets(QPainter &p);
 
   // FrogPilot variables
+  Params paramsMemory{"/dev/shm/params"};
+
+  UIScene &scene;
+
+  Compass *compass_img;
+  PersonalityButton *personality_btn;
+  ScreenRecorder *recorder_btn;
+
+  QHBoxLayout *bottom_layout;
+
   bool accelerationPath;
   bool adjacentPath;
   bool alwaysOnLateral;
@@ -181,16 +188,20 @@ private:
   bool compass;
   bool conditionalExperimental;
   bool experimentalMode;
+  bool hideSpeed;
   bool leadInfo;
   bool mapOpen;
   bool muteDM;
   bool onroadAdjustableProfiles;
+  bool reverseCruise;
   bool roadNameUI;
   bool showDriverCamera;
+  bool showSLCOffset;
   bool slcOverridden;
   bool turnSignalLeft;
   bool turnSignalRight;
   bool useSI;
+  bool useViennaSLCSign;
   double maxAcceleration;
   float cruiseAdjustment;
   float laneWidthLeft;
@@ -213,18 +224,10 @@ private:
   QTimer *animationTimer;
   size_t animationFrameIndex;
 
+  inline QColor greenColor(int alpha = 242) { return QColor(23, 134, 68, alpha); }
+
   std::unordered_map<int, std::pair<QString, std::pair<QColor, std::map<double, QBrush>>>> themeConfiguration;
   std::vector<QPixmap> signalImgVector;
-
-  QHBoxLayout *bottom_layout;
-
-  Compass *compass_img;
-  PersonalityButton *personality_btn;
-  ScreenRecorder *recorder_btn;
-
-  Params params;
-  Params paramsMemory{"/dev/shm/params"};
-  const UIScene &scene;
 
 protected:
   // NDA neokii
@@ -281,12 +284,10 @@ private:
   QHBoxLayout* split;
 
   // FrogPilot variables
+  UIScene &scene;
+
   QPoint timeoutPoint = QPoint(420, 69);
   QTimer clickTimer;
-
-  Params params;
-  Params paramsMemory{"/dev/shm/params"};
-  const UIScene &scene;
 
 private slots:
   void offroadTransition(bool offroad);
