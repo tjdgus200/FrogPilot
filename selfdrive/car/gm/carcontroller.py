@@ -26,23 +26,6 @@ PITCH_DEADZONE = 0.01 # [radians] 0.01 ≈ 1% grade
 BRAKE_PITCH_FACTOR_BP = [5., 10.] # [m/s] smoothly revert to planned accel at low speeds
 BRAKE_PITCH_FACTOR_V = [0., 1.] # [unitless in [0,1]]; don't touch
 
-def actuator_hystereses(final_pedal, pedal_steady, pedal_hyst_gap_param = 0.002):
-  # hyst params... TODO: move these to VehicleParams
-  # don't change pedal command for small oscillations within this value
-  # pedal_hyst_gap= 0.01
-  pedal_hyst_gap= pedal_hyst_gap_param
-  # for small pedal oscillations within pedal_hyst_gap, don't change the pedal command
-  if math.isclose(final_pedal, 0.0):
-    pedal_steady = 0.
-  elif final_pedal > pedal_steady + pedal_hyst_gap:
-    pedal_steady = final_pedal - pedal_hyst_gap
-  elif final_pedal < pedal_steady - pedal_hyst_gap:
-    pedal_steady = final_pedal + pedal_hyst_gap
-  final_pedal = pedal_steady
-
-  return final_pedal, pedal_steady
-
-
 class CarController:
   def __init__(self, dbc_name, CP, VM):
     self.CP = CP
@@ -55,7 +38,6 @@ class CarController:
     self.last_steer_frame = 0
     self.last_button_frame = 0
     self.cancel_counter = 0
-    self.pedal_steady = 0.
 
     self.lka_steering_cmd_counter = 0
     self.lka_icon_status_last = (False, False)
@@ -74,8 +56,6 @@ class CarController:
     self.accel_g = 0.0
     self.interceptor_gas_cmd = 0.0
 
-
-
   def update_frogpilot_variables(self, params):
     self.long_pitch = params.get_bool("LongPitch")
     self.use_ev_tables = params.get_bool("EVTable")
@@ -83,25 +63,14 @@ class CarController:
   @staticmethod
   def calc_pedal_command(accel: float, long_active: bool, car_velocity) -> float:
     if not long_active: return 0.
-
-    # zero = 0.15625  # 40/256
-    # if accel > 0.:
-    #   # Scales the accel from 0-1 to 0.156-1
-    #   pedal_gas = clip(((1 - zero) * accel + zero), 0., 1.)
-    # else:
-    #   # if accel is negative, -0.1 -> 0.015625
-    #   pedal_gas = clip(zero + accel, 0., zero)  # Make brake the same size as gas, but clip to regen
-
     # Boltpilot pedal
     if accel > 0:
       pedaloffset = interp(car_velocity, [0., 3, 6, 30], [0.0, 0.180, 0.22, 0.280])
     else:
-      pedaloffset = interp(car_velocity, [0., 3, 6, 30], [0.15, 0.180, 0.22, 0.280])
+      pedaloffset = interp(car_velocity, [0., 3, 6, 30], [0.10, 0.180, 0.22, 0.280])
     pedal_gas = clip((pedaloffset + accel), 0.0, 1.0)
 
     return pedal_gas
-    
-
 
   def update(self, CC, CS, now_nanos):
     actuators = CC.actuators
@@ -193,12 +162,9 @@ class CarController:
             # gas interceptor only used for full long control on cars without ACC
             interceptor_gas_cmd = self.calc_pedal_command(actuators.accel, CC.longActive, CS.out.vEgo)
 
-            # self.interceptor_gas_cmd = interceptor_gas_cmd
-
         if self.CP.enableGasInterceptor and self.apply_gas > self.params.INACTIVE_REGEN and CS.out.cruiseState.standstill:
           # "Tap" the accelerator pedal to re-engage ACC
           interceptor_gas_cmd = self.params.SNG_INTERCEPTOR_GAS
-          # self.interceptor_gas_cmd = interceptor_gas_cmd
           
           self.apply_brake = 0
           self.apply_gas = self.params.INACTIVE_REGEN
