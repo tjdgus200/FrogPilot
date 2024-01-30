@@ -26,6 +26,23 @@ PITCH_DEADZONE = 0.01 # [radians] 0.01 ≈ 1% grade
 BRAKE_PITCH_FACTOR_BP = [5., 10.] # [m/s] smoothly revert to planned accel at low speeds
 BRAKE_PITCH_FACTOR_V = [0., 1.] # [unitless in [0,1]]; don't touch
 
+def actuator_hystereses(final_pedal, pedal_steady, pedal_hyst_gap_param = 0.002):
+  # hyst params... TODO: move these to VehicleParams
+  # don't change pedal command for small oscillations within this value
+  # pedal_hyst_gap= 0.01
+  pedal_hyst_gap= pedal_hyst_gap_param
+  # for small pedal oscillations within pedal_hyst_gap, don't change the pedal command
+  if math.isclose(final_pedal, 0.0):
+    pedal_steady = 0.
+  elif final_pedal > pedal_steady + pedal_hyst_gap:
+    pedal_steady = final_pedal - pedal_hyst_gap
+  elif final_pedal < pedal_steady - pedal_hyst_gap:
+    pedal_steady = final_pedal + pedal_hyst_gap
+  final_pedal = pedal_steady
+
+  return final_pedal, pedal_steady
+
+
 class CarController:
   def __init__(self, dbc_name, CP, VM):
     self.CP = CP
@@ -55,6 +72,9 @@ class CarController:
 
     self.pitch = FirstOrderFilter(0., 0.09 * 4, DT_CTRL * 4)  # runs at 25 Hz
     self.accel_g = 0.0
+    self.interceptor_gas_cmd = 0.0
+
+
 
   def update_frogpilot_variables(self, params):
     self.long_pitch = params.get_bool("LongPitch")
@@ -173,9 +193,13 @@ class CarController:
             # gas interceptor only used for full long control on cars without ACC
             interceptor_gas_cmd = self.calc_pedal_command(actuators.accel, CC.longActive, CS.out.vEgo)
 
+            # self.interceptor_gas_cmd = interceptor_gas_cmd
+
         if self.CP.enableGasInterceptor and self.apply_gas > self.params.INACTIVE_REGEN and CS.out.cruiseState.standstill:
           # "Tap" the accelerator pedal to re-engage ACC
           interceptor_gas_cmd = self.params.SNG_INTERCEPTOR_GAS
+          # self.interceptor_gas_cmd = interceptor_gas_cmd
+          
           self.apply_brake = 0
           self.apply_gas = self.params.INACTIVE_REGEN
 
@@ -187,6 +211,7 @@ class CarController:
             can_sends.extend(gmcan.create_gm_cc_spam_command(self.packer_pt, self, CS, actuators))
         if self.CP.enableGasInterceptor:
           can_sends.append(create_gas_interceptor_command(self.packer_pt, interceptor_gas_cmd, idx))
+          self.interceptor_gas_cmd = interceptor_gas_cmd
         if self.CP.carFingerprint not in CC_ONLY_CAR:
           friction_brake_bus = CanBus.CHASSIS
           # GM Camera exceptions
@@ -259,6 +284,7 @@ class CarController:
       if self.frame % 10 == 0:
         can_sends.append(gmcan.create_pscm_status(self.packer_pt, CanBus.CAMERA, CS.pscm_status))
 
+    actuators.commaPedal = self.interceptor_gas_cmd
     new_actuators = actuators.copy()
     new_actuators.accel = accel
     new_actuators.steer = self.apply_steer_last / self.params.STEER_MAX
@@ -266,6 +292,8 @@ class CarController:
     new_actuators.gas = self.apply_gas
     new_actuators.brake = self.apply_brake
     new_actuators.speed = self.apply_speed
+
+
 
     self.frame += 1
     return new_actuators, can_sends
