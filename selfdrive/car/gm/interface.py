@@ -175,17 +175,17 @@ class CarInterface(CarInterfaceBase):
                                                                          tire_stiffness_factor=tire_stiffness_factor)
 
     # longitudinal
-    ret.longitudinalTuning.kpBP = [0.]
-    ret.longitudinalTuning.kpV = [1.0]
-    ret.longitudinalTuning.kiBP = [0.]
-    ret.longitudinalTuning.kiV = [0.]
+    ret.longitudinalTuning.kpBP = [5., 35.]
+    ret.longitudinalTuning.kpV = [0.1500, 0.1500]
+    ret.longitudinalTuning.kiBP = [0., 35.0]
+    ret.longitudinalTuning.kiV = [0.1, 0.05]
     
     ret.longitudinalTuning.deadzoneBP = [0., 30.*CV.KPH_TO_MS]
     ret.longitudinalTuning.deadzoneV = [0., 0.10]
     ret.longitudinalActuatorDelayLowerBound = 0.15
     ret.longitudinalActuatorDelayUpperBound = 0.15
     
-    ret.stopAccel = 0.
+    ret.stopAccel = -2.0
     ret.stoppingDecelRate = 0.8
     ret.vEgoStopping = 0.5
     ret.vEgoStarting = 0.5
