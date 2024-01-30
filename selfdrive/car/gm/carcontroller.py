@@ -104,17 +104,12 @@ class CarController():
 
     elif CS.adaptive_Cruise:
       # Boltpilot pedal
-      accGain = 0.1429  # This value is the result of testing by several users.
-      DecelZero = interp(CS.out.vEgo, [0., 3, 10, 15, 30], [0.0, 0.190, 0.245, 0.25, 0.280])
-      AccelZero = interp(CS.out.vEgo, [0., 3, 10, 15, 30], [0.0, 0.130, 0.180, 0.210, 0.280])
-      ZeroRatio = interp(actuators.accel, [-3.0, 1.7], [1.0, 0.0])
-      zero = DecelZero * ZeroRatio + AccelZero * (1 - ZeroRatio)
-      self.comma_pedal = clip((actuators.accel * accGain + zero), 0., 1.)
-
-      #self.pedal_hyst_gap = interp(CS.out.vEgo, [40.0 * CV.KPH_TO_MS, 100.0 * CV.KPH_TO_MS], [0.01, 0.0050])
-      #pedal_final, self.pedal_steady = actuator_hystereses(self.comma_pedal, self.pedal_steady, self.pedal_hyst_gap)
-      #self.comma_pedal = clip(pedal_final, 0., self.pedal_gas_max)
-
+      if actuators.accel > 0.0:
+        pedaloffset = interp(CS.out.vEgo, [0., 3, 6, 30], [0.0, 0.180, 0.22, 0.280])
+      else:
+        pedaloffset = interp(CS.out.vEgo, [0., 3, 6, 30], [0.08, 0.180, 0.22, 0.280])
+      
+      self.comma_pedal = clip((pedaloffset + actuators.accel), 0.0, 1.0)
       actuators.commaPedalOrigin = self.comma_pedal
 
       if CS.CP.restartForceAccel :
@@ -175,7 +170,7 @@ class CarController():
           self.comma_pedal = clip(self.comma_pedal, 0.0 , (self.pedalMaxValue -0.025))
 
       #braking logic
-      if actuators.accel < -1.5 :
+      if actuators.accel < -0.3 :
         can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN))
         actuators.regenPaddle = True #for icon
       elif controls.LoC.pid.f < - 0.95 :
