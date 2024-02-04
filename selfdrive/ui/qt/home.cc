@@ -92,6 +92,7 @@ void HomeWindow::mousePressEvent(QMouseEvent* e) {
   // Handle sidebar collapsing
   if ((onroad->isVisible() || body->isVisible()) && (!sidebar->isVisible() || e->x() > sidebar->width())) {
     sidebar->setVisible(!sidebar->isVisible() && !onroad->isMapVisible());
+    params.putBool("Sidebar", sidebar->isVisible());
   }
 }
 
@@ -220,11 +221,7 @@ OffroadHome::OffroadHome(QWidget* parent) : QFrame(parent) {
 
   // Set the model name
   std::map<int, QString> MODEL_NAME {
-    {0, "New Delhi"},
-    {1, "Blue Diamond V1"},
-    {2, "Blue Diamond V2"},
-    {3, "Farmville"},
-    {4, "New Lemon Pie"},
+    {0, "Los Angeles"},
   };
 
   modelName = MODEL_NAME[params.getInt("Model")];

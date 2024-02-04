@@ -1,41 +1,42 @@
+import threading
+
 from cereal import log
 from openpilot.common.conversions import Conversions as CV
+from openpilot.common.params import Params
 from openpilot.common.realtime import DT_MDL
 
-from openpilot.selfdrive.frogpilot.functions.frogpilot_planner import calculate_lane_width
-
-LaneChangeState = log.LateralPlan.LaneChangeState
-LaneChangeDirection = log.LateralPlan.LaneChangeDirection
-TurnDirection = log.LateralPlan.Desire
+LaneChangeState = log.LaneChangeState
+LaneChangeDirection = log.LaneChangeDirection
+TurnDirection = log.Desire
 
 LANE_CHANGE_SPEED_MIN = 20 * CV.MPH_TO_MS
 LANE_CHANGE_TIME_MAX = 10.
 
 DESIRES = {
   LaneChangeDirection.none: {
-    LaneChangeState.off: log.LateralPlan.Desire.none,
-    LaneChangeState.preLaneChange: log.LateralPlan.Desire.none,
-    LaneChangeState.laneChangeStarting: log.LateralPlan.Desire.none,
-    LaneChangeState.laneChangeFinishing: log.LateralPlan.Desire.none,
+    LaneChangeState.off: log.Desire.none,
+    LaneChangeState.preLaneChange: log.Desire.none,
+    LaneChangeState.laneChangeStarting: log.Desire.none,
+    LaneChangeState.laneChangeFinishing: log.Desire.none,
   },
   LaneChangeDirection.left: {
-    LaneChangeState.off: log.LateralPlan.Desire.none,
-    LaneChangeState.preLaneChange: log.LateralPlan.Desire.none,
-    LaneChangeState.laneChangeStarting: log.LateralPlan.Desire.laneChangeLeft,
-    LaneChangeState.laneChangeFinishing: log.LateralPlan.Desire.laneChangeLeft,
+    LaneChangeState.off: log.Desire.none,
+    LaneChangeState.preLaneChange: log.Desire.none,
+    LaneChangeState.laneChangeStarting: log.Desire.laneChangeLeft,
+    LaneChangeState.laneChangeFinishing: log.Desire.laneChangeLeft,
   },
   LaneChangeDirection.right: {
-    LaneChangeState.off: log.LateralPlan.Desire.none,
-    LaneChangeState.preLaneChange: log.LateralPlan.Desire.none,
-    LaneChangeState.laneChangeStarting: log.LateralPlan.Desire.laneChangeRight,
-    LaneChangeState.laneChangeFinishing: log.LateralPlan.Desire.laneChangeRight,
+    LaneChangeState.off: log.Desire.none,
+    LaneChangeState.preLaneChange: log.Desire.none,
+    LaneChangeState.laneChangeStarting: log.Desire.laneChangeRight,
+    LaneChangeState.laneChangeFinishing: log.Desire.laneChangeRight,
   },
 }
 
 TURN_DESIRES = {
-  TurnDirection.none: log.LateralPlan.Desire.none,
-  TurnDirection.turnLeft: log.LateralPlan.Desire.turnLeft,
-  TurnDirection.turnRight: log.LateralPlan.Desire.turnRight,
+  TurnDirection.none: log.Desire.none,
+  TurnDirection.turnLeft: log.Desire.turnLeft,
+  TurnDirection.turnRight: log.Desire.turnRight,
 }
 
 
@@ -47,51 +48,41 @@ class DesireHelper:
     self.lane_change_ll_prob = 1.0
     self.keep_pulse_timer = 0.0
     self.prev_one_blinker = False
-    self.desire = log.LateralPlan.Desire.none
+    self.desire = log.Desire.none
 
     # FrogPilot variables
+    self.params = Params()
+    self.params_memory = Params("/dev/shm/params")
+
     self.turn_direction = TurnDirection.none
 
     self.lane_change_completed = False
     self.turn_completed = False
 
     self.lane_change_wait_timer = 0
-    self.lane_width_left = 0
-    self.lane_width_right = 0
 
-  def update(self, carstate, modeldata, lateral_active, lane_change_prob, frogpilot_planner):
+    self.update_frogpilot_params()
+
+  def update(self, carstate, lateral_active, lane_change_prob, frogpilotPlan):
     v_ego = carstate.vEgo
     one_blinker = carstate.leftBlinker != carstate.rightBlinker
     below_lane_change_speed = v_ego < LANE_CHANGE_SPEED_MIN
 
-    # Calculate left and right lane widths for the blindspot path
-    turning = abs(carstate.steeringAngleDeg) >= 60
-    if frogpilot_planner.blindspot_path and not below_lane_change_speed and not turning:
-      # Calculate left and right lane widths
-      self.lane_width_left = calculate_lane_width(modeldata.laneLines[0], modeldata.laneLines[1], modeldata.roadEdges[0])
-      self.lane_width_right = calculate_lane_width(modeldata.laneLines[3], modeldata.laneLines[2], modeldata.roadEdges[1])
-    else:
-      self.lane_width_left = 0
-      self.lane_width_right = 0
-
     # Calculate the desired lane width for nudgeless lane change with lane detection
-    if not (frogpilot_planner.lane_detection and one_blinker) or below_lane_change_speed or turning:
+    if not (self.lane_detection and one_blinker) or below_lane_change_speed:
       lane_available = True
     else:
       # Set the minimum lane threshold to 2.8 meters
       min_lane_threshold = 2.8
-      # Set the blinker index based on which signal is on
-      blinker_index = 0 if carstate.leftBlinker else 1
-      current_lane = modeldata.laneLines[blinker_index + 1]
-      desired_lane = modeldata.laneLines[blinker_index if carstate.leftBlinker else blinker_index + 2]
-      road_edge = modeldata.roadEdges[blinker_index]
+      desired_lane = frogpilotPlan.laneWidthLeft if carstate.leftBlinker else frogpilotPlan.laneWidthRight
       # Check if the lane width exceeds the threshold
-      lane_available = calculate_lane_width(desired_lane, current_lane, road_edge) >= min_lane_threshold
+      lane_available = desired_lane >= min_lane_threshold
 
     if not lateral_active or self.lane_change_timer > LANE_CHANGE_TIME_MAX:
       self.lane_change_state = LaneChangeState.off
       self.lane_change_direction = LaneChangeDirection.none
-    elif one_blinker and below_lane_change_speed and frogpilot_planner.turn_desires:
+      self.turn_direction = TurnDirection.none
+    elif one_blinker and below_lane_change_speed and self.turn_desires:
       self.turn_direction = TurnDirection.turnLeft if carstate.leftBlinker else TurnDirection.turnRight
       # Set the "turn_completed" flag to prevent lane changes after completing a turn
       self.turn_completed = True
@@ -120,16 +111,16 @@ class DesireHelper:
 
         # Conduct a nudgeless lane change if all the conditions are true
         self.lane_change_wait_timer += DT_MDL
-        if frogpilot_planner.nudgeless and lane_available and not self.lane_change_completed and self.lane_change_wait_timer >= frogpilot_planner.lane_change_delay:
-          torque_applied = True
+        if self.nudgeless and lane_available and not self.lane_change_completed and self.lane_change_wait_timer >= self.lane_change_delay:
           self.lane_change_wait_timer = 0
+          torque_applied = True
 
         if not one_blinker or below_lane_change_speed:
           self.lane_change_state = LaneChangeState.off
           self.lane_change_direction = LaneChangeDirection.none
         elif torque_applied and not blindspot_detected:
           # Set the "lane_change_completed" flag to prevent any more lane changes if the toggle is on
-          self.lane_change_completed = frogpilot_planner.one_lane_change
+          self.lane_change_completed = self.one_lane_change
           self.lane_change_state = LaneChangeState.laneChangeStarting
 
       # LaneChangeState.laneChangeStarting
@@ -169,7 +160,7 @@ class DesireHelper:
     elif not self.turn_completed:
       self.desire = DESIRES[self.lane_change_direction][self.lane_change_state]
     else:
-      self.desire = log.LateralPlan.Desire.none
+      self.desire = log.Desire.none
 
     # Send keep pulse once per second during LaneChangeStart.preLaneChange
     if self.lane_change_state in (LaneChangeState.off, LaneChangeState.laneChangeStarting):
@@ -178,5 +169,17 @@ class DesireHelper:
       self.keep_pulse_timer += DT_MDL
       if self.keep_pulse_timer > 1.0:
         self.keep_pulse_timer = 0.0
-      elif self.desire in (log.LateralPlan.Desire.keepLeft, log.LateralPlan.Desire.keepRight):
-        self.desire = log.LateralPlan.Desire.none
+      elif self.desire in (log.Desire.keepLeft, log.Desire.keepRight):
+        self.desire = log.Desire.none
+
+    if self.params_memory.get_bool("FrogPilotTogglesUpdated"):
+      updateFrogPilotParams = threading.Thread(target=self.update_frogpilot_params)
+      updateFrogPilotParams.start()
+
+  def update_frogpilot_params(self):
+    self.nudgeless = self.params.get_bool("NudgelessLaneChange")
+    self.lane_change_delay = self.params.get_int("LaneChangeTime") if self.nudgeless else 0
+    self.lane_detection = self.params.get_bool("LaneDetection") and self.nudgeless
+    self.one_lane_change = self.params.get_bool("OneLaneChange") and self.nudgeless
+
+    self.turn_desires = self.params.get_bool("TurnDesires")

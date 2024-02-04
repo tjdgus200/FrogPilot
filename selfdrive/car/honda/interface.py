@@ -19,14 +19,14 @@ BUTTONS_DICT = {CruiseButtons.RES_ACCEL: ButtonType.accelCruise, CruiseButtons.D
 
 class CarInterface(CarInterfaceBase):
   @staticmethod
-  def get_pid_accel_limits(CP, current_speed, cruise_speed, sport_plus):
+  def get_pid_accel_limits(CP, current_speed, cruise_speed, frogpilot_variables):
     if CP.carFingerprint in HONDA_BOSCH:
-      if sport_plus:
+      if frogpilot_variables.sport_plus:
         return CarControllerParams.BOSCH_ACCEL_MIN, CarControllerParams.BOSCH_ACCEL_MAX_PLUS
       else:
         return CarControllerParams.BOSCH_ACCEL_MIN, CarControllerParams.BOSCH_ACCEL_MAX
     elif CP.enableGasInterceptor:
-      if sport_plus:
+      if frogpilot_variables.sport_plus:
         return CarControllerParams.NIDEC_ACCEL_MIN, CarControllerParams.NIDEC_ACCEL_MAX_PLUS
       else:
         return CarControllerParams.NIDEC_ACCEL_MIN, CarControllerParams.NIDEC_ACCEL_MAX
@@ -338,8 +338,8 @@ class CarInterface(CarInterfaceBase):
       disable_ecu(logcan, sendcan, bus=1, addr=0x18DAB0F1, com_cont_req=b'\x28\x83\x03')
 
   # returns a car.CarState
-  def _update(self, c):
-    ret = self.CS.update(self.cp, self.cp_cam, self.cp_body)
+  def _update(self, c, conditional_experimental_mode, frogpilot_variables):
+    ret = self.CS.update(self.cp, self.cp_cam, self.cp_body, conditional_experimental_mode, frogpilot_variables)
 
     ret.buttonEvents = [
       *create_button_events(self.CS.cruise_buttons, self.CS.prev_cruise_buttons, BUTTONS_DICT),
@@ -347,7 +347,7 @@ class CarInterface(CarInterfaceBase):
     ]
 
     # events
-    events = self.create_common_events(ret, pcm_enable=False)
+    events = self.create_common_events(ret, frogpilot_variables, pcm_enable=False)
     if self.CP.pcmCruise and ret.vEgo < self.CP.minEnableSpeed:
       events.add(EventName.belowEngageSpeed)
 
@@ -372,5 +372,5 @@ class CarInterface(CarInterfaceBase):
 
   # pass in a car.CarControl
   # to be called @ 100hz
-  def apply(self, c, now_nanos, sport_plus):
-    return self.CC.update(c, self.CS, now_nanos, sport_plus)
+  def apply(self, c, now_nanos, frogpilot_variables):
+    return self.CC.update(c, self.CS, now_nanos, frogpilot_variables)

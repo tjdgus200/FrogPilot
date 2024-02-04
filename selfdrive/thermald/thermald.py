@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import datetime
 import os
 import json
 import queue
@@ -14,12 +13,13 @@ import psutil
 import cereal.messaging as messaging
 from cereal import log
 from cereal.services import SERVICE_LIST
+from openpilot.common.basedir import BASEDIR
 from openpilot.common.dict_helpers import strip_deprecated_keys
-from openpilot.common.time import MIN_DATE
 from openpilot.common.filter_simple import FirstOrderFilter
 from openpilot.common.params import Params
 from openpilot.common.realtime import DT_TRML
 from openpilot.selfdrive.controls.lib.alertmanager import set_offroad_alert
+from openpilot.selfdrive.manager.manager import PREBUILT_FILE
 from openpilot.system.hardware import HARDWARE, TICI, AGNOS
 from openpilot.system.loggerd.config import get_available_bytes, get_available_percent, get_used_bytes
 from openpilot.selfdrive.statsd import statlog
@@ -304,19 +304,13 @@ def thermald_thread(end_event, hw_queue) -> None:
 
     # **** starting logic ****
 
-    # Ensure date/time are valid
-    now = datetime.datetime.utcnow()
-    startup_conditions["time_valid"] = now > MIN_DATE
-    set_offroad_alert_if_changed("Offroad_InvalidTime", (not startup_conditions["time_valid"]) and peripheral_panda_present)
-
     startup_conditions["up_to_date"] = (params.get("OfflineMode") and params.get("FireTheBabysitter")) or params.get("Offroad_ConnectivityNeeded") is None or params.get_bool("DisableUpdates") or params.get_bool("SnoozeUpdate")
     startup_conditions["not_uninstalling"] = not params.get_bool("DoUninstall")
     startup_conditions["accepted_terms"] = params.get("HasAcceptedTerms") == terms_version
 
     # with 2% left, we killall, otherwise the phone will take a long time to boot
     startup_conditions["free_space"] = msg.deviceState.freeSpacePercent > 2
-    startup_conditions["completed_training"] = params.get("CompletedTrainingVersion") == training_version or \
-                                               params.get_bool("Passive")
+    startup_conditions["completed_training"] = params.get("CompletedTrainingVersion") == training_version
     startup_conditions["not_driver_view"] = not params.get_bool("IsDriverViewEnabled")
     startup_conditions["not_taking_snapshot"] = not params.get_bool("IsTakingSnapshot")
 
@@ -458,13 +452,15 @@ def thermald_thread(end_event, hw_queue) -> None:
         except Exception:
           cloudlog.exception("failed to save offroad status")
 
+    params.put_bool_nonblocking("NetworkMetered", msg.deviceState.networkMetered)
+
     count += 1
     should_start_prev = should_start
 
     # Create the prebuilt file if it doesn't exist
-    if not os.path.isfile('/data/openpilot/prebuilt'):
-      if os.path.exists("/data/openpilot/selfdrive/modeld/models/supercombo.thneed"):
-        os.system(f"touch {'/data/openpilot/prebuilt'}")
+    if not os.path.exists(PREBUILT_FILE):
+      if os.path.exists(os.path.join(BASEDIR, "selfdrive/modeld/models/supercombo.thneed")):
+        os.system(f"touch {PREBUILT_FILE}")
 
 def main():
   hw_queue = queue.Queue(maxsize=1)

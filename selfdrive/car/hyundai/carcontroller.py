@@ -56,7 +56,7 @@ class CarController:
     self.car_fingerprint = CP.carFingerprint
     self.last_button_frame = 0
 
-  def update(self, CC, CS, now_nanos, sport_plus):
+  def update(self, CC, CS, now_nanos, frogpilot_variables):
     actuators = CC.actuators
     hud_control = CC.hudControl
 
@@ -78,7 +78,7 @@ class CarController:
     self.apply_steer_last = apply_steer
 
     # accel + longitudinal
-    if sport_plus:
+    if frogpilot_variables.sport_plus:
       accel = clip(actuators.accel, CarControllerParams.ACCEL_MIN, CarControllerParams.ACCEL_MAX_PLUS)
     else:
       accel = clip(actuators.accel, CarControllerParams.ACCEL_MIN, CarControllerParams.ACCEL_MAX)

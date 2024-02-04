@@ -15,8 +15,8 @@ SteerControlType = car.CarParams.SteerControlType
 
 class CarInterface(CarInterfaceBase):
   @staticmethod
-  def get_pid_accel_limits(CP, current_speed, cruise_speed, sport_plus):
-    if sport_plus:
+  def get_pid_accel_limits(CP, current_speed, cruise_speed, frogpilot_variables):
+    if frogpilot_variables.sport_plus:
       return CarControllerParams.ACCEL_MIN, CarControllerParams.ACCEL_MAX_PLUS
     else:
       return CarControllerParams.ACCEL_MIN, CarControllerParams.ACCEL_MAX
@@ -83,7 +83,7 @@ class CarInterface(CarInterfaceBase):
       ret.tireStiffnessFactor = 0.444  # not optimized yet
       ret.mass = 2860. * CV.LB_TO_KG  # mean between normal and hybrid
 
-    elif candidate in (CAR.LEXUS_RX, CAR.LEXUS_RXH, CAR.LEXUS_RX_TSS2):
+    elif candidate in (CAR.LEXUS_RX, CAR.LEXUS_RX_TSS2):
       stop_and_go = True
       ret.wheelbase = 2.79
       ret.steerRatio = 16.  # 14.8 is spec end-to-end
@@ -105,7 +105,8 @@ class CarInterface(CarInterfaceBase):
       ret.tireStiffnessFactor = 0.7933
       ret.mass = 3400. * CV.LB_TO_KG  # mean between normal and hybrid
 
-    elif candidate in (CAR.HIGHLANDER, CAR.HIGHLANDERH, CAR.HIGHLANDER_TSS2):
+    elif candidate in (CAR.HIGHLANDER, CAR.HIGHLANDER_TSS2):
+      # TODO: TSS-P models can do stop and go, but unclear if it requires sDSU or unplugging DSU
       stop_and_go = True
       ret.wheelbase = 2.8194  # average of 109.8 and 112.2 in
       ret.steerRatio = 16.0
@@ -148,9 +149,7 @@ class CarInterface(CarInterfaceBase):
       ret.tireStiffnessFactor = 0.444  # not optimized yet
       ret.mass = 3060. * CV.LB_TO_KG
 
-    elif candidate in (CAR.LEXUS_ES, CAR.LEXUS_ESH, CAR.LEXUS_ES_TSS2):
-      if candidate not in (CAR.LEXUS_ES,):  # TODO: LEXUS_ES may have sng
-        stop_and_go = True
+    elif candidate in (CAR.LEXUS_ES, CAR.LEXUS_ES_TSS2):
       ret.wheelbase = 2.8702
       ret.steerRatio = 16.0  # not optimized
       ret.tireStiffnessFactor = 0.444  # not optimized yet
@@ -303,11 +302,11 @@ class CarInterface(CarInterfaceBase):
       disable_ecu(logcan, sendcan, bus=0, addr=0x750, sub_addr=0xf, com_cont_req=communication_control)
 
   # returns a car.CarState
-  def _update(self, c):
-    ret = self.CS.update(self.cp, self.cp_cam)
+  def _update(self, c, conditional_experimental_mode, frogpilot_variables):
+    ret = self.CS.update(self.cp, self.cp_cam, conditional_experimental_mode, frogpilot_variables)
 
     # events
-    events = self.create_common_events(ret)
+    events = self.create_common_events(ret, frogpilot_variables)
 
     # Lane Tracing Assist control is unavailable (EPS_STATUS->LTA_STATE=0) until
     # the more accurate angle sensor signal is initialized
@@ -334,5 +333,5 @@ class CarInterface(CarInterfaceBase):
 
   # pass in a car.CarControl
   # to be called @ 100hz
-  def apply(self, c, now_nanos, sport_plus):
-    return self.CC.update(c, self.CS, now_nanos, sport_plus)
+  def apply(self, c, now_nanos, frogpilot_variables):
+    return self.CC.update(c, self.CS, now_nanos, frogpilot_variables)

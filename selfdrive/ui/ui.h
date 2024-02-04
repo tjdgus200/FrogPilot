@@ -172,6 +172,7 @@ typedef struct UIScene {
   // FrogPilot variables
   bool acceleration_path;
   bool adjacent_path;
+  bool adjacent_path_metrics;
   bool always_on_lateral;
   bool always_on_lateral_active;
   bool blind_spot_left;
@@ -185,22 +186,27 @@ typedef struct UIScene {
   bool enabled;
   bool experimental_mode;
   bool experimental_mode_via_screen;
+  bool fahrenheit;
+  bool fps_counter;
   bool full_map;
   bool hide_speed;
+  bool hide_speed_ui;
   bool lead_info;
   bool map_open;
   bool model_ui;
   bool mute_dm;
+  bool numerical_temp;
   bool personalities_via_screen;
   bool quality_of_life_controls;
   bool quality_of_life_visuals;
   bool random_events;
   bool reverse_cruise;
+  bool reverse_cruise_ui;
   bool road_name_ui;
   bool rotating_wheel;
   bool show_driver_camera;
   bool show_slc_offset;
-  bool show_fps;
+  bool show_slc_offset_ui;
   bool speed_limit_controller;
   bool speed_limit_overridden;
   bool tethering_enabled;
@@ -209,6 +215,7 @@ typedef struct UIScene {
   bool unlimited_road_ui_length;
   bool use_si;
   bool use_vienna_slc_sign;
+  bool vtsc_controlling_curve;
   float adjusted_cruise;
   float lane_line_width;
   float lane_width_left;
@@ -329,3 +336,6 @@ void update_dmonitoring(UIState *s, const cereal::DriverStateV2::Reader &drivers
 void update_leads(UIState *s, const cereal::RadarState::Reader &radar_state, const cereal::XYZTData::Reader &line);
 void update_line_data(const UIState *s, const cereal::XYZTData::Reader &line,
                       float y_off, float z_off, QPolygonF *pvd, int max_idx, bool allow_invert);
+
+// FrogPilot functions
+void ui_update_frogpilot_params(UIState *s);

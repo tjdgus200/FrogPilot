@@ -111,7 +111,8 @@ class ALTERNATIVE_EXPERIENCE:
   DISABLE_DISENGAGE_ON_GAS = 1
   DISABLE_STOCK_AEB = 2
   RAISE_LONGITUDINAL_LIMITS_TO_ISO_MAX = 8
-  ALWAYS_ON_LATERAL = 16
+  ALLOW_AEB = 16
+  ALWAYS_ON_LATERAL = 32
 
 class Panda:
 
@@ -211,6 +212,7 @@ class Panda:
   FLAG_HYUNDAI_CANFD_ALT_BUTTONS = 32
   FLAG_HYUNDAI_ALT_LIMITS = 64
   FLAG_HYUNDAI_CANFD_HDA2_ALT_STEERING = 128
+  FLAG_HYUNDAI_LFA_BTN = 256
 
   FLAG_TESLA_POWERTRAIN = 1
   FLAG_TESLA_LONG_CONTROL = 2
@@ -396,7 +398,7 @@ class Panda:
     return context, usb_handle, usb_serial, bootstub, bcd
 
   @classmethod
-  def list(cls): # noqa: A003
+  def list(cls):
     ret = cls.usb_list()
     ret += cls.spi_list()
     return list(set(ret))

@@ -39,13 +39,13 @@ What is openpilot?
 What is FrogPilot? 🐸
 ------
 
-FrogPilot is a weekly updated and 100% open-sourced fork of openpilot with clean commits dedicated to serve the openpilot community. While I maintain personal oversight, FrogPilot is shaped by user and developer contributions, emphasizing collaborative, community-driven development to provide a bleeding-edge openpilot experience for everyone!
+FrogPilot is a bi-weekly updated and 100% open-sourced fork of openpilot with clean commits dedicated to serve the openpilot community. FrogPilot is shaped by user and developer contributions, emphasizing collaborative, community-driven development to provide a bleeding-edge openpilot experience for everyone!
 
 ------
 FrogPilot was last updated on:
 <img width="10%" align="left" src="./selfdrive/assets/img_spinner_comma.png">
 
-**January 19th, 2024**
+**February 2nd, 2024**
 
 Features
 ------
@@ -199,7 +199,7 @@ As for feature requests, these are my guidelines:
 Discord
 ------
 
-[Join the FrogPilot Community Discord for easy access to updates, bug reporting, feature requests, future planned updates, and other FrogPilot related discussions!](https://l.linklyhq.com/l/1t3Il)
+[Join the FrogPilot Community Discord for easy access to updates, bug reporting, feature requests, future planned updates, and other FrogPilot related discussions!](https://discord.gg/SqrRVBmMHC)
 
 Donations
 ------

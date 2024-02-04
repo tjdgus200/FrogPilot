@@ -13,15 +13,15 @@ from openpilot.selfdrive.controls.lib.drive_helpers import get_friction
 
 ButtonType = car.CarState.ButtonEvent.Type
 EventName = car.CarEvent.EventName
-FrogPilotEventName = custom.FrogPilotEvents
 GearShifter = car.CarState.GearShifter
 TransmissionType = car.CarParams.TransmissionType
 NetworkLocation = car.CarParams.NetworkLocation
 BUTTONS_DICT = {CruiseButtons.RES_ACCEL: ButtonType.accelCruise, CruiseButtons.DECEL_SET: ButtonType.decelCruise,
                 CruiseButtons.MAIN: ButtonType.altButton3, CruiseButtons.CANCEL: ButtonType.cancel}
 
+FrogPilotEventName = custom.FrogPilotEvents
+
 ACCELERATOR_POS_MSG = 0xbe
-BSM_MSG = 0x142
 CAM_MSG = 0x320  # AEBCmd
                  # TODO: Is this always linked to camera presence?
 PEDAL_MSG = 0x201
@@ -36,8 +36,8 @@ NON_LINEAR_TORQUE_PARAMS = {
 
 class CarInterface(CarInterfaceBase):
   @staticmethod
-  def get_pid_accel_limits(CP, current_speed, cruise_speed, sport_plus):
-    if sport_plus:
+  def get_pid_accel_limits(CP, current_speed, cruise_speed, frogpilot_variables):
+    if frogpilot_variables.sport_plus:
       return CarControllerParams.ACCEL_MIN, CarControllerParams.ACCEL_MAX_PLUS
     else:
       return CarControllerParams.ACCEL_MIN, CarControllerParams.ACCEL_MAX
@@ -82,11 +82,12 @@ class CarInterface(CarInterfaceBase):
   def _get_params(ret, candidate, fingerprint, car_fw, experimental_long, docs):
     # FrogPilot variables
     params = Params()
-    useGasRegenCmd = params.get_bool("GasRegenCmd")
 
     ret.carName = "gm"
     ret.safetyConfigs = [get_safety_config(car.CarParams.SafetyModel.gm)]
     ret.autoResumeSng = False
+    ret.enableBsm = 0x142 in fingerprint[CanBus.POWERTRAIN]
+
     if PEDAL_MSG in fingerprint[0]:
       ret.enableGasInterceptor = True
       ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_GAS_INTERCEPTOR
@@ -120,8 +121,9 @@ class CarInterface(CarInterfaceBase):
       ret.vEgoStopping = 0.25
       ret.vEgoStarting = 0.25
 
-      if candidate in SLOW_ACC and useGasRegenCmd:
+      if candidate in SLOW_ACC:
         ret.longitudinalTuning.kpV = [1.5, 1.125]
+        ret.stopAccel = -0.25
 
       if experimental_long:
         ret.pcmCruise = False
@@ -275,8 +277,6 @@ class CarInterface(CarInterfaceBase):
       ret.steerRatio = 16.3
       ret.centerToFront = ret.wheelbase * 0.5
       ret.tireStiffnessFactor = 1.0
-      if useGasRegenCmd:
-        ret.stopAccel = -0.25
       # On the Bolt, the ECM and camera independently check that you are either above 5 kph or at a stop
       # with foot on brake to allow engagement, but this platform only has that check in the camera.
       # TODO: check if this is split by EV/ICE with more platforms in the future
@@ -295,15 +295,6 @@ class CarInterface(CarInterfaceBase):
       ret.mass = 1345.
       ret.wheelbase = 2.64
       ret.steerRatio = 16.8
-      ret.centerToFront = ret.wheelbase * 0.4
-      ret.tireStiffnessFactor = 1.0
-      ret.steerActuatorDelay = 0.2
-      CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
-
-    elif candidate == CAR.TRAX:
-      ret.mass = 1365.
-      ret.wheelbase = 2.7
-      ret.steerRatio = 16.4
       ret.centerToFront = ret.wheelbase * 0.4
       ret.tireStiffnessFactor = 1.0
       ret.steerActuatorDelay = 0.2
@@ -356,9 +347,9 @@ class CarInterface(CarInterfaceBase):
         ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_PEDAL_LONG
         # Note: Low speed, stop and go not tested. Should be fairly smooth on highway
         ret.longitudinalTuning.kpBP = [5., 35.]
-        ret.longitudinalTuning.kpV = [0.1500, 0.1500]
+        ret.longitudinalTuning.kpV = [0.35, 0.5]
         ret.longitudinalTuning.kiBP = [0., 35.0]
-        ret.longitudinalTuning.kiV = [0.1, 0.05]
+        ret.longitudinalTuning.kiV = [0.1, 0.1]
         ret.longitudinalTuning.kf = 0.15
         ret.stoppingDecelRate = 0.8
       else:  # Pedal used for SNG, ACC for longitudinal control otherwise
@@ -398,14 +389,11 @@ class CarInterface(CarInterfaceBase):
     if ACCELERATOR_POS_MSG not in fingerprint[CanBus.POWERTRAIN]:
       ret.flags |= GMFlags.NO_ACCELERATOR_POS_MSG.value
 
-    # Detect if BSM message is present
-    ret.enableBsm = BSM_MSG in fingerprint[CanBus.POWERTRAIN]
-
     return ret
 
   # returns a car.CarState
-  def _update(self, c):
-    ret = self.CS.update(self.cp, self.cp_cam, self.cp_loopback)
+  def _update(self, c, conditional_experimental_mode, frogpilot_variables):
+    ret = self.CS.update(self.cp, self.cp_cam, self.cp_loopback, conditional_experimental_mode, frogpilot_variables)
 
     # Don't add event if transitioning from INIT, unless it's to an actual button
     if self.CS.cruise_buttons != CruiseButtons.UNPRESS or self.CS.prev_cruise_buttons != CruiseButtons.INIT:
@@ -413,7 +401,7 @@ class CarInterface(CarInterfaceBase):
                                               unpressed_btn=CruiseButtons.UNPRESS)
 
     # The ECM allows enabling on falling edge of set, but only rising edge of resume
-    events = self.create_common_events(ret, extra_gears=[GearShifter.sport, GearShifter.low,
+    events = self.create_common_events(ret, frogpilot_variables, extra_gears=[GearShifter.sport, GearShifter.low,
                                                          GearShifter.eco, GearShifter.manumatic],
                                        pcm_enable=self.CP.pcmCruise, enable_buttons=(ButtonType.decelCruise,))
     if not self.CP.pcmCruise:
@@ -449,11 +437,11 @@ class CarInterface(CarInterfaceBase):
       self.CP.transmissionType == TransmissionType.direct and \
       not self.CS.single_pedal_mode and \
       c.longActive:
-      events.add(FrogPilotEventName.pedalInterceptorNoBrake)
+      events.add(EventName.pedalInterceptorNoBrake)
 
     ret.events = events.to_msg()
 
     return ret
 
-  def apply(self, c, now_nanos, sport_plus):
-    return self.CC.update(c, self.CS, now_nanos)
+  def apply(self, c, now_nanos, frogpilot_variables):
+    return self.CC.update(c, self.CS, now_nanos, frogpilot_variables)

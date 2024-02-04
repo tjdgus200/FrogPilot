@@ -4,6 +4,8 @@ from openpilot.common.conversions import Conversions as CV
 from openpilot.common.numpy_fast import interp
 from openpilot.common.params import Params
 
+from openpilot.selfdrive.frogpilot.functions.speed_limit_controller import SpeedLimitController
+
 # Constants
 PROBABILITY = 0.6  # 60% chance of condition being true
 THRESHOLD = 5      # Time threshold (0.25s)
@@ -62,7 +64,7 @@ class ConditionalExperimentalMode:
     self.slow_lead_gmac = GenericMovingAverageCalculator()
     self.slowing_down_gmac = GenericMovingAverageCalculator()
 
-  def update(self, carState, frogpilotNavigation, modelData, mpc, radarState, standstill, v_ego):
+  def update(self, carState, frogpilotNavigation, modelData, mpc, radarState, road_curvature, standstill, v_ego):
     # Set the value of "overridden"
     if self.experimental_mode_via_press:
       overridden = self.params_memory.get_int("CEStatus")
@@ -83,7 +85,7 @@ class ConditionalExperimentalMode:
       self.previous_status_value = self.status_value
       self.params_memory.put_int("CEStatus", self.status_value)
 
-    self.update_conditions(modelData, mpc, radarState, v_ego)
+    self.update_conditions(modelData, mpc, radarState, road_curvature, v_ego)
 
   # Check conditions for the appropriate state of Experimental Mode
   def check_conditions(self, carState, frogpilotNavigation, modelData, standstill, v_ego):
@@ -91,7 +93,7 @@ class ConditionalExperimentalMode:
       return self.experimental_mode
 
     # Keep Experimental Mode active if slowing down for a red light
-    if self.slowing_down and self.status_value == 12 and not self.lead_slowing_down:
+    if self.slowing_down and self.status_value == 12:
       return True
 
     # Navigation check
@@ -100,7 +102,7 @@ class ConditionalExperimentalMode:
       return True
 
     # Speed Limit Controller check
-    if self.params_memory.get_bool("SLCExperimentalMode"):
+    if SpeedLimitController.experimental_mode:
       self.status_value = 6
       return True
 
@@ -120,34 +122,39 @@ class ConditionalExperimentalMode:
       return True
 
     # Road curvature check
-    if self.curves and self.curve_detected and (self.curves_lead or not self.lead_detected):
+    if self.curves and self.curve_detected:
       self.status_value = 11
       return True
 
     # Stop sign and light check
-    if self.stop_lights and self.red_light_detected and (self.stop_lights_lead or not self.lead_slowing_down):
+    if self.stop_lights and self.red_light_detected:
       self.status_value = 12
       return True
 
     return False
 
-  def update_conditions(self, modelData, mpc, radarState, v_ego):
+  def update_conditions(self, modelData, mpc, radarState, road_curvature, v_ego):
     self.lead_detection(radarState)
-    self.road_curvature(modelData, v_ego)
+    self.road_curvature(road_curvature)
     self.slow_lead(mpc, radarState, v_ego)
     self.stop_sign_and_light(modelData, v_ego)
     self.v_ego_slowing_down(v_ego)
-    self.v_lead_slowing_down(mpc, radarState)
+    self.v_lead_slowing_down(radarState)
+
+  # Lead detection
+  def lead_detection(self, radarState):
+    self.lead_detection_gmac.add_data(radarState.leadOne.status)
+    self.lead_detected = self.lead_detection_gmac.get_moving_average() >= PROBABILITY
 
   def v_ego_slowing_down(self, v_ego):
     self.slowing_down_gmac.add_data(v_ego < self.previous_v_ego)
     self.slowing_down = self.slowing_down_gmac.get_moving_average() >= PROBABILITY
     self.previous_v_ego = v_ego
 
-  def v_lead_slowing_down(self, mpc, radarState):
+  def v_lead_slowing_down(self, radarState):
     if self.lead_detected:
       v_lead = radarState.leadOne.vLead
-      self.lead_slowing_down_gmac.add_data(v_lead < self.previous_v_lead or v_lead < 1 or radarState.leadOne.dRel <= v_lead * mpc.t_follow)
+      self.lead_slowing_down_gmac.add_data(v_lead < self.previous_v_lead or v_lead < 1 or self.slower_lead_detected)
       self.lead_slowing_down = self.lead_slowing_down_gmac.get_moving_average() >= PROBABILITY
       self.previous_v_lead = v_lead
     else:
@@ -155,26 +162,16 @@ class ConditionalExperimentalMode:
       self.lead_slowing_down = False
       self.previous_v_lead = 0
 
-  # Lead detection
-  def lead_detection(self, radarState):
-    self.lead_detection_gmac.add_data(radarState.leadOne.status)
-    self.lead_detected = self.lead_detection_gmac.get_moving_average() >= PROBABILITY
-
   # Determine the road curvature - Credit goes to to Pfeiferj!
-  def road_curvature(self, modelData, v_ego):
-    predicted_velocities = np.array(modelData.velocity.x)
-    if predicted_velocities.size:
-      curvature_ratios = np.abs(np.array(modelData.acceleration.y)) / (predicted_velocities**2)
-      curvature = np.amax(curvature_ratios * (v_ego**2))
-      # Setting an upper limit of "5.0" helps prevent it activating at stop lights
-      if curvature > 5.0:
-        self.curvature_gmac.reset_data()
-        self.curve_detected = False
-      else:
-        self.curvature_gmac.add_data(curvature > 1.6 or self.curve_detected and curvature > 1.1)
-        self.curve_detected = self.curvature_gmac.get_moving_average() >= PROBABILITY
+  def road_curvature(self, road_curvature):
+    lead_check = self.curves_lead or not self.lead_detected
+
+    if lead_check and not self.red_light_detected:
+      self.curvature_gmac.add_data(road_curvature > 1.6 or self.curve_detected and road_curvature > 1.1)
+      self.curve_detected = self.curvature_gmac.get_moving_average() >= PROBABILITY
     else:
       self.curvature_gmac.reset_data()
+      self.curve_detected = False
 
   # Slower lead detection - Credit goes to the DragonPilot team!
   def slow_lead(self, mpc, radarState, v_ego):
@@ -190,11 +187,12 @@ class ConditionalExperimentalMode:
 
   # Stop sign/stop light detection - Credit goes to the DragonPilot team!
   def stop_sign_and_light(self, modelData, v_ego):
+    lead_check = not self.slower_lead_detected and (self.stop_lights_lead or not self.lead_slowing_down)
     # Check if the model data is consistent and wants to stop
     model_check = len(modelData.orientation.x) == len(modelData.position.x) == TRAJECTORY_SIZE
     model_stopping = modelData.position.x[TRAJECTORY_SIZE - 1] < interp(v_ego * CV.MS_TO_KPH, SLOW_DOWN_BP, SLOW_DOWN_DISTANCE)
-    self.slow_down_gmac.add_data(model_check and model_stopping and not self.curve_detected and not self.slower_lead_detected)
 
+    self.slow_down_gmac.add_data(lead_check and model_check and model_stopping and not self.curve_detected)
     self.red_light_detected = self.slow_down_gmac.get_moving_average() >= PROBABILITY
 
   def update_frogpilot_params(self, is_metric, params):

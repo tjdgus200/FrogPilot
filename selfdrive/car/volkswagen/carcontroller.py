@@ -25,7 +25,7 @@ class CarController:
     self.hca_frame_timer_running = 0
     self.hca_frame_same_torque = 0
 
-  def update(self, CC, CS, ext_bus, now_nanos, sport_plus):
+  def update(self, CC, CS, ext_bus, now_nanos, frogpilot_variables):
     actuators = CC.actuators
     hud_control = CC.hudControl
     can_sends = []
@@ -78,7 +78,7 @@ class CarController:
 
     if self.frame % self.CCP.ACC_CONTROL_STEP == 0 and self.CP.openpilotLongitudinalControl:
       acc_control = self.CCS.acc_control_value(CS.out.cruiseState.available, CS.out.accFaulted, CC.longActive)
-      if sport_plus:
+      if frogpilot_variables.sport_plus:
         accel = clip(actuators.accel, self.CCP.ACCEL_MIN, self.CCP.ACCEL_MAX_PLUS) if CC.longActive else 0
       else:
         accel = clip(actuators.accel, self.CCP.ACCEL_MIN, self.CCP.ACCEL_MAX) if CC.longActive else 0

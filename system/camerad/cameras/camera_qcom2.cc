@@ -934,10 +934,9 @@ void process_road_camera(MultiCameraState *s, CameraState *c, int cnt) {
 void cameras_run(MultiCameraState *s) {
   // FrogPilot variables
   Params paramsMemory{"/dev/shm/params"};
-
-  bool wide_camera_displayed = paramsMemory.getBool("WideCamera");
-  static int frame_count = 0;
-  static int fps = 0.0;
+  const std::chrono::seconds fpsUpdateInterval(1);
+  std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
+  int frameCount = 0;
 
   LOG("-- Starting threads");
   std::vector<std::thread> threads;
@@ -951,22 +950,9 @@ void cameras_run(MultiCameraState *s) {
   s->road_cam.sensors_start();
   s->wide_road_cam.sensors_start();
 
-  auto prev_time_point = std::chrono::high_resolution_clock::now();
-
   // poll events
   LOG("-- Dequeueing Video events");
   while (!do_exit) {
-
-    auto current_time_point = std::chrono::high_resolution_clock::now();
-    double elapsed_time = std::chrono::duration<double>(current_time_point - prev_time_point).count();
-
-    if (elapsed_time > 1.0) {
-      fps = frame_count / elapsed_time;
-      paramsMemory.putIntNonBlocking("CameraFPS", fps);
-      frame_count = 0;
-      prev_time_point = current_time_point;
-    }
-
     struct pollfd fds[1] = {{0}};
 
     fds[0].fd = s->video0_fd;
@@ -994,16 +980,24 @@ void cameras_run(MultiCameraState *s) {
         // for debugging
         //do_exit = do_exit || event_data->u.frame_msg.frame_id > (30*20);
 
+        // Increment frame count
+        frameCount++;
+
+        // Calculate and display FPS every second
+        std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
+        if (currentTime - startTime >= fpsUpdateInterval) {
+          double fps = static_cast<double>(frameCount) / std::chrono::duration<double>(currentTime - startTime).count();
+          paramsMemory.putIntNonBlocking("CameraFPS", fps / 3);
+
+          // Reset counter and timer
+          frameCount = 0;
+          startTime = currentTime;
+        }
+
         if (event_data->session_hdl == s->road_cam.session_handle) {
           s->road_cam.handle_camera_event(event_data);
-          if (!wide_camera_displayed) {
-            frame_count++;
-          }
         } else if (event_data->session_hdl == s->wide_road_cam.session_handle) {
           s->wide_road_cam.handle_camera_event(event_data);
-          if (wide_camera_displayed) {
-            frame_count++;
-          }
         } else if (event_data->session_hdl == s->driver_cam.session_handle) {
           s->driver_cam.handle_camera_event(event_data);
         } else {

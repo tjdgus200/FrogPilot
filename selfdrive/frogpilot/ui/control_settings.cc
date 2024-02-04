@@ -26,19 +26,19 @@ FrogPilotControlsPanel::FrogPilotControlsPanel(SettingsWindow *parent) : FrogPil
     {"OfflineMode", "Offline Mode", "Allow the device to be offline indefinitely.", ""},
 
     {"LateralTune", "Lateral Tuning", "Modify openpilot's steering behavior.", "../frogpilot/assets/toggle_icons/icon_lateral_tune.png"},
-    {"AverageCurvature", "Average Desired Curvature", "Use Pfeiferj's distance-based curvature adjustment for improved curve handling.", ""},
     {"NNFF", "NNFF - Neural Network Feedforward", "Use Twilsonco's Neural Network Feedforward for enhanced precision in lateral control.", ""},
     {"SteerRatio", steerRatioStock != 0 ? QString("Steer Ratio (Default: %1)").arg(steerRatioStock, 0, 'f', 2) : "Steer Ratio", "Set a custom steer ratio for your vehicle controls.", ""},
 
     {"LongitudinalTune", "Longitudinal Tuning", "Modify openpilot's acceleration and braking behavior.", "../frogpilot/assets/toggle_icons/icon_longitudinal_tune.png"},
     {"AccelerationProfile", "Acceleration Profile", "Change the acceleration rate to be either sporty or eco-friendly.", ""},
     {"AggressiveAcceleration", "Aggressive Acceleration With Lead", "Increase acceleration aggressiveness when following a lead vehicle from a stop.", ""},
-    {"StoppingDistance", "Increased Stopping Distance", "Increase the stopping distance for a more comfortable stop.", ""},
+    {"StoppingDistance", "Increase Stop Distance Behind Lead", "Increase the stopping distance for a more comfortable stop from lead vehicles.", ""},
     {"SmoothBraking", "Smoother Braking Behind Lead", "Smoothen out the braking behavior when approaching slower vehicles.", ""},
 
     {"Model", "Model Selector", "Choose your preferred openpilot model.", "../assets/offroad/icon_calibration.png"},
 
     {"MTSCEnabled", "Map Turn Speed Control", "Slow down for anticipated curves detected by your downloaded maps.", "../frogpilot/assets/toggle_icons/icon_speed_map.png"},
+    {"MTSCAggressiveness", "Turn Speed Aggressiveness", "Set turn speed aggressiveness. Higher values result in faster turns, lower values yield gentler turns.\n\nA change of +- 1% results in the velocity being raised or lowered by about 1 mph.", ""},
 
     {"NudgelessLaneChange", "Nudgeless Lane Change", "Enable lane changes without manual steering input.", "../frogpilot/assets/toggle_icons/icon_lane.png"},
     {"LaneChangeTime", "Lane Change Timer", "Specify a delay before executing a nudgeless lane change.", ""},
@@ -48,6 +48,7 @@ FrogPilotControlsPanel::FrogPilotControlsPanel(SettingsWindow *parent) : FrogPil
     {"QOLControls", "Quality of Life", "Miscellaneous quality of life changes to improve your overall openpilot experience.", "../frogpilot/assets/toggle_icons/quality_of_life.png"},
     {"DisableOnroadUploads", "Disable Onroad Uploads", "Prevent large data uploads when onroad.", ""},
     {"HigherBitrate", "Higher Bitrate Recording", "Increases the quality of the footage uploaded to comma connect.", ""},
+    {"NavChill", "Navigate on Chill Mode", "Allows cars without longitudinal support to navigate. Allows navigation without experimental mode.", ""},
     {"PauseLateralOnSignal", "Pause Lateral On Turn Signal Below", "Temporarily disable lateral control during turn signal use below the set speed.", ""},
     {"ReverseCruise", "Reverse Cruise Increase", "Reverses the 'long press' functionality when increasing the max set speed. Useful to increase the max speed quickly.", ""},
     {"SetSpeedOffset", "Set Speed Offset", "Set an offset for your desired set speed.", ""},
@@ -59,7 +60,6 @@ FrogPilotControlsPanel::FrogPilotControlsPanel(SettingsWindow *parent) : FrogPil
     {"Offset4", "Speed Limit Offset (65-99 mph)", "Speed limit offset for speed limits between 65-99 mph.", ""},
     {"SLCFallback", "Fallback Method", "Choose your fallback method for when there are no speed limits currently being obtained from Navigation, OSM, and the car's dashboard.", ""},
     {"SLCOverride", "Override Method", "Choose your preferred method to override the current speed limit.", ""},
-    {"SLCPriority", "Priority Order", "Determine the priority order for what speed limits to use.", ""},
 
     {"TurnDesires", "Use Turn Desires", "Use turn desires for enhanced precision in turns below the minimum lane change speed.", "../assets/navigation/direction_continue_right.png"},
 
@@ -72,7 +72,9 @@ FrogPilotControlsPanel::FrogPilotControlsPanel(SettingsWindow *parent) : FrogPil
     ParamControl *toggle;
 
     if (param == "AdjustablePersonalities") {
-      toggle = new FrogPilotParamValueControl(param, title, desc, icon, 0, 3, {{0, "None"}, {1, "Steering Wheel"}, {2, "Onroad UI Button"}, {3, "Wheel + Button"}}, this, true);
+      std::vector<QString> adjustablePersonalitiesToggles{"PersonalitiesViaWheel", "PersonalitiesViaScreen"};
+      std::vector<QString> adjustablePersonalitiesNames{tr("Distance Button"), tr("Screen")};
+      toggle = new FrogPilotParamToggleControl(param, title, desc, icon, adjustablePersonalitiesToggles, adjustablePersonalitiesNames);
 
     } else if (param == "AlwaysOnLateral") {
       std::vector<QString> aolToggles{"AlwaysOnLateralMain"};
@@ -137,29 +139,41 @@ FrogPilotControlsPanel::FrogPilotControlsPanel(SettingsWindow *parent) : FrogPil
       toggle = customPersonalitiesToggle;
 
       FrogPilotParamValueControl *aggressiveFollow = new FrogPilotParamValueControl("AggressiveFollow", "Follow",
-      "Set the 'Aggressive' personality' following distance. Represents seconds to follow behind the lead vehicle.\n\nStock: 1.25 seconds.", "../frogpilot/assets/other_images/aggressive.png",
-      10, 50, std::map<int, QString>(), this, false, " sec", 10);
+                                                                                    "Set the 'Aggressive' personality' following distance. "
+                                                                                    "Represents seconds to follow behind the lead vehicle.\n\nStock: 1.25 seconds.",
+                                                                                    "../frogpilot/assets/other_images/aggressive.png",
+                                                                                    10, 50, std::map<int, QString>(), this, false, " sec", 10);
       FrogPilotParamValueControl *aggressiveJerk = new FrogPilotParamValueControl("AggressiveJerk", " Jerk",
-      "Configure brake/gas pedal responsiveness for the 'Aggressive' personality. Higher values yield a more 'relaxed' response.\n\nStock: 0.5.", "", 1, 50,
-                                                                std::map<int, QString>(), this, false, "", 10);
+                                                                                  "Configure brake/gas pedal responsiveness for the 'Aggressive' personality. "
+                                                                                  "Higher values yield a more 'relaxed' response.\n\nStock: 0.5.",
+                                                                                  "",
+                                                                                  1, 50, std::map<int, QString>(), this, false, "", 10);
       aggressiveProfile = new FrogPilotDualParamControl(aggressiveFollow, aggressiveJerk, this, true);
       addItem(aggressiveProfile);
 
       FrogPilotParamValueControl *standardFollow = new FrogPilotParamValueControl("StandardFollow", "Follow",
-      "Set the 'Standard' personality following distance. Represents seconds to follow behind the lead vehicle.\n\nStock: 1.45 seconds.", "../frogpilot/assets/other_images/standard.png",
-      10, 50, std::map<int, QString>(), this, false, " sec", 10);
+                                                                                  "Set the 'Standard' personality following distance. "
+                                                                                  "Represents seconds to follow behind the lead vehicle.\n\nStock: 1.45 seconds.",
+                                                                                  "../frogpilot/assets/other_images/standard.png",
+                                                                                  10, 50, std::map<int, QString>(), this, false, " sec", 10);
       FrogPilotParamValueControl *standardJerk = new FrogPilotParamValueControl("StandardJerk", " Jerk",
-      "Adjust brake/gas pedal responsiveness for the 'Standard' personality. Higher values yield a more 'relaxed' response.\n\nStock: 1.0.", "", 1, 50,
-                                                              std::map<int, QString>(), this, false, "", 10);
+                                                                                "Adjust brake/gas pedal responsiveness for the 'Standard' personality. "
+                                                                                "Higher values yield a more 'relaxed' response.\n\nStock: 1.0.",
+                                                                                "",
+                                                                                1, 50, std::map<int, QString>(), this, false, "", 10);
       standardProfile = new FrogPilotDualParamControl(standardFollow, standardJerk, this, true);
       addItem(standardProfile);
 
       FrogPilotParamValueControl *relaxedFollow = new FrogPilotParamValueControl("RelaxedFollow", "Follow",
-      "Set the 'Relaxed' personality following distance. Represents seconds to follow behind the lead vehicle.\n\nStock: 1.75 seconds.", "../frogpilot/assets/other_images/relaxed.png",
-      10, 50, std::map<int, QString>(), this, false, " sec", 10);
+                                                                                 "Set the 'Relaxed' personality following distance. "
+                                                                                 "Represents seconds to follow behind the lead vehicle.\n\nStock: 1.75 seconds.",
+                                                                                 "../frogpilot/assets/other_images/relaxed.png",
+                                                                                 10, 50, std::map<int, QString>(), this, false, " sec", 10);
       FrogPilotParamValueControl *relaxedJerk = new FrogPilotParamValueControl("RelaxedJerk", " Jerk",
-      "Set brake/gas pedal responsiveness for the 'Relaxed' personality. Higher values yield a more 'relaxed' response.\n\nStock: 1.0.", "", 1, 50,
-                                                             std::map<int, QString>(), this, false, "", 10);
+                                                                               "Set brake/gas pedal responsiveness for the 'Relaxed' personality. "
+                                                                               "Higher values yield a more 'relaxed' response.\n\nStock: 1.0.",
+                                                                               "", 1, 50,
+                                                                               std::map<int, QString>(), this, false, "", 10);
       relaxedProfile = new FrogPilotDualParamControl(relaxedFollow, relaxedJerk, this, true);
       addItem(relaxedProfile);
 
@@ -222,7 +236,7 @@ FrogPilotControlsPanel::FrogPilotControlsPanel(SettingsWindow *parent) : FrogPil
 
     } else if (param == "Model") {
       modelSelectorButton = new FrogPilotButtonIconControl(title, tr("SELECT"), desc, icon);
-      QStringList models = {"New Delhi (Default)", "Blue Diamond V1", "Blue Diamond V2", "Farmville", "New Lemon Pie"};
+      QStringList models = {"Los Angeles (Default)"};
       QObject::connect(modelSelectorButton, &FrogPilotButtonIconControl::clicked, this, [this, models]() {
         int currentModel = params.getInt("Model");
         QString currentModelLabel = models[currentModel];
@@ -231,8 +245,6 @@ FrogPilotControlsPanel::FrogPilotControlsPanel(SettingsWindow *parent) : FrogPil
         if (!selection.isEmpty()) {
           int selectedModel = models.indexOf(selection);
           params.putInt("Model", selectedModel);
-          params.remove("CalibrationParams");
-          params.remove("LiveTorqueParameters");
           modelSelectorButton->setValue(selection);
           if (FrogPilotConfirmationDialog::toggle("Reboot required to take effect.", "Reboot Now", this)) {
             Hardware::reboot();
@@ -241,6 +253,36 @@ FrogPilotControlsPanel::FrogPilotControlsPanel(SettingsWindow *parent) : FrogPil
       });
       modelSelectorButton->setValue(models[params.getInt("Model")]);
       addItem(modelSelectorButton);
+
+    } else if (param == "MTSCEnabled") {
+      FrogPilotParamManageControl *mtscToggle = new FrogPilotParamManageControl(param, title, desc, icon, this);
+      QObject::connect(mtscToggle, &FrogPilotParamManageControl::manageButtonClicked, this, [this]() {
+        parentToggleClicked();
+        for (auto &[key, toggle] : toggles) {
+          toggle->setVisible(mtscKeys.find(key.c_str()) != mtscKeys.end());
+        }
+      });
+      toggle = mtscToggle;
+    } else if (param == "MTSCAggressiveness") {
+      toggle = new FrogPilotParamValueControl(param, title, desc, icon, 1, 200, std::map<int, QString>(), this, false, "%");
+
+    } else if (param == "QOLControls") {
+      FrogPilotParamManageControl *qolToggle = new FrogPilotParamManageControl(param, title, desc, icon, this);
+      QObject::connect(qolToggle, &FrogPilotParamManageControl::manageButtonClicked, this, [this]() {
+        parentToggleClicked();
+        for (auto &[key, toggle] : toggles) {
+          toggle->setVisible(qolKeys.find(key.c_str()) != qolKeys.end());
+        }
+      });
+      toggle = qolToggle;
+    } else if (param == "PauseLateralOnSignal") {
+      toggle = new FrogPilotParamValueControl(param, title, desc, icon, 0, 99, std::map<int, QString>(), this, false, " mph");
+    } else if (param == "ReverseCruise") {
+      std::vector<QString> reverseCruiseToggles{"ReverseCruiseUI"};
+      std::vector<QString> reverseCruiseNames{tr("Control Via UI")};
+      toggle = new FrogPilotParamToggleControl(param, title, desc, icon, reverseCruiseToggles, reverseCruiseNames);
+    } else if (param == "SetSpeedOffset") {
+      toggle = new FrogPilotParamValueControl(param, title, desc, icon, 0, 99, std::map<int, QString>(), this, false, " mph");
 
     } else if (param == "NudgelessLaneChange") {
       FrogPilotParamManageControl *laneChangeToggle = new FrogPilotParamManageControl(param, title, desc, icon, this);
@@ -257,20 +299,6 @@ FrogPilotControlsPanel::FrogPilotControlsPanel(SettingsWindow *parent) : FrogPil
         laneChangeTimeLabels[i] = i == 0 ? "Instant" : QString::number(i / 2.0) + " seconds";
       }
       toggle = new FrogPilotParamValueControl(param, title, desc, icon, 0, 10, laneChangeTimeLabels, this, false);
-
-    } else if (param == "QOLControls") {
-      FrogPilotParamManageControl *qolToggle = new FrogPilotParamManageControl(param, title, desc, icon, this);
-      QObject::connect(qolToggle, &FrogPilotParamManageControl::manageButtonClicked, this, [this]() {
-        parentToggleClicked();
-        for (auto &[key, toggle] : toggles) {
-          toggle->setVisible(qolKeys.find(key.c_str()) != qolKeys.end());
-        }
-      });
-      toggle = qolToggle;
-    } else if (param == "PauseLateralOnSignal") {
-      toggle = new FrogPilotParamValueControl(param, title, desc, icon, 0, 99, std::map<int, QString>(), this, false, " mph");
-    } else if (param == "SetSpeedOffset") {
-      toggle = new FrogPilotParamValueControl(param, title, desc, icon, 0, 99, std::map<int, QString>(), this, false, " mph");
 
     } else if (param == "SpeedLimitController") {
       FrogPilotParamManageControl *speedLimitControllerToggle = new FrogPilotParamManageControl(param, title, desc, icon, this);
@@ -292,69 +320,56 @@ FrogPilotControlsPanel::FrogPilotControlsPanel(SettingsWindow *parent) : FrogPil
       std::vector<QString> overrideOptions{tr("None"), tr("Manual Set Speed"), tr("Max Set Speed")};
       FrogPilotButtonParamControl *overrideSelection = new FrogPilotButtonParamControl(param, title, desc, icon, overrideOptions);
       toggle = overrideSelection;
-    } else if (param == "SLCPriority") {
-      const QStringList priorities {
-        "Navigation, Dashboard, Offline Maps",
-        "Navigation, Offline Maps, Dashboard",
-        "Navigation, Offline Maps",
-        "Navigation, Dashboard",
-        "Navigation",
-        "Offline Maps, Dashboard, Navigation",
-        "Offline Maps, Navigation, Dashboard",
-        "Offline Maps, Navigation",
-        "Offline Maps, Dashboard",
-        "Offline Maps",
-        "Dashboard, Navigation, Offline Maps",
-        "Dashboard, Offline Maps, Navigation",
-        "Dashboard, Offline Maps",
-        "Dashboard, Navigation",
-        "Dashboard",
-        "Highest",
-        "Lowest",
-        "",
-      };
 
-      slscPriorityButton = new ButtonControl(title, tr("SELECT"), desc);
-      QObject::connect(slscPriorityButton, &ButtonControl::clicked, this, [this, priorities]() {
-        QStringList availablePriorities = {"Dashboard", "Navigation", "Offline Maps", "Highest", "Lowest", "None"};
+      slscPriorityButton = new ButtonControl("Priority Order", tr("SELECT"), "Determine the priority order for what speed limits to use.");
+      QStringList primaryPriorities = {"None", "Dashboard", "Navigation", "Offline Maps", "Highest", "Lowest"};
+      QStringList secondaryTertiaryPriorities = {"None", "Dashboard", "Navigation", "Offline Maps"};
+      QStringList priorityPrompts = {tr("Select your primary priority"), tr("Select your secondary priority"), tr("Select your tertiary priority")};
+
+      QObject::connect(slscPriorityButton, &ButtonControl::clicked, this, [this, primaryPriorities, secondaryTertiaryPriorities, priorityPrompts]() {
+        QStringList availablePriorities = primaryPriorities;
         QStringList selectedPriorities;
-        int priorityValue = -1;
+        for (int i = 1; i <= 3; ++i) {
+          QStringList currentPriorities = (i == 1) ? availablePriorities : secondaryTertiaryPriorities;
 
-        QStringList priorityPrompts = {tr("Select your primary priority"), tr("Select your secondary priority"), tr("Select your tertiary priority")};
+          for (const QString &selectedPriority : selectedPriorities) {
+            currentPriorities.removeAll(selectedPriority);
+          }
 
-        for (int i = 0; i < 3; ++i) {
-          QString selection = MultiOptionDialog::getSelection(priorityPrompts[i], availablePriorities, "", this);
-          if (selection.isEmpty()) break;
+          QString priorityKey = QString("SLCPriority%1").arg(i);
 
-          if (selection == "None") {
-            priorityValue = 17;
-            break;
-          } else if (selection == "Highest") {
-            priorityValue = 15;
-            break;
-          } else if (selection == "Lowest") {
-            priorityValue = 16;
-            break;
-          } else {
+          QString selection = MultiOptionDialog::getSelection(priorityPrompts[i - 1], currentPriorities, "", this);
+          if (!selection.isEmpty()) {
+            if (selection == "None" || (i == 1 && (selection == "Highest" || selection == "Lowest"))) {
+              for (int j = i; j <= 3; ++j) {
+                QString specialPriorityKey = QString("SLCPriority%1").arg(j);
+                params.putInt(specialPriorityKey.toStdString(), primaryPriorities.indexOf(selection));
+              }
+              selectedPriorities.append(selection);
+              break;
+            }
+
+            int selectedPriority = primaryPriorities.indexOf(selection);
+            params.putInt(priorityKey.toStdString(), selectedPriority);
             selectedPriorities.append(selection);
-            availablePriorities.removeAll(selection);
-            availablePriorities.removeAll("Highest");
-            availablePriorities.removeAll("Lowest");
+          } else {
+            break;
           }
         }
 
-        if (priorityValue == -1 && !selectedPriorities.isEmpty()) {
-          QString priorityString = selectedPriorities.join(", ");
-          priorityValue = priorities.indexOf(priorityString);
-        }
-
-        if (priorityValue != -1) {
-          slscPriorityButton->setValue(priorities[priorityValue]);
-          params.putInt("SLCPriority", priorityValue);
-          updateToggles();
-        }
+        selectedPriorities.removeAll("None");
+        slscPriorityButton->setValue(selectedPriorities.join(", "));
       });
-      slscPriorityButton->setValue(priorities[params.getInt("SLCPriority")]);
+
+      QStringList initialPriorities;
+      for (int i = 1; i <= 3; ++i) {
+        QString priorityKey = QString("SLCPriority%1").arg(i);
+        int priorityIndex = params.getInt(priorityKey.toStdString());
+        if (priorityIndex >= 0 && priorityIndex < primaryPriorities.size() && primaryPriorities[priorityIndex] != "None") {
+          initialPriorities.append(primaryPriorities[priorityIndex]);
+        }
+      }
+      slscPriorityButton->setValue(initialPriorities.join(", "));
       addItem(slscPriorityButton);
 
     } else if (param == "VisionTurnControl") {
@@ -393,7 +408,7 @@ FrogPilotControlsPanel::FrogPilotControlsPanel(SettingsWindow *parent) : FrogPil
     });
   }
 
-  std::set<std::string> rebootKeys = {"AlwaysOnLateral", "FireTheBabysitter", "HigherBitrate", "MuteDM", "NNFF"};
+  std::set<std::string> rebootKeys = {"AlwaysOnLateral", "FireTheBabysitter", "HigherBitrate", "NNFF", "MuteDM", "OfflineMode"};
   for (const std::string &key : rebootKeys) {
     QObject::connect(toggles[key], &ToggleControl::toggleFlipped, [this]() {
       if (FrogPilotConfirmationDialog::toggle("Reboot required to take effect.", "Reboot Now", this)) {
@@ -405,10 +420,10 @@ FrogPilotControlsPanel::FrogPilotControlsPanel(SettingsWindow *parent) : FrogPil
   conditionalExperimentalKeys = {"CECurves", "CECurvesLead", "CESlowerLead", "CENavigation", "CEStopLights", "CESignal"};
   fireTheBabysitterKeys = {"NoLogging", "MuteDM", "MuteDoor", "MuteOverheated", "MuteSeatbelt", "OfflineMode"};
   laneChangeKeys = {"LaneChangeTime", "LaneDetection", "OneLaneChange"};
-  lateralTuneKeys = {"AverageCurvature", "NNFF", "SteerRatio"};
+  lateralTuneKeys = {"NNFF", "SteerRatio"};
   longitudinalTuneKeys = {"AccelerationProfile", "AggressiveAcceleration", "SmoothBraking", "StoppingDistance"};
   mtscKeys = {"MTSCAggressiveness"};
-  qolKeys = {"DisableOnroadUploads", "HigherBitrate", "PauseLateralOnSignal", "ReverseCruise", "SetSpeedOffset"};
+  qolKeys = {"DisableOnroadUploads", "HigherBitrate", "NavChill", "PauseLateralOnSignal", "ReverseCruise", "SetSpeedOffset"};
   speedLimitControllerKeys = {"Offset1", "Offset2", "Offset3", "Offset4", "SLCFallback", "SLCOverride", "SLCPriority"};
   visionTurnControlKeys = {"CurveSensitivity", "TurnAggressiveness"};
 
@@ -421,17 +436,10 @@ FrogPilotControlsPanel::FrogPilotControlsPanel(SettingsWindow *parent) : FrogPil
   QObject::connect(device(), &Device::interactiveTimeout, this, &FrogPilotControlsPanel::hideSubToggles);
   QObject::connect(parent, &SettingsWindow::closeParentToggle, this, &FrogPilotControlsPanel::hideSubToggles);
   QObject::connect(parent, &SettingsWindow::updateMetric, this, &FrogPilotControlsPanel::updateMetric);
+  QObject::connect(uiState(), &UIState::offroadTransition, this, &FrogPilotControlsPanel::updateCarToggles);
 
   hideSubToggles();
   updateMetric();
-}
-
-void FrogPilotControlsPanel::updateCarToggles() {
-  FrogPilotParamValueControlFloat *steerRatioToggle = static_cast<FrogPilotParamValueControlFloat*>(toggles["SteerRatio"]);
-  steerRatioStock = params.getFloat("SteerRatioStock");
-  steerRatioToggle->setTitle(steerRatioStock != 0 ? QString("Steer Ratio (Default: %1)").arg(steerRatioStock, 0, 'f', 2) : QString("Steer Ratio"));
-  steerRatioToggle->updateControl(steerRatioStock * 0.75, steerRatioStock * 1.25, "", 10.0);
-  steerRatioToggle->refresh();
 }
 
 void FrogPilotControlsPanel::updateToggles() {
@@ -442,6 +450,14 @@ void FrogPilotControlsPanel::updateToggles() {
   }).detach();
 }
 
+void FrogPilotControlsPanel::updateCarToggles() {
+  FrogPilotParamValueControlFloat *steerRatioToggle = static_cast<FrogPilotParamValueControlFloat*>(toggles["SteerRatio"]);
+  steerRatioStock = params.getFloat("SteerRatioStock");
+  steerRatioToggle->setTitle(steerRatioStock != 0 ? QString("Steer Ratio (Default: %1)").arg(steerRatioStock, 0, 'f', 2) : QString("Steer Ratio"));
+  steerRatioToggle->updateControl(steerRatioStock * 0.75, steerRatioStock * 1.25, "", 10.0);
+  steerRatioToggle->refresh();
+}
+
 void FrogPilotControlsPanel::updateMetric() {
   bool previousIsMetric = isMetric;
   isMetric = params.getBool("IsMetric");
@@ -449,15 +465,15 @@ void FrogPilotControlsPanel::updateMetric() {
   if (isMetric != previousIsMetric) {
     double distanceConversion = isMetric ? FOOT_TO_METER : METER_TO_FOOT;
     double speedConversion = isMetric ? MILE_TO_KM : KM_TO_MILE;
-    params.putInt("CESpeed", std::nearbyint(params.getInt("CESpeed") * speedConversion));
-    params.putInt("CESpeedLead", std::nearbyint(params.getInt("CESpeedLead") * speedConversion));
-    params.putInt("Offset1", std::nearbyint(params.getInt("Offset1") * speedConversion));
-    params.putInt("Offset2", std::nearbyint(params.getInt("Offset2") * speedConversion));
-    params.putInt("Offset3", std::nearbyint(params.getInt("Offset3") * speedConversion));
-    params.putInt("Offset4", std::nearbyint(params.getInt("Offset4") * speedConversion));
-    params.putInt("PauseLateralOnSignal", std::nearbyint(params.getInt("PauseLateralOnSignal") * speedConversion));
-    params.putInt("SetSpeedOffset", std::nearbyint(params.getInt("SetSpeedOffset") * speedConversion));
-    params.putInt("StoppingDistance", std::nearbyint(params.getInt("StoppingDistance") * distanceConversion));
+    params.putIntNonBlocking("CESpeed", std::nearbyint(params.getInt("CESpeed") * speedConversion));
+    params.putIntNonBlocking("CESpeedLead", std::nearbyint(params.getInt("CESpeedLead") * speedConversion));
+    params.putIntNonBlocking("Offset1", std::nearbyint(params.getInt("Offset1") * speedConversion));
+    params.putIntNonBlocking("Offset2", std::nearbyint(params.getInt("Offset2") * speedConversion));
+    params.putIntNonBlocking("Offset3", std::nearbyint(params.getInt("Offset3") * speedConversion));
+    params.putIntNonBlocking("Offset4", std::nearbyint(params.getInt("Offset4") * speedConversion));
+    params.putIntNonBlocking("PauseLateralOnSignal", std::nearbyint(params.getInt("PauseLateralOnSignal") * speedConversion));
+    params.putIntNonBlocking("SetSpeedOffset", std::nearbyint(params.getInt("SetSpeedOffset") * speedConversion));
+    params.putIntNonBlocking("StoppingDistance", std::nearbyint(params.getInt("StoppingDistance") * distanceConversion));
   }
 
   FrogPilotParamValueControl *offset1Toggle = static_cast<FrogPilotParamValueControl*>(toggles["Offset1"]);
@@ -479,10 +495,11 @@ void FrogPilotControlsPanel::updateMetric() {
     offset3Toggle->setDescription("Set speed limit offset for limits between 55-64 kph.");
     offset4Toggle->setDescription("Set speed limit offset for limits between 65-99 kph.");
 
-    offset1Toggle->updateControl(0, 150, " kph");
-    offset2Toggle->updateControl(0, 150, " kph");
-    offset3Toggle->updateControl(0, 150, " kph");
-    offset4Toggle->updateControl(0, 150, " kph");
+    offset1Toggle->updateControl(0, 99, " kph");
+    offset2Toggle->updateControl(0, 99, " kph");
+    offset3Toggle->updateControl(0, 99, " kph");
+    offset4Toggle->updateControl(0, 99, " kph");
+
     pauseLateralToggle->updateControl(0, 150, " kph");
     setSpeedOffsetToggle->updateControl(0, 150, " kph");
     stoppingDistanceToggle->updateControl(0, 5, " meters");
@@ -501,6 +518,7 @@ void FrogPilotControlsPanel::updateMetric() {
     offset2Toggle->updateControl(0, 99, " mph");
     offset3Toggle->updateControl(0, 99, " mph");
     offset4Toggle->updateControl(0, 99, " mph");
+
     pauseLateralToggle->updateControl(0, 99, " mph");
     setSpeedOffsetToggle->updateControl(0, 99, " mph");
     stoppingDistanceToggle->updateControl(0, 10, " feet");

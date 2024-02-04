@@ -47,19 +47,10 @@ class CarController:
     self.accel = 0
 
     # FrogPilot variables
-    self.lock_doors = False
-    self.reverse_cruise_increase = False
-    self.sng_hack = False
-
     self.doors_locked = False
     self.doors_unlocked = True
 
-  def update_frogpilot_variables(self, params):
-    self.lock_doors = params.get_bool("LockDoors")
-    self.reverse_cruise_increase = params.get_bool("ReverseCruise")
-    self.sng_hack = params.get_bool("SNGHack")
-
-  def update(self, CC, CS, now_nanos, sport_plus):
+  def update(self, CC, CS, now_nanos, frogpilot_variables):
     actuators = CC.actuators
     hud_control = CC.hudControl
     pcm_cancel_cmd = CC.cruiseControl.cancel
@@ -120,7 +111,7 @@ class CarController:
     if self.CP.enableGasInterceptor and CC.longActive:
       MAX_INTERCEPTOR_GAS = 0.5
       # RAV4 has very sensitive gas pedal
-      if self.CP.carFingerprint in (CAR.RAV4, CAR.RAV4H, CAR.HIGHLANDER, CAR.HIGHLANDERH):
+      if self.CP.carFingerprint in (CAR.RAV4, CAR.RAV4H, CAR.HIGHLANDER):
         PEDAL_SCALE = interp(CS.out.vEgo, [0.0, MIN_ACC_SPEED, MIN_ACC_SPEED + PEDAL_TRANSITION], [0.15, 0.3, 0.0])
       elif self.CP.carFingerprint in (CAR.COROLLA,):
         PEDAL_SCALE = interp(CS.out.vEgo, [0.0, MIN_ACC_SPEED, MIN_ACC_SPEED + PEDAL_TRANSITION], [0.3, 0.4, 0.0])
@@ -132,7 +123,7 @@ class CarController:
       interceptor_gas_cmd = clip(pedal_command, 0., MAX_INTERCEPTOR_GAS)
     else:
       interceptor_gas_cmd = 0.
-    if sport_plus:
+    if frogpilot_variables.sport_plus:
       pcm_accel_cmd = clip(actuators.accel, self.params.ACCEL_MIN, self.params.ACCEL_MAX_PLUS)
     else:
       pcm_accel_cmd = clip(actuators.accel, self.params.ACCEL_MIN, self.params.ACCEL_MAX)
@@ -143,7 +134,7 @@ class CarController:
       pcm_cancel_cmd = 1
 
     # on entering standstill, send standstill request
-    if CS.out.standstill and not self.last_standstill and (self.CP.carFingerprint not in NO_STOP_TIMER_CAR or self.CP.enableGasInterceptor) and not self.sng_hack:
+    if CS.out.standstill and not self.last_standstill and (self.CP.carFingerprint not in NO_STOP_TIMER_CAR or self.CP.enableGasInterceptor) and not frogpilot_variables.sng_hack:
       self.standstill_req = True
     if CS.pcm_acc_status != 8:
       # pcm entered standstill or it's disabled
@@ -163,10 +154,10 @@ class CarController:
       if pcm_cancel_cmd and self.CP.carFingerprint in UNSUPPORTED_DSU_CAR:
         can_sends.append(toyotacan.create_acc_cancel_command(self.packer))
       elif self.CP.openpilotLongitudinalControl:
-        can_sends.append(toyotacan.create_accel_command(self.packer, pcm_accel_cmd, pcm_cancel_cmd, self.standstill_req, lead, CS.acc_type, fcw_alert, self.reverse_cruise_increase, CS.distance_button))
+        can_sends.append(toyotacan.create_accel_command(self.packer, pcm_accel_cmd, pcm_cancel_cmd, self.standstill_req, lead, CS.acc_type, fcw_alert, frogpilot_variables, CS.distance_button))
         self.accel = pcm_accel_cmd
       else:
-        can_sends.append(toyotacan.create_accel_command(self.packer, 0, pcm_cancel_cmd, False, lead, CS.acc_type, False, self.reverse_cruise_increase, CS.distance_button))
+        can_sends.append(toyotacan.create_accel_command(self.packer, 0, pcm_cancel_cmd, False, lead, CS.acc_type, False, frogpilot_variables, CS.distance_button))
 
     if self.frame % 2 == 0 and self.CP.enableGasInterceptor and self.CP.openpilotLongitudinalControl:
       # send exactly zero if gas cmd is zero. Interceptor will send the max between read value and gas cmd.
@@ -213,7 +204,7 @@ class CarController:
     new_actuators.gas = self.gas
 
     # Lock doors when in drive / unlock doors when in park
-    if self.lock_doors:
+    if frogpilot_variables.lock_doors:
       if self.doors_unlocked and CS.out.gearShifter != PARK:
         can_sends.append(make_can_msg(0x750, LOCK_CMD, 0))
         self.doors_locked = True

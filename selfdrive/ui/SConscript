@@ -19,13 +19,16 @@ if arch == "Darwin":
   del base_libs[base_libs.index('OpenCL')]
   qt_env['FRAMEWORKS'] += ['OpenCL']
 
+# FIXME: remove this once we're on 5.15 (24.04)
+qt_env['CXXFLAGS'] += ["-Wno-deprecated-declarations"]
+
 qt_util = qt_env.Library("qt_util", ["#selfdrive/ui/qt/api.cc", "#selfdrive/ui/qt/util.cc"], LIBS=base_libs)
 widgets_src = ["ui.cc", "qt/widgets/input.cc", "qt/widgets/drive_stats.cc", "qt/widgets/wifi.cc",
                "qt/widgets/ssh_keys.cc", "qt/widgets/toggle.cc", "qt/widgets/controls.cc",
                "qt/widgets/offroad_alerts.cc", "qt/widgets/prime.cc", "qt/widgets/keyboard.cc",
                "qt/widgets/scrollview.cc", "qt/widgets/cameraview.cc", "#third_party/qrcode/QrCode.cc",
                "qt/request_repeater.cc", "qt/qt_window.cc", "qt/network/networking.cc", "qt/network/wifi_manager.cc",
-               "../frogpilot/ui/frogpilot_functions.cc", "../frogpilot/navigation/ui/navigation_settings.cc",
+               "../frogpilot/ui/frogpilot_ui_functions.cc", "../frogpilot/navigation/ui/navigation_settings.cc",
                "../frogpilot/ui/control_settings.cc", "../frogpilot/ui/vehicle_settings.cc",
                "../frogpilot/ui/visual_settings.cc"]
 
@@ -46,20 +49,13 @@ qt_src = ["main.cc", "qt/sidebar.cc", "qt/onroad.cc", "qt/body.cc",
           "qt/offroad/driverview.cc", "qt/offroad/experimental_mode.cc",
           "../frogpilot/screenrecorder/omx_encoder.cc", "../frogpilot/screenrecorder/screenrecorder.cc"]
 
-def is_running_on_wsl2():
-  try:
-    with open('/proc/version', 'r') as f:
-      return 'WSL2' in f.read()
-  except FileNotFoundError:
-    return False
-
-if is_running_on_wsl2():
-  qt_env.Append(CXXFLAGS=['-DWSL2'])
+if GetOption("nosr"):
+  qt_env.Append(CXXFLAGS=['-DNO_SR'])
   base_libs.remove('OmxCore')
   qt_libs.remove('OmxCore')
   qt_src.remove("../frogpilot/screenrecorder/screenrecorder.cc")
   qt_src.remove("../frogpilot/screenrecorder/omx_encoder.cc")
-  print("Building for WSL2. Removing Screen Recorder")
+  print("Removing Screen Recorder")
 
 # build translation files
 with open(File("translations/languages.json").abspath) as f:
@@ -118,23 +114,17 @@ if GetOption('extras') and arch != "Darwin":
   senv['LINKFLAGS'].append('-Wl,-strip-debug')
 
   release = "release3"
-  dashcam = "dashcam3"
   installers = [
     ("openpilot", release),
     ("openpilot_test", f"{release}-staging"),
     ("openpilot_nightly", "nightly"),
     ("openpilot_internal", "master"),
-    ("dashcam", dashcam),
-    ("dashcam_test", f"{dashcam}-staging"),
   ]
 
-  cont = {}
-  for brand in ("openpilot", "dashcam"):
-    cont[brand] = senv.Command(f"installer/continue_{brand}.o", f"installer/continue_{brand}.sh",
-                               "ld -r -b binary -o $TARGET $SOURCE")
+  cont = senv.Command(f"installer/continue_openpilot.o", f"installer/continue_openpilot.sh",
+                      "ld -r -b binary -o $TARGET $SOURCE")
   for name, branch in installers:
-    brand = "dashcam" if "dashcam" in branch else "openpilot"
-    d = {'BRANCH': f"'\"{branch}\"'", 'BRAND': f"'\"{brand}\"'"}
+    d = {'BRANCH': f"'\"{branch}\"'"}
     if "internal" in name:
       d['INTERNAL'] = "1"
 
@@ -143,7 +133,7 @@ if GetOption('extras') and arch != "Darwin":
       r.raise_for_status()
       d['SSH_KEYS'] = f'\\"{r.text.strip()}\\"'
     obj = senv.Object(f"installer/installers/installer_{name}.o", ["installer/installer.cc"], CPPDEFINES=d)
-    f = senv.Program(f"installer/installers/installer_{name}", [obj, cont[brand]], LIBS=qt_libs)
+    f = senv.Program(f"installer/installers/installer_{name}", [obj, cont], LIBS=qt_libs)
     # keep installers small
     assert f[0].get_size() < 350*1e3
 
