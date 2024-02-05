@@ -824,8 +824,8 @@ class Controls:
           left_deviation = steering_value > 0 and dpath_points[0] < -0.20
           right_deviation = steering_value < 0 and dpath_points[0] > 0.20
 
-          # if left_deviation or right_deviation:
-          #   self.events.add(EventName.steerSaturated)
+          if left_deviation or right_deviation:
+            self.events.add(EventName.steerSaturated)
 
     # Ensure no NaNs/Infs
     for p in ACTUATOR_FIELDS:
