@@ -51,7 +51,6 @@ struct CarEvent @0x9b1657f34caf3ad3 {
     parkBrake @29;
     manualRestart @30;
     lowSpeedLockout @31;
-    plannerError @32;
     joystickDebug @34;
     steerTempUnavailableSilent @35;
     resumeRequired @36;
@@ -117,9 +116,18 @@ struct CarEvent @0x9b1657f34caf3ad3 {
     locationdPermanentError @118;
     paramsdTemporaryError @50;
     paramsdPermanentError @119;
+    openpilotCrashedRandomEvents @120;
+    frogSteerSaturated @121;
+    greenLight @122;
+    openpilotCrashed @123;
+    pedalInterceptorNoBrake @124;
+    torqueNNLoad @125;
+    turningLeft @126;
+    turningRight @127;
+    firefoxSteerSaturated @128;
 
     # NDA Neokii
-    slowingDownSpeedSound @120;
+    slowingDownSpeedSound @129;
 
     radarCanErrorDEPRECATED @15;
     communityFeatureDisallowedDEPRECATED @62;
@@ -145,6 +153,7 @@ struct CarEvent @0x9b1657f34caf3ad3 {
     startupFuzzyFingerprintDEPRECATED @97;
     noTargetDEPRECATED @25;
     brakeUnavailableDEPRECATED @2;
+    plannerErrorDEPRECATED @32;
   }
 }
 
@@ -416,9 +425,10 @@ struct CarControl {
       promptRepeat @7;
       promptDistracted @8;
 
-      firefox @9;
+      fart @9;
+      firefox @10;
 
-      speedDown @10;
+      speedDown @11;
     }
   }
 

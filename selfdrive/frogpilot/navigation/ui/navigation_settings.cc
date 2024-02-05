@@ -15,7 +15,7 @@ FrogPilotNavigationPanel::FrogPilotNavigationPanel(QWidget *parent) : QFrame(par
   Primeless *primelessPanel = new Primeless(this);
   mainLayout->addWidget(primelessPanel);
 
-  ButtonControl *manageNOOButton = new ButtonControl(tr("Manage Navigation Settings"), tr("MANAGE"), tr("Manage primeless navigate on openpilot settings."));
+  ButtonControl *manageNOOButton = new ButtonControl(tr("Manage Primeless Navigation Settings"), tr("MANAGE"), tr("Manage primeless navigate on openpilot settings."));
   QObject::connect(manageNOOButton, &ButtonControl::clicked, [=]() { mainLayout->setCurrentWidget(primelessPanel); });
   QObject::connect(primelessPanel, &Primeless::backPress, [=]() { mainLayout->setCurrentWidget(navigationWidget); });
   list->addItem(manageNOOButton);

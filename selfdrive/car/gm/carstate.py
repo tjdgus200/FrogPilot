@@ -2,11 +2,12 @@ import copy
 from cereal import car
 from openpilot.common.conversions import Conversions as CV
 from openpilot.common.numpy_fast import mean
-from openpilot.common.params import Params
 from opendbc.can.can_define import CANDefine
 from opendbc.can.parser import CANParser
 from openpilot.selfdrive.car.interfaces import CarStateBase
 from openpilot.selfdrive.car.gm.values import DBC, AccState, CanBus, STEER_THRESHOLD, GMFlags, CC_ONLY_CAR, CAMERA_ACC_CAR, SDGM_CAR
+
+from openpilot.selfdrive.frogpilot.functions.frogpilot_functions import FrogPilotFunctions
 
 TransmissionType = car.CarParams.TransmissionType
 NetworkLocation = car.CarParams.NetworkLocation
@@ -30,7 +31,7 @@ class CarState(CarStateBase):
 
     self.single_pedal_mode = False
 
-  def update(self, pt_cp, cam_cp, loopback_cp):
+  def update(self, pt_cp, cam_cp, loopback_cp, conditional_experimental_mode, frogpilot_variables):
     ret = car.CarState.new_message()
 
     self.prev_cruise_buttons = self.cruise_buttons
@@ -43,14 +44,6 @@ class CarState(CarStateBase):
     self.pscm_status = copy.copy(pt_cp.vl["PSCMStatus"])
     moving_forward = pt_cp.vl["EBCMWheelSpdRear"]["MovingForward"] != 0
     self.moving_backward = (pt_cp.vl["EBCMWheelSpdRear"]["MovingBackward"] != 0) and not moving_forward
-
-    if self.CP.enableBsm:
-      if self.CP.carFingerprint in SDGM_CAR:
-        ret.leftBlindspot = cam_cp.vl["BCMBSM"]["Left_BSM"] == 1
-        ret.rightBlindspot = cam_cp.vl["BCMBSM"]["Right_BSM"] == 1
-      else:
-        ret.leftBlindspot = pt_cp.vl["BCMBSM"]["Left_BSM"] == 1
-        ret.rightBlindspot = pt_cp.vl["BCMBSM"]["Right_BSM"] == 1
 
     # Variables used for avoiding LKAS faults
     self.loopback_lka_steering_cmd_updated = len(loopback_cp.vl_all["ASCMLKASteeringCmd"]["RollingCounter"]) > 0
@@ -66,7 +59,7 @@ class CarState(CarStateBase):
       pt_cp.vl["EBCMWheelSpdRear"]["RLWheelSpd"],
       pt_cp.vl["EBCMWheelSpdRear"]["RRWheelSpd"],
     )
-    ret.vEgoRaw = (pt_cp.vl["ECMVehicleSpeed"]["VehicleSpeed"] * CV.MPH_TO_MS)
+    ret.vEgoRaw = mean([ret.wheelSpeeds.fl, ret.wheelSpeeds.fr, ret.wheelSpeeds.rl, ret.wheelSpeeds.rr])
     ret.vEgo, ret.aEgo = self.update_speed_kf(ret.vEgoRaw)
     # sample rear wheel speeds, standstill=True if ECM allows engagement with brake
     ret.standstill = ret.wheelSpeeds.rl <= STANDSTILL_THRESHOLD and ret.wheelSpeeds.rr <= STANDSTILL_THRESHOLD
@@ -96,7 +89,7 @@ class CarState(CarStateBase):
 
     if self.CP.enableGasInterceptor:
       ret.gas = (pt_cp.vl["GAS_SENSOR"]["INTERCEPTOR_GAS"] + pt_cp.vl["GAS_SENSOR"]["INTERCEPTOR_GAS2"]) / 2.
-      threshold = 20 if self.CP.carFingerprint in CAMERA_ACC_CAR else 4
+      threshold = 15 if self.CP.carFingerprint in CAMERA_ACC_CAR else 4
       ret.gasPressed = ret.gas > threshold
     else:
       ret.gas = pt_cp.vl["AcceleratorPedal2"]["AcceleratorPedal2"] / 254.
@@ -146,7 +139,6 @@ class CarState(CarStateBase):
 
     ret.cruiseState.enabled = pt_cp.vl["AcceleratorPedal2"]["CruiseState"] != AccState.OFF
     ret.cruiseState.standstill = pt_cp.vl["AcceleratorPedal2"]["CruiseState"] == AccState.STANDSTILL
-    ret.regenPressed = bool(pt_cp.vl["EBCMRegenPaddle"]["RegenPaddle"])
     if self.CP.networkLocation == NetworkLocation.fwdCamera and not self.CP.flags & GMFlags.NO_CAMERA.value:
       if self.CP.carFingerprint not in CC_ONLY_CAR:
         ret.cruiseState.speed = cam_cp.vl["ASCMActiveCruiseControlStatus"]["ACCSpeedSetpoint"] * CV.KPH_TO_MS
@@ -162,8 +154,16 @@ class CarState(CarStateBase):
       ret.cruiseState.speed = pt_cp.vl["ECMCruiseControl"]["CruiseSetSpeed"] * CV.KPH_TO_MS
       ret.cruiseState.enabled = pt_cp.vl["ECMCruiseControl"]["CruiseActive"] != 0
 
+    if self.CP.enableBsm:
+      if self.CP.carFingerprint not in SDGM_CAR:
+        ret.leftBlindspot = pt_cp.vl["BCMBlindSpotMonitor"]["LeftBSM"] == 1
+        ret.rightBlindspot = pt_cp.vl["BCMBlindSpotMonitor"]["RightBSM"] == 1
+      else:
+        ret.leftBlindspot = cam_cp.vl["BCMBlindSpotMonitor"]["LeftBSM"] == 1
+        ret.rightBlindspot = cam_cp.vl["BCMBlindSpotMonitor"]["RightBSM"] == 1
+
     # Driving personalities function - Credit goes to Mangomoose!
-    if self.personalities_via_wheel and ret.cruiseState.available:
+    if frogpilot_variables.personalities_via_wheel and ret.cruiseState.available:
       # Sync with the onroad UI button
       if self.param_memory.get_bool("PersonalityChangedViaUI"):
         self.personality_profile = self.param.get_int("LongitudinalPersonality")
@@ -195,27 +195,20 @@ class CarState(CarStateBase):
         else:
           self.display_menu = False
 
-      if self.personality_profile != self.previous_personality_profile:
+      if self.personality_profile != self.previous_personality_profile and self.personality_profile >= 0:
         self.param.put_int("LongitudinalPersonality", self.personality_profile)
         self.param_memory.put_bool("PersonalityChangedViaWheel", True)
         self.previous_personality_profile = self.personality_profile
 
     # Toggle Experimental Mode from steering wheel function
-    if self.experimental_mode_via_lkas and ret.cruiseState.available:
+    if frogpilot_variables.experimental_mode_via_lkas and ret.cruiseState.available:
       if self.CP.carFingerprint in SDGM_CAR:
         lkas_pressed = cam_cp.vl["ASCMSteeringButton"]["LKAButton"]
       else:
         lkas_pressed = pt_cp.vl["ASCMSteeringButton"]["LKAButton"]
+
       if lkas_pressed and not self.lkas_previously_pressed:
-        if self.conditional_experimental_mode:
-          # Set "CEStatus" to work with "Conditional Experimental Mode"
-          conditional_status = self.param_memory.get_int("CEStatus")
-          override_value = 0 if conditional_status in (1, 2, 3, 4) else 1 if conditional_status >= 5 else 2
-          self.param_memory.put_int("CEStatus", override_value)
-        else:
-          experimental_mode = self.param.get_bool("ExperimentalMode")
-          # Invert the value of "ExperimentalMode"
-          put_bool_nonblocking("ExperimentalMode", not experimental_mode)
+        FrogPilotFunctions.lkas_button_function(conditional_experimental_mode)
       self.lkas_previously_pressed = lkas_pressed
 
     return ret
@@ -235,7 +228,7 @@ class CarState(CarStateBase):
           ("ASCMSteeringButton", 33),
         ]
         if CP.enableBsm:
-          messages.append(("BCMBSM", 10))
+          messages.append(("BCMBlindSpotMonitor", 10))
       else:
         messages += [
           ("AEBCmd", 10),
@@ -277,7 +270,7 @@ class CarState(CarStateBase):
         ("ASCMSteeringButton", 33),
       ]
       if CP.enableBsm:
-        messages.append(("BCMBSM", 10))
+        messages.append(("BCMBlindSpotMonitor", 10))
 
     # Used to read back last counter sent to PT by camera
     if CP.networkLocation == NetworkLocation.fwdCamera:

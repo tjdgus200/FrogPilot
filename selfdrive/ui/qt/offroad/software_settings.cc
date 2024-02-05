@@ -18,6 +18,7 @@
 #include "selfdrive/ui/qt/widgets/input.h"
 #include "system/hardware/hw.h"
 
+#include "selfdrive/frogpilot/ui/frogpilot_ui_functions.h"
 
 void SoftwarePanel::checkForUpdates() {
   std::system("pkill -SIGUSR1 -f selfdrive.updated");
@@ -32,15 +33,16 @@ SoftwarePanel::SoftwarePanel(QWidget* parent) : ListWidget(parent) {
   versionLbl = new LabelControl(tr("Current Version"), "");
   addItem(versionLbl);
 
-  // update scheduler
+  // Update scheduler
   std::vector<QString> scheduleOptions{tr("Manually"), tr("Daily"), tr("Weekly")};
-  ButtonParamControl *preferredSchedule = new ButtonParamControl("UpdateSchedule", tr("Update Scheduler"),
-                                          tr("Choose the update frequency for FrogPilot's automatic updates.\n\n"
-                                          "This feature will handle the download, installation, and device reboot for a seamless 'Set and Forget' experience.\n\n"
+  FrogPilotButtonParamControl *preferredSchedule = new FrogPilotButtonParamControl("UpdateSchedule", tr("Update Scheduler"),
+                                          tr("Choose the frequency to automatically update FrogPilot.\n\n"
+                                          "This feature will handle the download, installation, and device reboot for a seamless 'Set and Forget' update experience.\n\n"
                                           "Weekly updates start at midnight every Sunday."),
                                           "",
                                           scheduleOptions);
   schedule = params.getInt("UpdateSchedule");
+  QObject::connect(preferredSchedule, &FrogPilotButtonParamControl::buttonClicked, this, &SoftwarePanel::updateLabels);
   addItem(preferredSchedule);
 
   updateTime = new ButtonControl(tr("Update Time"), tr("SELECT"));
@@ -51,7 +53,8 @@ SoftwarePanel::SoftwarePanel(QWidget* parent) : ListWidget(parent) {
     hours << QString("%1:00 %2").arg(displayHour).arg(meridiem)
           << QString("%1:30 %2").arg(displayHour).arg(meridiem);
   }
-   QObject::connect(updateTime, &ButtonControl::clicked, [=]() {
+
+  QObject::connect(updateTime, &ButtonControl::clicked, [=]() {
     int currentHourIndex = params.getInt("UpdateTime");
     QString currentHourLabel = hours[currentHourIndex];
 
@@ -63,8 +66,8 @@ SoftwarePanel::SoftwarePanel(QWidget* parent) : ListWidget(parent) {
     }
   });
   time = params.getInt("UpdateTime");
-  deviceShutdown = params.getInt("DeviceShutdown") * 3600;
   updateTime->setValue(hours[time]);
+  updateTime->setVisible(schedule != 0);
   addItem(updateTime);
 
   // download update btn
@@ -131,8 +134,6 @@ SoftwarePanel::SoftwarePanel(QWidget* parent) : ListWidget(parent) {
 
   fs_watch = new ParamWatcher(this);
   QObject::connect(fs_watch, &ParamWatcher::paramChanged, [=](const QString &param_name, const QString &param_value) {
-    schedule = params.getInt("UpdateSchedule");
-    time = params.getInt("UpdateTime");
     updateLabels();
   });
 
@@ -159,9 +160,6 @@ void SoftwarePanel::updateLabels() {
   fs_watch->addParam("UpdateFailedCount");
   fs_watch->addParam("UpdaterState");
   fs_watch->addParam("UpdateAvailable");
-
-  fs_watch->addParam("UpdateSchedule");
-  fs_watch->addParam("UpdateTime");
 
   if (!isVisible()) {
     return;
@@ -211,72 +209,49 @@ void SoftwarePanel::updateLabels() {
 }
 
 void SoftwarePanel::automaticUpdate() {
-  static int timer = 0;
-  static std::chrono::system_clock::time_point lastOffroadTime;
-
-  if (!is_onroad) {
-    timer = (timer == 0) ? 0 : std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - lastOffroadTime).count();
-    lastOffroadTime = std::chrono::system_clock::now();
-  } else {
-    timer = 0;
-  }
-
-  bool isWifiConnected = (*uiState()->sm)["deviceState"].getDeviceState().getNetworkType() == cereal::DeviceState::NetworkType::WIFI;
-  if (schedule == 0 || is_onroad || !isWifiConnected || isVisible()) return;
-
+  // Variable declarations
   static bool isDownloadCompleted = false;
-  if (isDownloadCompleted && params.getBool("UpdateAvailable")) {
-    params.putBool(timer > deviceShutdown ? "DoShutdown" : "DoReboot", true);
-    return;
-  }
-
-  int updateHour = time / 2;
-  int updateMinute = (time % 2) * 30;
-
-  if (updateHour >= 1 && updateHour <= 11 && time >= 24) {
-    updateHour += 12;
-  } else if (updateHour == 12 && time < 24) {
-    updateHour = 0;
-  }
+  static bool updateCheckedToday = false;
 
   std::time_t currentTimeT = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
   std::tm now = *std::localtime(&currentTimeT);
 
-  static bool updateCheckedToday = false;
+  // Check to make sure we're not onroad and have a WiFi connection
+  bool isWifiConnected = (*uiState()->sm)["deviceState"].getDeviceState().getNetworkType() == cereal::DeviceState::NetworkType::WIFI;
+  if (schedule == 0 || is_onroad || !isWifiConnected || isVisible()) return;
+
+  // Reboot if an automatic update was completed
+  if (isDownloadCompleted) {
+    if (installBtn->isVisible()) Hardware::reboot();
+    return;
+  }
+
+  // Format "Updated" to a useable format
+  std::tm lastUpdate;
+  std::istringstream ss(params.get("Updated"));
+  ss >> std::get_time(&lastUpdate, "%Y-%m-%d %H:%M:%S");
+  std::time_t lastUpdateTimeT = std::mktime(&lastUpdate);
+
+  // Check if an update was already performed today
   static int lastCheckedDay = now.tm_yday;
   if (lastCheckedDay != now.tm_yday) {
     updateCheckedToday = false;
     lastCheckedDay = now.tm_yday;
-  }
-
-  if (now.tm_hour != updateHour || now.tm_min < updateMinute) return;
-
-  std::string lastUpdateStr = params.get("Updated");
-  std::tm lastUpdate = {};
-  std::istringstream iss(lastUpdateStr);
-
-  if (iss >> std::get_time(&lastUpdate, "%Y-%m-%d %H:%M:%S")) {
-    lastUpdate.tm_year -= 1900;
-    lastUpdate.tm_mon -= 1;
-  }
-  std::time_t lastUpdateTimeT = std::mktime(&lastUpdate);
-
-  if (lastUpdate.tm_yday == now.tm_yday) {
+  } else if (lastUpdate.tm_yday == now.tm_yday) {
     return;
   }
 
-  if (!isDownloadCompleted) {
-    std::chrono::hours durationSinceLastUpdate = std::chrono::duration_cast<std::chrono::hours>(std::chrono::system_clock::now() - std::chrono::system_clock::from_time_t(lastUpdateTimeT));
-    int daysSinceLastUpdate = durationSinceLastUpdate.count() / 24;
+  // Check if it's time to update
+  std::chrono::hours durationSinceLastUpdate = std::chrono::duration_cast<std::chrono::hours>(std::chrono::system_clock::now() - std::chrono::system_clock::from_time_t(lastUpdateTimeT));
+  int daysSinceLastUpdate = durationSinceLastUpdate.count() / 24;
 
-    if ((schedule == 1 && daysSinceLastUpdate >= 1) || (schedule == 2 && (now.tm_yday / 7) != (std::localtime(&lastUpdateTimeT)->tm_yday / 7))) {
-      if (downloadBtn->text() == tr("CHECK") && !updateCheckedToday) {
-        checkForUpdates();
-        updateCheckedToday = true;
-      } else {
-        std::system("pkill -SIGHUP -f selfdrive.updated");
-        isDownloadCompleted = true;
-      }
+  if ((schedule == 1 && daysSinceLastUpdate >= 1) || (schedule == 2 && (now.tm_yday / 7) != (std::localtime(&lastUpdateTimeT)->tm_yday / 7))) {
+    if (downloadBtn->text() == tr("CHECK") && !updateCheckedToday) {
+      checkForUpdates();
+      updateCheckedToday = true;
+    } else {
+      std::system("pkill -SIGHUP -f selfdrive.updated");
+      isDownloadCompleted = true;
     }
   }
 }

@@ -2,7 +2,7 @@
 
 #include <set>
 
-#include "selfdrive/frogpilot/ui/frogpilot_functions.h"
+#include "selfdrive/frogpilot/ui/frogpilot_ui_functions.h"
 #include "selfdrive/ui/qt/offroad/settings.h"
 
 class FrogPilotVisualsPanel : public FrogPilotListWidget {

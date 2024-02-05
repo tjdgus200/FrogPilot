@@ -58,7 +58,6 @@ services: dict[str, tuple] = {
   "liveLocationKalman": (True, 20., 5),
   "liveParameters": (True, 20., 5),
   "cameraOdometry": (True, 20., 5),
-  "lateralPlan": (True, 20., 5),
   "thumbnail": (True, 0.2, 1),
   "onroadEvents": (True, 1., 1),
   "carParams": (True, 0.02, 1),
@@ -87,9 +86,8 @@ services: dict[str, tuple] = {
   "frogpilotCarControl": (True, 100., 10),
   "frogpilotDeviceState": (True, 2., 1),
   "frogpilotEvents": (True, 1., 1),
-  "frogpilotLateralPlan": (True, 20., 5),
-  "frogpilotLongitudinalPlan": (True, 20., 5),
   "frogpilotNavigation": (True, 1., 10),
+  "frogpilotPlan": (True, 20., 5),
 
   # debug
   "uiDebug": (True, 0., 1),

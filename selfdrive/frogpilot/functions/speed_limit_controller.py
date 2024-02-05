@@ -13,6 +13,7 @@ class SpeedLimitController:
 
   def __init__(self) -> None:
     self.update_frogpilot_params()
+
     self.write_car_state()
     self.write_map_state()
     self.write_nav_state()
@@ -34,8 +35,6 @@ class SpeedLimitController:
 
   @property
   def speed_limit(self) -> float:
-    params_memory.put_bool("SLCExperimentalMode", False)
-
     limits = [self.car_speed_limit, self.map_speed_limit, self.nav_speed_limit]
     filtered_limits = [limit for limit in limits if limit > 0]
 
@@ -44,37 +43,19 @@ class SpeedLimitController:
     if self.lowest and filtered_limits:
       return min(filtered_limits)
 
-    priority_orders = [
-      ["nav", "car", "map"],
-      ["nav", "map", "car"],
-      ["nav", "map"],
-      ["nav", "car"],
-      ["nav"],
-      ["map", "car", "nav"],
-      ["map", "nav", "car"],
-      ["map", "nav"],
-      ["map", "car"],
-      ["map"],
-      ["car", "nav", "map"],
-      ["car", "map", "nav"],
-      ["car", "map"],
-      ["car", "nav"],
-      ["car"]
-    ]
+    priority_map = {1: "car", 2: "nav", 3: "map"}
+    priorities = [self.speed_limit_priority1, self.speed_limit_priority2, self.speed_limit_priority3]
+    valid_priorities = [priority_map[p] for p in priorities if p in priority_map]
 
-    if self.speed_limit_priority < len(priority_orders):
-      for source in priority_orders[self.speed_limit_priority]:
-        limit = getattr(self, f"{source}_speed_limit", 0)
-        if limit > 0:
-          self.prv_speed_limit = limit
-          return limit
+    for source in valid_priorities:
+      limit = getattr(self, f"{source}_speed_limit", 0)
+      if limit > 0:
+        self.prv_speed_limit = limit
+        return limit
 
-    if self.use_experimental_mode:
-      params_memory.put_bool("SLCExperimentalMode", True)
-      return 0
-    elif self.use_previous_limit:
+    if self.use_previous_limit:
       if self.lst_speed_limit != self.prv_speed_limit:
-        params.put_int("PreviousSpeedLimit", self.prv_speed_limit * 100)
+        params.put_float("PreviousSpeedLimit", self.prv_speed_limit)
       self.lst_speed_limit = self.prv_speed_limit
       return self.prv_speed_limit
 
@@ -83,6 +64,10 @@ class SpeedLimitController:
   @property
   def desired_speed_limit(self):
     return self.speed_limit + self.offset if self.speed_limit else 0
+
+  @property
+  def experimental_mode(self):
+    return self.speed_limit == 0 and self.use_experimental_mode
 
   def load_state(self):
     self.car_speed_limit = json.loads(params_memory.get("CarSpeedLimit"))
@@ -106,14 +91,17 @@ class SpeedLimitController:
     self.offset3 = params.get_int("Offset3") * conversion
     self.offset4 = params.get_int("Offset4") * conversion
 
-    self.speed_limit_priority = params.get_int("SLCPriority")
-    self.highest = self.speed_limit_priority == 15
-    self.lowest = self.speed_limit_priority == 16
+    self.speed_limit_priority1 = params.get_int("SLCPriority1")
+    self.speed_limit_priority2 = params.get_int("SLCPriority2")
+    self.speed_limit_priority3 = params.get_int("SLCPriority3")
+
+    self.highest = self.speed_limit_priority1 == 4
+    self.lowest = self.speed_limit_priority1 == 5
 
     slc_fallback = params.get_int("SLCFallback")
     self.use_experimental_mode = slc_fallback == 1
     self.use_previous_limit = slc_fallback == 2
 
-    self.prv_speed_limit = params.get_int("PreviousSpeedLimit") / 100
+    self.prv_speed_limit = params.get_float("PreviousSpeedLimit")
 
 SpeedLimitController = SpeedLimitController()

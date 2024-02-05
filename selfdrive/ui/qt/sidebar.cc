@@ -47,9 +47,6 @@ Sidebar::Sidebar(QWidget *parent) : QFrame(parent), onroad(false), flag_pressed(
   isStorageLeft = params.getBool("ShowStorageLeft");
   isStorageUsed = params.getBool("ShowStorageUsed");
 
-  isNumericalTemp = params.getBool("NumericalTemp");
-  isFahrenheit = params.getBool("Fahrenheit");
-
   themeConfiguration = {
     {0, {"stock", {QColor(255, 255, 255)}}},
     {1, {"frog_theme", {QColor(23, 134, 68)}}},
@@ -103,10 +100,10 @@ void Sidebar::mousePressEvent(QMouseEvent *event) {
     update();
   } else if (tempRect.contains(event->pos())) {
     showTemp = (showTemp + 1) % 3;
-    isNumericalTemp = (showTemp != 0);
-    isFahrenheit = (showTemp == 2);
-    params.putBoolNonBlocking("Fahrenheit", isFahrenheit);
-    params.putBoolNonBlocking("NumericalTemp", isNumericalTemp);
+    uiState()->scene.fahrenheit = showTemp == 2;
+    uiState()->scene.numerical_temp = showTemp != 0;
+    params.putBoolNonBlocking("Fahrenheit", showTemp == 2);
+    params.putBoolNonBlocking("NumericalTemp", showTemp != 0);
     update();
   } else if (onroad && home_btn.contains(event->pos())) {
     flag_pressed = true;
@@ -155,8 +152,10 @@ void Sidebar::updateState(const UIState &s) {
 
   auto frogpilotDeviceState = sm["frogpilotDeviceState"].getFrogpilotDeviceState();
 
+  bool isNumericalTemp = scene.numerical_temp;
+
   int maxTempC = deviceState.getMaxTempC();
-  QString max_temp = isFahrenheit ? QString::number(maxTempC * 9 / 5 + 32) + "°F" : QString::number(maxTempC) + "°C";
+  QString max_temp = scene.fahrenheit ? QString::number(maxTempC * 9 / 5 + 32) + "°F" : QString::number(maxTempC) + "°C";
   QColor theme_color = currentColors[0];
 
   // FrogPilot metrics

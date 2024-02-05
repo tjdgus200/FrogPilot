@@ -45,12 +45,11 @@ def only_offroad(started, params, CP: car.CarParams) -> bool:
 
 # FrogPilot functions
 def allow_uploads(started, params, CP: car.CarParams) -> bool:
-  enable_logging = not (params.get_bool("FireTheBabysitter") and params.get_bool("NoLogging"))
   wifi_connected = HARDWARE.get_network_type() == WIFI and not started
-  return wifi_connected if params.get_bool("DisableOnroadUploads") else enable_logging
+  return wifi_connected if params.get_bool("DisableOnroadUploads") else enable_logging(started, params, CP)
 
 def enable_dm(started, params, CP: car.CarParams) -> bool:
-  return (started or params.get_bool("IsDriverViewEnabled")) and not (params.get_bool("FireTheBabysitter") and params.get_bool("MuteDM"))
+  return driverview(started, params, CP) and not (params.get_bool("FireTheBabysitter") and params.get_bool("MuteDM"))
 
 def enable_logging(started, params, CP: car.CarParams) -> bool:
   return not (params.get_bool("FireTheBabysitter") and params.get_bool("NoLogging"))
@@ -66,7 +65,7 @@ procs = [
   NativeProcess("proclogd", "system/proclogd", ["./proclogd"], only_onroad),
   PythonProcess("logmessaged", "system.logmessaged", enable_logging),
   PythonProcess("micd", "system.micd", iscar),
-  PythonProcess("timezoned", "system.timezoned", always_run, enabled=not PC),
+  PythonProcess("timed", "system.timed", always_run, enabled=not PC),
 
   PythonProcess("dmonitoringmodeld", "selfdrive.modeld.dmonitoringmodeld", enable_dm, enabled=(not PC or WEBCAM)),
   NativeProcess("encoderd", "system/loggerd", ["./encoderd"], only_onroad),

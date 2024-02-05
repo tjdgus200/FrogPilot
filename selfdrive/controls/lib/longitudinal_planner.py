@@ -88,10 +88,8 @@ class LongitudinalPlanner:
       j = np.zeros(len(T_IDXS_MPC))
     return x, v, a, j
 
-  def update(self, sm, frogpilot_planner):
-    frogpilot_planner.update(sm, self.mpc)
-
-    if self.param_read_counter % 50 == 0:
+  def update(self, sm, frogpilot_planner, params_memory):
+    if self.param_read_counter % 50 == 0 or params_memory.get_bool("PersonalityChangedViaUI") or params_memory.get_bool("PersonalityChangedViaWheel"):
       self.read_param()
     self.param_read_counter += 1
     self.mpc.mode = 'blended' if sm['controlsState'].experimentalMode else 'acc'
@@ -135,12 +133,13 @@ class LongitudinalPlanner:
     accel_limits_turns[0] = min(accel_limits_turns[0], self.a_desired + 0.05)
     accel_limits_turns[1] = max(accel_limits_turns[1], self.a_desired - 0.05)
 
-    self.mpc.set_weights(prev_accel_constraint, frogpilot_planner.custom_personalities, frogpilot_planner.aggressive_jerk, frogpilot_planner.standard_jerk, frogpilot_planner.relaxed_jerk, personality=self.personality)
+    self.mpc.set_weights(prev_accel_constraint,
+                         frogpilot_planner.custom_personalities, frogpilot_planner.aggressive_jerk, frogpilot_planner.standard_jerk, frogpilot_planner.relaxed_jerk,
+                         personality=self.personality)
     self.mpc.set_accel_limits(accel_limits_turns[0], accel_limits_turns[1])
     self.mpc.set_cur_state(self.v_desired_filter.x, self.a_desired)
     x, v, a, j = self.parse_model(sm['modelV2'], self.v_model_error)
-    self.mpc.update(sm['radarState'], frogpilot_planner.v_cruise, x, v, a, j, frogpilot_planner.aggressive_acceleration, frogpilot_planner.increased_stopping_distance, frogpilot_planner.smoother_braking,
-                    frogpilot_planner.custom_personalities, frogpilot_planner.aggressive_follow, frogpilot_planner.standard_follow, frogpilot_planner.relaxed_follow, personality=self.personality)
+    self.mpc.update(sm['radarState'], frogpilot_planner.v_cruise, x, v, a, j, frogpilot_planner, personality=self.personality)
 
     self.v_desired_trajectory_full = np.interp(ModelConstants.T_IDXS, T_IDXS_MPC, self.mpc.v_solution)
     self.a_desired_trajectory_full = np.interp(ModelConstants.T_IDXS, T_IDXS_MPC, self.mpc.a_solution)
@@ -157,6 +156,8 @@ class LongitudinalPlanner:
     a_prev = self.a_desired
     self.a_desired = float(interp(self.dt, ModelConstants.T_IDXS[:CONTROL_N], self.a_desired_trajectory))
     self.v_desired_filter.x = self.v_desired_filter.x + self.dt * (self.a_desired + a_prev) / 2.0
+
+    frogpilot_planner.update(sm['carState'], sm['controlsState'], sm['modelV2'], self.mpc, sm, v_cruise, v_ego)
 
   def publish(self, sm, pm, frogpilot_planner):
     plan_send = messaging.new_message('longitudinalPlan')
@@ -180,4 +181,4 @@ class LongitudinalPlanner:
 
     pm.send('longitudinalPlan', plan_send)
 
-    frogpilot_planner.publish_longitudinal(sm, pm, self.mpc)
+    frogpilot_planner.publish(sm, pm, self.mpc)

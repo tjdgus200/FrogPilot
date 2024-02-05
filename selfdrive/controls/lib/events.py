@@ -17,6 +17,7 @@ AlertStatus = log.ControlsState.AlertStatus
 VisualAlert = car.CarControl.HUDControl.VisualAlert
 AudibleAlert = car.CarControl.HUDControl.AudibleAlert
 EventName = car.CarEvent.EventName
+
 FrogPilotEventName = custom.FrogPilotEvents
 
 
@@ -46,7 +47,6 @@ class ET:
 
 # get event name from enum
 EVENT_NAME = {v: k for k, v in EventName.schema.enumerants.items()}
-EVENT_NAME.update({v: k for k, v in FrogPilotEventName.schema.enumerants.items()})
 
 
 class Events:
@@ -931,14 +931,6 @@ EVENTS: Dict[int, Dict[str, Union[Alert, AlertCallbackType]]] = {
     ET.IMMEDIATE_DISABLE: ImmediateDisableAlert("Cruise Is Off"),
   },
 
-  # For planning the trajectory Model Predictive Control (MPC) is used. This is
-  # an optimization algorithm that is not guaranteed to find a feasible solution.
-  # If no solution is found or the solution has a very high cost this alert is thrown.
-  EventName.plannerError: {
-    ET.IMMEDIATE_DISABLE: ImmediateDisableAlert("Planner Solution Error"),
-    ET.NO_ENTRY: NoEntryAlert("Planner Solution Error"),
-  },
-
   # When the relay in the harness box opens the CAN bus between the LKAS camera
   # and the rest of the car is separated. When messages from the LKAS camera
   # are received on the car side this usually means the relay hasn't opened correctly
@@ -984,7 +976,7 @@ EVENTS: Dict[int, Dict[str, Union[Alert, AlertCallbackType]]] = {
   },
 
   # FrogPilot Events
-  FrogPilotEventName.frogSteerSaturated: {
+  EventName.frogSteerSaturated: {
     ET.WARNING: Alert(
       "Turn Exceeds Steering Limit",
       "JESUS TAKE THE WHEEL!!",
@@ -992,7 +984,7 @@ EVENTS: Dict[int, Dict[str, Union[Alert, AlertCallbackType]]] = {
       Priority.LOW, VisualAlert.steerRequired, AudibleAlert.none, 2.),
   },
 
-  FrogPilotEventName.greenLight: {
+  EventName.greenLight: {
     ET.PERMANENT: Alert(
       "Light turned green",
       "",
@@ -1000,7 +992,15 @@ EVENTS: Dict[int, Dict[str, Union[Alert, AlertCallbackType]]] = {
       Priority.LOW, VisualAlert.none, AudibleAlert.prompt, 3.),
   },
 
-  FrogPilotEventName.pedalInterceptorNoBrake: {
+  EventName.openpilotCrashed: {
+    ET.PERMANENT: Alert(
+      "openpilot crashed",
+      "Please post the error log in the FrogPilot Discord!",
+      AlertStatus.normal, AlertSize.mid,
+      Priority.HIGH, VisualAlert.none, AudibleAlert.none, .1),
+  },
+
+  EventName.pedalInterceptorNoBrake: {
     ET.WARNING: Alert(
       "Braking Unavailable",
       "Shift to L",
@@ -1008,11 +1008,11 @@ EVENTS: Dict[int, Dict[str, Union[Alert, AlertCallbackType]]] = {
       Priority.HIGH, VisualAlert.wrongGear, AudibleAlert.promptRepeat, 4.),
   },
 
-  FrogPilotEventName.torqueNNLoad: {
+  EventName.torqueNNLoad: {
     ET.PERMANENT: torque_nn_load_alert,
   },
 
-  FrogPilotEventName.turningLeft: {
+  EventName.turningLeft: {
     ET.WARNING: Alert(
       "Turning Left",
       "",
@@ -1020,7 +1020,7 @@ EVENTS: Dict[int, Dict[str, Union[Alert, AlertCallbackType]]] = {
       Priority.LOW, VisualAlert.none, AudibleAlert.none, .1, alert_rate=0.75),
   },
 
-  FrogPilotEventName.turningRight: {
+  EventName.turningRight: {
     ET.WARNING: Alert(
       "Turning Right",
       "",
@@ -1035,12 +1035,20 @@ EVENTS: Dict[int, Dict[str, Union[Alert, AlertCallbackType]]] = {
       Priority.LOW, VisualAlert.none, AudibleAlert.speedDown, 2.),
   },
   # Random Events
-  FrogPilotEventName.firefoxSteerSaturated: {
+  EventName.firefoxSteerSaturated: {
     ET.WARNING: Alert(
       "Turn Exceeds Steering Limit",
       "IE Has Stopped Responding...",
       AlertStatus.userPrompt, AlertSize.mid,
       Priority.LOW, VisualAlert.steerRequired, AudibleAlert.firefox, 4.),
+  },
+
+  EventName.openpilotCrashedRandomEvents: {
+    ET.PERMANENT: Alert(
+      "openpilot crashed 💩",
+      "Please post the error log in the FrogPilot Discord!",
+      AlertStatus.normal, AlertSize.mid,
+      Priority.HIGHEST, VisualAlert.none, AudibleAlert.fart, 4.),
   },
 }
 

@@ -137,8 +137,8 @@ def get_nn_model_path(car, eps_firmware) -> Tuple[Union[str, None, float]]:
     model_path = None
     max_similarity = -1.0
     for f in os.listdir(TORQUE_NN_MODEL_PATH):
-      if f.endswith(".json"):
-        model = f.replace(".json", "").replace(f"{TORQUE_NN_MODEL_PATH}/","")
+      if f.endswith(".json") and car in f:
+        model = f.replace(".json", "").replace(f"{TORQUE_NN_MODEL_PATH}/", "")
         similarity_score = similarity(model, check_model)
         if similarity_score > max_similarity:
           max_similarity = similarity_score
@@ -151,10 +151,10 @@ def get_nn_model_path(car, eps_firmware) -> Tuple[Union[str, None, float]]:
   else:
     check_model = car
   model_path, max_similarity = check_nn_path(check_model)
-  if car not in model_path or 0.0 <= max_similarity < 0.9:
+  if max_similarity < 0.9:
     check_model = car
     model_path, max_similarity = check_nn_path(check_model)
-    if car not in model_path or 0.0 <= max_similarity < 0.9:
+    if max_similarity < 0.9:
       model_path = None
   return model_path, max_similarity
 
@@ -214,8 +214,8 @@ class CarInterfaceBase(ABC):
     return (self.lat_torque_nn_model is not None)
 
   @staticmethod
-  def get_pid_accel_limits(CP, current_speed, cruise_speed, sport_plus):
-    if sport_plus:
+  def get_pid_accel_limits(CP, current_speed, cruise_speed, frogpilot_variables):
+    if frogpilot_variables.sport_plus:
       return ACCEL_MIN, ACCEL_MAX_PLUS
     else:
       return ACCEL_MIN, ACCEL_MAX
@@ -264,7 +264,6 @@ class CarInterfaceBase(ABC):
   @staticmethod
   def get_steer_feedforward_default(desired_angle, v_ego):
     # Proportional to realigning tire momentum: lateral acceleration.
-    # TODO: something with lateralPlan.curvatureRates
     return desired_angle * (v_ego**2)
 
   def get_steer_feedforward_function(self):
@@ -335,14 +334,14 @@ class CarInterfaceBase(ABC):
   def _update(self, c: car.CarControl) -> car.CarState:
     pass
 
-  def update(self, c: car.CarControl, can_strings: List[bytes]) -> car.CarState:
+  def update(self, c: car.CarControl, can_strings: List[bytes], conditional_experimental_mode, frogpilot_variables) -> car.CarState:
     # parse can
     for cp in self.can_parsers:
       if cp is not None:
         cp.update_strings(can_strings)
 
     # get CarState
-    ret = self._update(c)
+    ret = self._update(c, conditional_experimental_mode, frogpilot_variables)
 
     ret.canValid = all(cp.can_valid for cp in self.can_parsers if cp is not None)
     ret.canTimeout = any(cp.bus_timeout for cp in self.can_parsers if cp is not None)
@@ -372,13 +371,13 @@ class CarInterfaceBase(ABC):
   def apply(self, c: car.CarControl, now_nanos: int) -> Tuple[car.CarControl.Actuators, List[bytes]]:
     pass
 
-  def create_common_events(self, cs_out, extra_gears=None, pcm_enable=True, allow_enable=True,
+  def create_common_events(self, cs_out, frogpilot_variables, extra_gears=None, pcm_enable=True, allow_enable=True,
                            enable_buttons=(ButtonType.accelCruise, ButtonType.decelCruise)):
     events = Events()
 
-    if cs_out.doorOpen and not self.mute_door:
+    if cs_out.doorOpen and not frogpilot_variables.mute_door:
       events.add(EventName.doorOpen)
-    if cs_out.seatbeltUnlatched and not self.mute_seatbelt:
+    if cs_out.seatbeltUnlatched and not frogpilot_variables.mute_seatbelt:
       events.add(EventName.seatbeltNotLatched)
     if cs_out.gearShifter != GearShifter.drive and (extra_gears is None or
        cs_out.gearShifter not in extra_gears):
@@ -445,13 +444,6 @@ class CarInterfaceBase(ABC):
 
     return events
 
-  def update_frogpilot_params(self, params):
-    if hasattr(self.CC, 'update_frogpilot_variables'):
-      self.CC.update_frogpilot_variables(params)
-
-    fire_the_babysitter = params.get_bool("FireTheBabysitter")
-    self.mute_door = fire_the_babysitter and params.get_bool("MuteDoor")
-    self.mute_seatbelt = fire_the_babysitter and params.get_bool("MuteSeatbelt")
 
 class RadarInterfaceBase(ABC):
   def __init__(self, CP):
@@ -594,10 +586,6 @@ class CarStateBase(ABC):
   def get_loopback_can_parser(CP):
     return None
 
-  def update_frogpilot_params(self, params):
-    self.conditional_experimental_mode = params.get_bool("ConditionalExperimental")
-    self.experimental_mode_via_lkas = params.get_bool("ExperimentalModeViaLKAS") and params.get_bool("ExperimentalModeActivation");
-    self.personalities_via_wheel = params.get_int("AdjustablePersonalities") in {1, 3}
 
 INTERFACE_ATTR_FILE = {
   "FINGERPRINTS": "fingerprints",

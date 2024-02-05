@@ -2,7 +2,6 @@
 
 #include <memory>
 
-#include <QElapsedTimer>
 #include <QPushButton>
 #include <QStackedLayout>
 #include <QWidget>
@@ -43,7 +42,6 @@ class Compass : public QWidget {
 public:
   explicit Compass(QWidget *parent = nullptr);
 
-  void initializeStaticElements();
   void updateState(int bearing_deg);
 
 protected:
@@ -164,11 +162,12 @@ private:
   bool wide_cam_requested = false;
 
   // FrogPilot widgets
+  void initializeFrogPilotWidgets();
+  void updateFrogPilotWidgets(QPainter &p);
+
   void drawLeadInfo(QPainter &p);
   void drawStatusBar(QPainter &p);
   void drawTurnSignals(QPainter &p);
-  void initializeFrogPilotWidgets();
-  void updateFrogPilotWidgets(QPainter &p);
 
   // FrogPilot variables
   Params paramsMemory{"/dev/shm/params"};
@@ -181,35 +180,33 @@ private:
 
   QHBoxLayout *bottom_layout;
 
-  bool accelerationPath;
-  bool adjacentPath;
   bool alwaysOnLateral;
+  bool alwaysOnLateralActive;
   bool blindSpotLeft;
   bool blindSpotRight;
   bool compass;
   bool conditionalExperimental;
   bool experimentalMode;
-  bool hideSpeed;
+  bool fullMapOpen;
   bool leadInfo;
   bool mapOpen;
-  bool muteDM;
   bool onroadAdjustableProfiles;
-  bool reverseCruise;
   bool roadNameUI;
   bool showDriverCamera;
   bool showSLCOffset;
   bool slcOverridden;
   bool turnSignalLeft;
   bool turnSignalRight;
-  bool useSI;
   bool useViennaSLCSign;
-  double maxAcceleration;
+
   float cruiseAdjustment;
+  float distanceConversion;
   float laneWidthLeft;
   float laneWidthRight;
-  float slcOverriddenSpeed;
   float slcSpeedLimit;
   float slcSpeedLimitOffset;
+  float speedConversion;
+
   int bearingDeg;
   int cameraView;
   int conditionalSpeed;
@@ -217,18 +214,21 @@ private:
   int conditionalStatus;
   int customColors;
   int customSignals;
-  int desiredFollow;
   int obstacleDistance;
   int obstacleDistanceStock;
-  int stoppedEquivalence;
   int totalFrames = 8;
-  QTimer *animationTimer;
-  size_t animationFrameIndex;
 
-  inline QColor greenColor(int alpha = 242) { return QColor(23, 134, 68, alpha); }
+  QString leadDistanceUnit;
+  QString leadSpeedUnit;
+
+  size_t animationFrameIndex;
 
   std::unordered_map<int, std::pair<QString, std::pair<QColor, std::map<double, QBrush>>>> themeConfiguration;
   std::vector<QPixmap> signalImgVector;
+
+  QTimer *animationTimer;
+
+  inline QColor greenColor(int alpha = 242) { return QColor(23, 134, 68, alpha); }
 
 protected:
   // NDA neokii
@@ -239,7 +239,7 @@ protected:
   QPixmap ic_regenPaddle;
   void drawRoadLimitSpeed(QPainter &p);
   void drawBrakeRegen(QPainter &p);
-
+  
   void paintGL() override;
   void initializeGL() override;
   void showEvent(QShowEvent *event) override;
@@ -256,11 +256,12 @@ protected:
   double prev_draw_t = 0;
   FirstOrderFilter fps_filter;
 
+  
   const int radius = 192;
   const int img_size = (radius / 2) * 1.5;
 
   uint64_t last_update_params;
-
+  
 };
 
 // container for all onroad widgets
@@ -284,8 +285,16 @@ private:
   QWidget *map = nullptr;
   QHBoxLayout* split;
 
+  // FrogPilot widgets
+  void updateFPSCounter();
+
   // FrogPilot variables
   UIScene &scene;
+  Params paramsMemory{"/dev/shm/params"};
+
+  double avgFPS;
+  double maxFPS = 0.0;
+  double minFPS = 99.9;
 
   QPoint timeoutPoint = QPoint(420, 69);
   QTimer clickTimer;

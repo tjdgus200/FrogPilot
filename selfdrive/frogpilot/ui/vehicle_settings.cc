@@ -77,7 +77,7 @@ FrogPilotVehiclesPanel::FrogPilotVehiclesPanel(SettingsWindow *parent) : FrogPil
     QString newMakeSelection = MultiOptionDialog::getSelection(tr("Select a Make"), makes, QString::fromStdString(currentMake), this);
     if (!newMakeSelection.isEmpty()) {
       carMake = newMakeSelection;
-      params.put("CarMake", carMake.toStdString());
+      params.putNonBlocking("CarMake", carMake.toStdString());
       selectMakeButton->setValue(newMakeSelection);
       setModels();
     }
@@ -90,7 +90,7 @@ FrogPilotVehiclesPanel::FrogPilotVehiclesPanel(SettingsWindow *parent) : FrogPil
     std::string currentModel = params.get("CarModel");
     QString newModelSelection = MultiOptionDialog::getSelection(tr("Select a Model"), models, QString::fromStdString(currentModel), this);
     if (!newModelSelection.isEmpty()) {
-      params.put("CarModel", newModelSelection.toStdString());
+      params.putNonBlocking("CarModel", newModelSelection.toStdString());
       selectModelButton->setValue(newModelSelection);
     }
   });
@@ -98,9 +98,12 @@ FrogPilotVehiclesPanel::FrogPilotVehiclesPanel(SettingsWindow *parent) : FrogPil
   addItem(selectModelButton);
   selectModelButton->setVisible(false);
 
+  ParamControl *forceFingerprint = new ParamControl("ForceFingerprint", "Disable Automatic Fingerprint Detection", "Forces the selected fingerprint and prevents it from ever changing.", "", this);
+  addItem(forceFingerprint);
+
   std::vector<std::tuple<QString, QString, QString, QString>> vehicleToggles {
     {"EVTable", "EV Lookup Tables", "Smoothen out the gas and brake controls for EV vehicles.", ""},
-    {"GasRegenCmd", "Gas Regen Cmd", "", ""},
+    {"GasRegenCmd", "GM Truck Gas Tune", "Increase acceleration and smoothen brake to stop. For use on Silverado/Sierra only.", ""},
     {"LongPitch", "Long Pitch Compensation", "Reduce speed and acceleration error for greater passenger comfort and improved vehicle efficiency.", ""},
     {"LowerVolt", "Lower Volt Enable Speed", "Lower the Volt's minimum enable speed to enable openpilot at any speed.", ""},
 
@@ -124,7 +127,7 @@ FrogPilotVehiclesPanel::FrogPilotVehiclesPanel(SettingsWindow *parent) : FrogPil
   gmKeys = {"EVTable", "GasRegenCmd", "LongPitch", "LowerVolt"};
   toyotaKeys = {"LockDoors", "SNGHack", "TSS2Tune"};
 
-  std::set<std::string> rebootKeys = {"EVTable", "GasRegenCmd", "LongPitch", "LowerVolt", "TSS2Tune"};
+  std::set<std::string> rebootKeys = {"GasRegenCmd", "LongPitch", "LowerVolt", "TSS2Tune"};
   for (const std::string &key : rebootKeys) {
     QObject::connect(toggles[key], &ToggleControl::toggleFlipped, [this]() {
       if (FrogPilotConfirmationDialog::toggle("Reboot required to take effect.", "Reboot Now", this)) {

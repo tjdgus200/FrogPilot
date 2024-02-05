@@ -20,6 +20,7 @@ class SentryProject(Enum):
   # native project
   SELFDRIVE_NATIVE = "https://5ad1714d27324c74a30f9c538bff3b8d@o4505034923769856.ingest.sentry.io/4505034930651136"
 
+
 def report_tombstone(fn: str, message: str, contents: str) -> None:
   cloudlog.error({'tombstone': message})
 
@@ -87,14 +88,13 @@ def init(project: SentryProject) -> bool:
   integrations = []
   if project == SentryProject.SELFDRIVE:
     integrations.append(ThreadingIntegration(propagate_hub=True))
-  else:
-    sentry_sdk.utils.MAX_STRING_LENGTH = 8192
 
   sentry_sdk.init(project.value,
                   default_integrations=False,
                   release=get_version(),
                   integrations=integrations,
                   traces_sample_rate=1.0,
+                  max_value_length=8192,
                   environment=env)
 
   sentry_sdk.set_tag("serial", HARDWARE.get_serial())

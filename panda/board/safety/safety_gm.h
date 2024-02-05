@@ -87,25 +87,25 @@ bool gm_cc_long = false;
 bool gm_skip_relay_check = false;
 bool gm_force_ascm = false;
 
-static void handle_gm_wheel_buttons(CANPacket_t *to_push) {
+static void handle_gm_wheel_buttons(const CANPacket_t *to_push) {
   int button = (GET_BYTE(to_push, 5) & 0x70U) >> 4;
-
+  
   // enter controls on falling edge of set or rising edge of resume (avoids fault)
   bool set = (button != GM_BTN_SET) && (cruise_button_prev == GM_BTN_SET);
   bool res = (button == GM_BTN_RESUME) && (cruise_button_prev != GM_BTN_RESUME);
   if (set || res) {
     controls_allowed = true;
   }
-
+  
   // exit controls on cancel press
   if (button == GM_BTN_CANCEL) {
     controls_allowed = false;
   }
-
+  
   cruise_button_prev = button;
 }
 
-static void gm_rx_hook(CANPacket_t *to_push) {
+static void gm_rx_hook(const CANPacket_t *to_push) {
   if ((GET_BUS(to_push) == 2U) && (GET_ADDR(to_push) == 0x1E1) && (gm_hw == GM_SDGM)) {
     // SDGM buttons are on bus 2
     handle_gm_wheel_buttons(to_push);
@@ -140,11 +140,8 @@ static void gm_rx_hook(CANPacket_t *to_push) {
     }
 
     if ((addr == 0xC9) && ((gm_hw == GM_CAM) || (gm_hw == GM_SDGM))) {
-      brake_pressed = GET_BIT(to_push, 40U) != 0U;
-    }
-
-    if (addr == 0xC9) {
       acc_main_on = GET_BIT(to_push, 29U) != 0U;
+      brake_pressed = GET_BIT(to_push, 40U) != 0U;
     }
 
     if (addr == 0x1C4) {
@@ -191,7 +188,7 @@ static void gm_rx_hook(CANPacket_t *to_push) {
   }
 }
 
-static bool gm_tx_hook(CANPacket_t *to_send) {
+static bool gm_tx_hook(const CANPacket_t *to_send) {
   bool tx = true;
   int addr = GET_ADDR(to_send);
 

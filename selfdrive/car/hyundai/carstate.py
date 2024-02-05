@@ -11,6 +11,9 @@ from openpilot.selfdrive.car.hyundai.values import HyundaiFlags, CAR, DBC, CAN_G
                                                    CANFD_CAR, EV_CAR, HYBRID_CAR, Buttons, CarControllerParams
 from openpilot.selfdrive.car.interfaces import CarStateBase
 
+from openpilot.selfdrive.frogpilot.functions.frogpilot_functions import FrogPilotFunctions
+from openpilot.selfdrive.frogpilot.functions.speed_limit_controller import SpeedLimitController
+
 PREV_BUTTON_SAMPLES = 8
 CLUSTER_SAMPLE_RATE = 20  # frames
 STANDSTILL_THRESHOLD = 12 * 0.03125 * CV.KPH_TO_MS
@@ -52,9 +55,19 @@ class CarState(CarStateBase):
 
     self.params = CarControllerParams(CP)
 
-  def update(self, cp, cp_cam):
+  def calculate_speed_limit(self, cp, cp_cam):
     if self.CP.carFingerprint in CANFD_CAR:
-      return self.update_canfd(cp, cp_cam)
+      speed_limit_bus = cp if self.CP.flags & HyundaiFlags.CANFD_HDA2 else cp_cam
+      return speed_limit_bus.vl["CLUSTER_SPEED_LIMIT"]["SPEED_LIMIT_1"]
+    else:
+      if "SpeedLim_Nav_Clu" not in cp.vl["Navi_HU"]:
+        return 0
+      speed_limit = cp.vl["Navi_HU"]["SpeedLim_Nav_Clu"]
+      return speed_limit if speed_limit not in (0, 255) else 0
+
+  def update(self, cp, cp_cam, conditional_experimental_mode, frogpilot_variables):
+    if self.CP.carFingerprint in CANFD_CAR:
+      return self.update_canfd(cp, cp_cam, conditional_experimental_mode, frogpilot_variables)
 
     ret = car.CarState.new_message()
     cp_cruise = cp_cam if self.CP.carFingerprint in CAMERA_SCC_CAR else cp
@@ -168,7 +181,7 @@ class CarState(CarStateBase):
       self.main_enabled = not self.main_enabled
 
     # Driving personalities function
-    if self.personalities_via_wheel and ret.cruiseState.available:
+    if frogpilot_variables.personalities_via_wheel and ret.cruiseState.available:
       # Sync with the onroad UI button
       if self.param_memory.get_bool("PersonalityChangedViaUI"):
         self.personality_profile = self.param.get_int("LongitudinalPersonality")
@@ -184,23 +197,19 @@ class CarState(CarStateBase):
         self.previous_personality_profile = self.personality_profile
 
     # Toggle Experimental Mode from steering wheel function
-    if self.experimental_mode_via_lkas and ret.cruiseState.available:
+    if frogpilot_variables.experimental_mode_via_lkas and ret.cruiseState.available and self.CP.flags & HyundaiFlags.CAN_LFA_BTN:
       lkas_pressed = cp.vl["BCM_PO_11"]["LFA_Pressed"]
       if lkas_pressed and not self.lkas_previously_pressed:
-        if self.conditional_experimental_mode:
-          # Set "CEStatus" to work with "Conditional Experimental Mode"
-          conditional_status = self.param_memory.get_int("CEStatus")
-          override_value = 0 if conditional_status in (1, 2, 3, 4) else 1 if conditional_status >= 5 else 2
-          self.param_memory.put_int("CEStatus", override_value)
-        else:
-          experimental_mode = self.param.get_bool("ExperimentalMode")
-          # Invert the value of "ExperimentalMode"
-          put_bool_nonblocking("ExperimentalMode", not experimental_mode)
+        FrogPilotFunctions.lkas_button_function(conditional_experimental_mode)
       self.lkas_previously_pressed = lkas_pressed
+
+    SpeedLimitController.load_state()
+    SpeedLimitController.car_speed_limit = self.calculate_speed_limit(cp, cp_cam) * speed_conv
+    SpeedLimitController.write_car_state()
 
     return ret
 
-  def update_canfd(self, cp, cp_cam):
+  def update_canfd(self, cp, cp_cam, conditional_experimental_mode, frogpilot_variables):
     ret = car.CarState.new_message()
 
     self.is_metric = cp.vl["CRUISE_BUTTONS_ALT"]["DISTANCE_UNIT"] != 1
@@ -284,7 +293,7 @@ class CarState(CarStateBase):
                                           else cp_cam.vl["CAM_0x2a4"])
 
     # Driving personalities function
-    if self.personalities_via_wheel and ret.cruiseState.available:
+    if frogpilot_variables.personalities_via_wheel and ret.cruiseState.available:
       # Sync with the onroad UI button
       if self.param_memory.get_bool("PersonalityChangedViaUI"):
         self.personality_profile = self.param.get_int("LongitudinalPersonality")
@@ -300,19 +309,15 @@ class CarState(CarStateBase):
         self.previous_personality_profile = self.personality_profile
 
     # Toggle Experimental Mode from steering wheel function
-    if self.experimental_mode_via_lkas and ret.cruiseState.available:
+    if frogpilot_variables.experimental_mode_via_lkas and ret.cruiseState.available:
       lkas_pressed = cp.vl[self.cruise_btns_msg_canfd]["LKAS_BTN"]
       if lkas_pressed and not self.lkas_previously_pressed:
-        if self.conditional_experimental_mode:
-          # Set "CEStatus" to work with "Conditional Experimental Mode"
-          conditional_status = self.param_memory.get_int("CEStatus")
-          override_value = 0 if conditional_status in (1, 2, 3, 4) else 1 if conditional_status >= 5 else 2
-          self.param_memory.put_int("CEStatus", override_value)
-        else:
-          experimental_mode = self.param.get_bool("ExperimentalMode")
-          # Invert the value of "ExperimentalMode"
-          put_bool_nonblocking("ExperimentalMode", not experimental_mode)
+        FrogPilotFunctions.lkas_button_function(conditional_experimental_mode)
       self.lkas_previously_pressed = lkas_pressed
+
+    SpeedLimitController.load_state()
+    SpeedLimitController.car_speed_limit = self.calculate_speed_limit(cp, cp_cam) * speed_factor
+    SpeedLimitController.write_car_state()
 
     return ret
 
@@ -363,7 +368,12 @@ class CarState(CarStateBase):
     else:
       messages.append(("LVR12", 100))
 
-    messages.append(("BCM_PO_11", 50))
+    if CP.flags & HyundaiFlags.CAN_LFA_BTN:
+      messages.append(("BCM_PO_11", 50))
+
+    messages += [
+      ("Navi_HU", 5),
+    ]
 
     return CANParser(DBC[CP.carFingerprint]["pt"], messages, 0)
 
@@ -420,6 +430,9 @@ class CarState(CarStateBase):
         ("SCC_CONTROL", 50),
       ]
 
+    if CP.flags & HyundaiFlags.CANFD_HDA2:
+      messages.append(("CLUSTER_SPEED_LIMIT", 10))
+
     return CANParser(DBC[CP.carFingerprint]["pt"], messages, CanBus(CP).ECAN)
 
   @staticmethod
@@ -432,5 +445,8 @@ class CarState(CarStateBase):
       messages += [
         ("SCC_CONTROL", 50),
       ]
+
+    if not (CP.flags & HyundaiFlags.CANFD_HDA2):
+      messages.append(("CLUSTER_SPEED_LIMIT", 10))
 
     return CANParser(DBC[CP.carFingerprint]["pt"], messages, CanBus(CP).CAM)

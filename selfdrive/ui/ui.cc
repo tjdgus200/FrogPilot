@@ -12,9 +12,6 @@
 #include "common/util.h"
 #include "common/watchdog.h"
 #include "system/hardware/hw.h"
-
-#include "selfdrive/frogpilot/ui/frogpilot_functions.h"
-
 #define BACKLIGHT_DT 0.05
 #define BACKLIGHT_TS 10.00
 
@@ -119,10 +116,10 @@ void update_model(UIState *s,
   max_idx = get_path_length_idx(plan_position, max_distance);
   update_line_data(s, plan_position, scene.model_ui ? scene.path_width * (1 - scene.path_edge_width / 100) : 0.9, 1.22, &scene.track_vertices, max_idx, false);
 
-  // update path edges
+  // Update path edges
   update_line_data(s, plan_position, scene.model_ui ? scene.path_width : 0, 1.22, &scene.track_edge_vertices, max_idx, false);
 
-  // update adjacent paths
+  // Update adjacent paths
   for (int i = 4; i <= 5; i++) {
     update_line_data(s, lane_lines[i], scene.blind_spot_path ? (i == 4 ? scene.lane_width_left : scene.lane_width_right) / 2 : 0, 0, &scene.track_adjacent_vertices[i], max_idx);
   }
@@ -240,28 +237,26 @@ static void update_state(UIState *s) {
       scene.always_on_lateral_active = !scene.enabled && frogpilotCarControl.getAlwaysOnLateral();
     }
   }
-  if (sm.updated("frogpilotLateralPlan")) {
-    auto frogpilotLateralPlan = sm["frogpilotLateralPlan"].getFrogpilotLateralPlan();
+  if (sm.updated("frogpilotPlan")) {
+    auto frogpilotPlan = sm["frogpilotPlan"].getFrogpilotPlan();
     if (scene.blind_spot_path) {
-      scene.lane_width_left = frogpilotLateralPlan.getLaneWidthLeft();
-      scene.lane_width_right = frogpilotLateralPlan.getLaneWidthRight();
+      scene.lane_width_left = frogpilotPlan.getLaneWidthLeft();
+      scene.lane_width_right = frogpilotPlan.getLaneWidthRight();
     }
-  }
-  if (sm.updated("frogpilotLongitudinalPlan")) {
-    auto frogpilotLongitudinalPlan = sm["frogpilotLongitudinalPlan"].getFrogpilotLongitudinalPlan();
     if (scene.lead_info) {
-      scene.desired_follow = frogpilotLongitudinalPlan.getDesiredFollowDistance();
-      scene.obstacle_distance = frogpilotLongitudinalPlan.getSafeObstacleDistance();
-      scene.obstacle_distance_stock = frogpilotLongitudinalPlan.getSafeObstacleDistanceStock();
-      scene.stopped_equivalence = frogpilotLongitudinalPlan.getStoppedEquivalenceFactor();
+      scene.desired_follow = frogpilotPlan.getDesiredFollowDistance();
+      scene.obstacle_distance = frogpilotPlan.getSafeObstacleDistance();
+      scene.obstacle_distance_stock = frogpilotPlan.getSafeObstacleDistanceStock();
+      scene.stopped_equivalence = frogpilotPlan.getStoppedEquivalenceFactor();
     }
     if (scene.speed_limit_controller) {
-      scene.speed_limit = frogpilotLongitudinalPlan.getSlcSpeedLimit();
-      scene.speed_limit_offset = frogpilotLongitudinalPlan.getSlcSpeedLimitOffset();
-      scene.speed_limit_overridden = frogpilotLongitudinalPlan.getSlcOverridden();
-      scene.speed_limit_overridden_speed = frogpilotLongitudinalPlan.getSlcOverriddenSpeed();
+      scene.speed_limit = frogpilotPlan.getSlcSpeedLimit();
+      scene.speed_limit_offset = frogpilotPlan.getSlcSpeedLimitOffset();
+      scene.speed_limit_overridden = frogpilotPlan.getSlcOverridden();
+      scene.speed_limit_overridden_speed = frogpilotPlan.getSlcOverriddenSpeed();
     }
-    scene.adjusted_cruise = frogpilotLongitudinalPlan.getAdjustedCruise();
+    scene.adjusted_cruise = frogpilotPlan.getAdjustedCruise();
+    scene.vtsc_controlling_curve = frogpilotPlan.getVtscControllingCurve();
   }
   if (sm.updated("liveLocationKalman")) {
     auto liveLocationKalman = sm["liveLocationKalman"].getLiveLocationKalman();
@@ -290,8 +285,12 @@ void ui_update_params(UIState *s) {
   auto params = Params();
   s->scene.is_metric = params.getBool("IsMetric");
   s->scene.map_on_left = params.getBool("NavSettingLeftSide");
+}
 
-  // FrogPilot variables
+void ui_update_frogpilot_params(UIState *s) {
+  ui_update_params(s);
+
+  Params params = Params();
   UIScene &scene = s->scene;
 
   scene.always_on_lateral = params.getBool("AlwaysOnLateral");
@@ -303,11 +302,13 @@ void ui_update_params(UIState *s) {
   scene.conditional_speed_lead = params.getInt("CESpeedLead");
 
   scene.custom_onroad_ui = params.getBool("CustomUI");
+  scene.acceleration_path = params.getBool("AccelerationPath") && scene.custom_onroad_ui;
   scene.adjacent_path = params.getBool("AdjacentPath") && scene.custom_onroad_ui;
+  scene.adjacent_path_metrics = params.getBool("AdjacentPathMetrics") && scene.custom_onroad_ui;
   scene.blind_spot_path = params.getBool("BlindSpotPath") && scene.custom_onroad_ui;
+  scene.fps_counter = params.getBool("FPSCounter") && scene.custom_onroad_ui;
   scene.lead_info = params.getBool("LeadInfo") && scene.custom_onroad_ui;
   scene.road_name_ui = params.getBool("RoadNameUI") && scene.custom_onroad_ui;
-  scene.show_fps = params.getBool("ShowFPS") && scene.custom_onroad_ui;
   scene.use_si = params.getBool("UseSI") && scene.custom_onroad_ui;
   scene.use_vienna_slc_sign = params.getBool("UseVienna") && scene.custom_onroad_ui;
 
@@ -316,27 +317,32 @@ void ui_update_params(UIState *s) {
   scene.custom_icons = scene.custom_theme ? params.getInt("CustomIcons") : 0;
   scene.custom_signals = scene.custom_theme ? params.getInt("CustomSignals") : 0;
 
+  scene.driver_camera = params.getBool("DriverCamera");
+  scene.experimental_mode_via_screen = params.getBool("ExperimentalModeViaScreen") && params.getBool("ExperimentalModeActivation");
+  scene.fahrenheit = params.getBool("Fahrenheit");
+
   scene.model_ui = params.getBool("ModelUI");
-  scene.acceleration_path = params.getBool("AccelerationPath") && scene.model_ui;
   scene.lane_line_width = params.getInt("LaneLinesWidth") * (scene.is_metric ? 1 : INCH_TO_CM) / 200;
   scene.path_edge_width = params.getInt("PathEdgeWidth");
   scene.path_width = params.getInt("PathWidth") / 10.0 * (scene.is_metric ? 1 : FOOT_TO_METER) / 2;
   scene.road_edge_width = params.getInt("RoadEdgesWidth") * (scene.is_metric ? 1 : INCH_TO_CM) / 200;
   scene.unlimited_road_ui_length = params.getBool("UnlimitedLength") && scene.model_ui;
 
-  scene.driver_camera = params.getBool("DriverCamera");
-  scene.experimental_mode_via_screen = params.getBool("ExperimentalModeViaScreen") && params.getBool("ExperimentalModeActivation");
   scene.mute_dm = params.getBool("MuteDM") && params.getBool("FireTheBabysitter");
-  scene.personalities_via_screen = (params.getInt("AdjustablePersonalities") == 2 || params.getInt("AdjustablePersonalities") == 3);
+  scene.numerical_temp = params.getBool("NumericalTemp");
 
   scene.quality_of_life_controls = params.getBool("QOLControls");
   scene.reverse_cruise = params.getBool("ReverseCruise") && scene.quality_of_life_controls;
+  scene.reverse_cruise_ui = params.getBool("ReverseCruiseUI") && scene.reverse_cruise;
+  scene.show_slc_offset = params.getBool("ShowSLCOffset") && scene.quality_of_life_controls;
+  scene.show_slc_offset_ui = params.getBool("ShowSLCOffsetUI") && scene.quality_of_life_controls;
 
   scene.quality_of_life_visuals = params.getBool("QOLVisuals");
   scene.full_map = params.getBool("FullMap") && scene.quality_of_life_visuals;
   scene.hide_speed = params.getBool("HideSpeed") && scene.quality_of_life_visuals;
-  scene.show_slc_offset = params.getBool("ShowSLCOffset") && scene.quality_of_life_visuals;
+  scene.hide_speed_ui = params.getBool("HideSpeedUI") && scene.hide_speed;
 
+  scene.personalities_via_screen = params.getBool("PersonalitiesViaScreen") && params.getBool("AdjustablePersonalities");
   scene.random_events = params.getBool("RandomEvents");
   scene.rotating_wheel = params.getBool("RotatingWheel");
   scene.screen_brightness = params.getInt("ScreenBrightness");
@@ -375,7 +381,7 @@ UIState::UIState(QObject *parent) : QObject(parent) {
     "modelV2", "controlsState", "liveCalibration", "radarState", "deviceState",
     "pandaStates", "carParams", "driverMonitoringState", "carState", "liveLocationKalman", "driverStateV2",
     "wideRoadCameraState", "managerState", "navInstruction", "navRoute", "uiPlan", "carControl", "naviData",
-    "frogpilotCarControl", "frogpilotDeviceState", "frogpilotLateralPlan", "frogpilotLongitudinalPlan",
+    "frogpilotCarControl", "frogpilotDeviceState", "frogpilotPlan",
   });
 
   Params params;
@@ -392,8 +398,7 @@ UIState::UIState(QObject *parent) : QObject(parent) {
 
   wifi = new WifiManager(this);
 
-  ui_update_params(this);
-  setDefaultParams();
+  ui_update_frogpilot_params(this);
 }
 
 void UIState::update() {
@@ -409,7 +414,7 @@ void UIState::update() {
   // Update FrogPilot variables when they are changed
   Params paramsMemory{"/dev/shm/params"};
   if (paramsMemory.getBool("FrogPilotTogglesUpdated")) {
-    std::thread updateFrogPilotParams(ui_update_params, this);
+    std::thread updateFrogPilotParams(ui_update_frogpilot_params, this);
     updateFrogPilotParams.detach();
   }
 
