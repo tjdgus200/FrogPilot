@@ -516,6 +516,11 @@ class Controls:
       self.events.add(EventName.slowingDownSpeedSound)
       self.slowing_down_sound_alert = False
 
+    # kans: events for roadSpeedLimiter
+    if self.slowing_down_sound_alert:
+      self.events.add(EventName.slowingDownSpeedSound)
+      self.slowing_down_sound_alert = False
+
   def data_sample(self):
     """Receive data from sockets and update carState"""
 
@@ -829,7 +834,7 @@ class Controls:
         continue
 
       if not math.isfinite(attr):
-        cloudlog.error(f"actuators.{p} not finite {actuators.to_dict()}")
+        # cloudlog.error(f"actuators.{p} not finite {actuators.to_dict()}")
         setattr(actuators, p, 0.0)
 
     return CC, lac_log

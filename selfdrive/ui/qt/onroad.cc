@@ -484,14 +484,12 @@ AnnotatedCameraWidget::AnnotatedCameraWidget(VisionStreamType type, QWidget* par
   main_layout->addWidget(map_settings_btn, 0, Qt::AlignBottom | Qt::AlignRight);
 
   dm_img = loadPixmap("../assets/img_driver_face.png", {img_size + 5, img_size + 5});
-
   ic_regenPaddle = loadPixmap("../assets/images/img_regen.png", {img_size+5, img_size+5});
   // NDA neokii
   ic_nda = QPixmap("../assets/images/img_nda.png");
   ic_hda = QPixmap("../assets/images/img_hda.png");
   ic_nda2 = QPixmap("../assets/images/img_nda2.png");
   ic_hda2 = QPixmap("../assets/images/img_hda2.png");
-
   // Initialize FrogPilot widgets
   initializeFrogPilotWidgets();
 }
@@ -678,11 +676,25 @@ void AnnotatedCameraWidget::drawHud(QPainter &p) {
   }
 
   // current speed
-    if (!(scene.hide_speed || fullMapOpen)) {
-    p.setFont(InterFont(176, QFont::Bold));
-    drawText(p, rect().center().x(), 240, speedStr);
-    p.setFont(InterFont(66));
-    drawText(p, rect().center().x(), 320, speedUnit, 200);
+  UIState *s = uiState();
+  const SubMaster &sm = *(s->sm);
+  //const auto car_control = sm["carControl"].getCarControl();
+  //const auto car_state = sm["carState"].getCarState();
+  //const auto car_params = sm["carParams"].getCarParams();
+  const auto navi_data = sm["naviData"].getNaviData();
+
+  if (!(scene.hide_speed || fullMapOpen)) {
+    if (navi_data.getActive() > 0 )  { // activeNDA > 0
+        p.setFont(InterFont(176, QFont::Bold));
+        drawText(p, rect().center().x(), 240, speedStr);
+        p.setFont(InterFont(66));
+        drawText(p, rect().center().x(), 320, speedUnit, 200);
+    } else {
+        p.setFont(InterFont(176, QFont::Bold));
+        drawText(p, rect().center().x(), 210, speedStr);
+        p.setFont(InterFont(66));
+        drawText(p, rect().center().x(), 290, speedUnit, 200);
+    }
   }
 
   p.restore();

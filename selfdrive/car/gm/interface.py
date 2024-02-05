@@ -401,7 +401,7 @@ class CarInterface(CarInterfaceBase):
     return ret
 
   # returns a car.CarState
-  def _update(self, c, conditional_experimental_mode, frogpilot_variables):
+  def _update(self, c, conditional_experimental_mode, frogpilot_variables): # pylint: disable=arguments-differ
     ret = self.CS.update(self.cp, self.cp_cam, self.cp_loopback, conditional_experimental_mode, frogpilot_variables)
 
     # Don't add event if transitioning from INIT, unless it's to an actual button
@@ -452,5 +452,5 @@ class CarInterface(CarInterfaceBase):
 
     return ret
 
-  def apply(self, c, now_nanos, frogpilot_variables):
+  def apply(self, c, now_nanos, frogpilot_variables): # pylint: disable=arguments-differ
     return self.CC.update(c, self.CS, now_nanos, frogpilot_variables)
