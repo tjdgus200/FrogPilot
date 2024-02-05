@@ -695,7 +695,6 @@ void AnnotatedCameraWidget::drawHud(QPainter &p) {
         p.setFont(InterFont(66));
         drawText(p, rect().center().x(), 290, speedUnit, 200);
     }
-
   }
 
   p.restore();

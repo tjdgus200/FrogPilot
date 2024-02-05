@@ -509,7 +509,12 @@ class Controls:
       self.stopped_for_light_previously = stopped_for_light
 
       if green_light and not CS.gasPressed:
-        self.events.add(EventName.greenLight)
+        self.events.add(FrogPilotEventName.greenLight)
+
+    # kans: events for roadSpeedLimiter
+    if self.slowing_down_sound_alert:
+      self.events.add(EventName.slowingDownSpeedSound)
+      self.slowing_down_sound_alert = False
 
     # kans: events for roadSpeedLimiter
     if self.slowing_down_sound_alert:
