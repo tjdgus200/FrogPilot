@@ -509,12 +509,7 @@ class Controls:
       self.stopped_for_light_previously = stopped_for_light
 
       if green_light and not CS.gasPressed:
-        self.events.add(FrogPilotEventName.greenLight)
-
-    # kans: events for roadSpeedLimiter
-    if self.slowing_down_sound_alert:
-      self.events.add(EventName.slowingDownSpeedSound)
-      self.slowing_down_sound_alert = False
+        self.events.add(EventName.greenLight)
 
     # kans: events for roadSpeedLimiter
     if self.slowing_down_sound_alert:
@@ -586,7 +581,7 @@ class Controls:
     if apply_limit_speed >= 20:
       self.v_cruise_kph_limit = min(apply_limit_speed, self.v_cruise_helper.v_cruise_kph)
 
-      if CS.vEgo * CV.MS_TO_KPH > apply_limit_speed:
+      if CS.vEgo * CV.MS_TO_KPH > apply_limit_speed + 1:
         #  self.events.add(EventName.slowingDownSpeedSound)
 
         # if not self.slowing_down:
