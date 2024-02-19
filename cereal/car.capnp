@@ -435,7 +435,7 @@ struct CarControl {
       firefox @10;
       noice @11;
 
-      speedDown @9;
+      speedDown @12;
     }
   }
 
