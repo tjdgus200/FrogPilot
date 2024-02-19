@@ -269,6 +269,9 @@ private:
   inline QColor greenColor(int alpha = 242) { return QColor(23, 134, 68, alpha); }
 
 protected:
+  QPixmap ic_regenPaddle;
+  void drawBrakeRegen(QPainter &p);
+
   void paintGL() override;
   void initializeGL() override;
   void showEvent(QShowEvent *event) override;
