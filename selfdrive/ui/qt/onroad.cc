@@ -1740,7 +1740,7 @@ void AnnotatedCameraWidget::drawRoadLimitSpeed(QPainter &p) {
   }
 
   const int x_start = 35;
-  const int y_start = 240;
+  const int y_start = 45;
 
   int board_width = 210;
   int board_height = 384;
