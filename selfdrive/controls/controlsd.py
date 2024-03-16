@@ -303,7 +303,7 @@ class Controls:
 
     # NDA neokii
     self.v_cruise_kph_limit = 0
-    # self.slowing_down = False
+    self.slowing_down = False
     self.slowing_down_sound_alert = False
     self.second = 0.0
     self.autoNaviSpeedCtrlStart = float(Params().get("AutoNaviSpeedCtrlStart"))
@@ -328,7 +328,7 @@ class Controls:
     self.rk = Ratekeeper(100, print_delay_threshold=None)
 
   def reset(self):
-    # self.slowing_down = False
+    self.slowing_down = False
     self.slowing_down_sound_alert = False
 
   def set_initial_state(self):
@@ -799,11 +799,11 @@ class Controls:
       self.v_cruise_kph_limit = min(apply_limit_speed, self.v_cruise_helper.v_cruise_kph)
 
       if CS.vEgo * CV.MS_TO_KPH > apply_limit_speed:
-        #  self.events.add(EventName.slowingDownSpeedSound)
+        self.events.add(EventName.slowingDownSpeedSound)
 
-        # if not self.slowing_down:
-        #   self.slowing_down_sound_alert = True
-        #   self.slowing_down = True
+        if not self.slowing_down:
+          self.slowing_down_sound_alert = True
+          self.slowing_down = True
         self.slowing_down_sound_alert = True
 
     else:
