@@ -590,7 +590,7 @@ EVENTS: dict[int, dict[str, Alert | AlertCallbackType]] = {
       "Take Control",
       "Turn Exceeds Steering Limit",
       AlertStatus.userPrompt, AlertSize.mid,
-      Priority.LOW, VisualAlert.steerRequired, AudibleAlert.promptRepeat, 2.),
+      Priority.LOW, VisualAlert.steerRequired, AudibleAlert.none, 2.),
   },
 
   # Thrown when the fan is driven at >50% but is not rotating
@@ -1104,7 +1104,7 @@ EVENTS: dict[int, dict[str, Alert | AlertCallbackType]] = {
       "UwU u went a bit fast there!",
       "(⁄ ⁄•⁄ω⁄•⁄ ⁄)",
       AlertStatus.frogpilot, AlertSize.mid,
-      Priority.LOW, VisualAlert.none, AudibleAlert.uwu, 4.),
+      Priority.LOW, VisualAlert.none, AudibleAlert.none, 4.),
   },
 
   EventName.accel35: {
@@ -1112,7 +1112,7 @@ EVENTS: dict[int, dict[str, Alert | AlertCallbackType]] = {
       "I ain't giving you no tree-fiddy",
       "you damn Loch Ness monsta!",
       AlertStatus.frogpilot, AlertSize.mid,
-      Priority.LOW, VisualAlert.none, AudibleAlert.nessie, 4.),
+      Priority.LOW, VisualAlert.none, AudibleAlert.none, 4.),
   },
 
   EventName.accel40: {
