@@ -883,15 +883,12 @@ void AnnotatedCameraWidget::drawHud(QPainter &p) {
   }
 
   p.restore();
+    // NDA neokii
+  drawRoadLimitSpeed(p);
 
   // Draw FrogPilot widgets
   paintFrogPilotWidgets(p);
 
-  // regen paddle working
-  //drawBrakeRegen(p);
-
-  // NDA neokii
-  drawRoadLimitSpeed(p);
 }
 
 void AnnotatedCameraWidget::drawText(QPainter &p, int x, int y, const QString &text, int alpha) {
