@@ -2065,10 +2065,6 @@ void AnnotatedCameraWidget::drawRoadLimitSpeed(QPainter &p) {
         p.drawPixmap(x, y, w, h, activeNDA == 1 ? ic_nda : ic_hda);
       }
   }
-  else {
-    limit_speed = ex_state.getNavSpeedLimit();
-  }
-
 
   const int x_start = 30;
   const int y_start = 30;
@@ -2117,7 +2113,7 @@ void AnnotatedCameraWidget::drawRoadLimitSpeed(QPainter &p) {
     p.setBrush(QBrush(Qt::white));
     p.drawEllipse(board_rect);
 
-    padding = 18;
+    int padding = 18;
     board_rect.adjust(padding, padding, -padding, -padding);
     p.setBrush(Qt::NoBrush);
     p.setPen(QPen(Qt::red, 25));
