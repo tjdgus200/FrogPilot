@@ -2149,7 +2149,7 @@ void AnnotatedCameraWidget::drawRoadLimitSpeed(QPainter &p) {
       QFontMetrics fm(font);
       int width = fm.width(strLeftDist);
 
-      int padding = 10;
+      padding = 10;
 
       int center_x = x_start + board_width / 2;
       rcLeftDist.setRect(center_x - width / 2, y_start+board_height+15, width, font.pixelSize()+10);
