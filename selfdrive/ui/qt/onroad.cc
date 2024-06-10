@@ -2054,20 +2054,24 @@ void AnnotatedCameraWidget::drawRoadLimitSpeed(QPainter &p) {
         int w = 155;
         int h = 54;
         int x = (width() + (UI_BORDER_SIZE*2))/2 - w/2 - UI_BORDER_SIZE;
-        int y = 70 - UI_BORDER_SIZE;
+        int y = 40 - UI_BORDER_SIZE;
         p.drawPixmap(x, y, w, h, activeNDA == 1 ? ic_nda2 : ic_hda2);
       }
       else {
         int w = 120;
         int h = 54;
         int x = (width() + (UI_BORDER_SIZE*2))/2 - w/2 - UI_BORDER_SIZE;
-        int y = 70 - UI_BORDER_SIZE;
+        int y = 40 - UI_BORDER_SIZE;
         p.drawPixmap(x, y, w, h, activeNDA == 1 ? ic_nda : ic_hda);
       }
   }
+  else {
+    limit_speed = ex_state.getNavSpeedLimit();
+  }
 
-  const int x_start = 35;
-  const int y_start = 45;
+
+  const int x_start = 30;
+  const int y_start = 30;
 
   int board_width = 210;
   int board_height = 384;
@@ -2075,7 +2079,7 @@ void AnnotatedCameraWidget::drawRoadLimitSpeed(QPainter &p) {
   const int corner_radius = 32;
   int max_speed_height = 210;
 
-  QColor bgColor = QColor(0, 0, 0, 0);
+  QColor bgColor = QColor(0, 0, 0, 166);
 
   {
     // draw board
@@ -2147,7 +2151,7 @@ void AnnotatedCameraWidget::drawRoadLimitSpeed(QPainter &p) {
       QFontMetrics fm(font);
       int width = fm.width(strLeftDist);
 
-      padding = 10;
+      int padding = 10;
 
       int center_x = x_start + board_width / 2;
       rcLeftDist.setRect(center_x - width / 2, y_start+board_height+15, width, font.pixelSize()+10);
