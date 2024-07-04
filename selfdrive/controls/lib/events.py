@@ -1159,7 +1159,7 @@ EVENTS: dict[int, dict[str, Alert | AlertCallbackType]] = {
     ET.PERMANENT: Alert(
       "Slowing down",
       "",
-      AlertStatus.frogpilot, AlertSize.none,
+      AlertStatus.normal, AlertSize.none,
       Priority.LOW, VisualAlert.none, AudibleAlert.speedDown, 2.),
   },
 }
