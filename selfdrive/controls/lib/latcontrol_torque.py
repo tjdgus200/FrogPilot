@@ -67,7 +67,7 @@ class LatControlTorque(LatControl):
     super().__init__(CP, CI)
     self.torque_params = CP.lateralTuning.torque
     self.pid = PIDController(self.torque_params.kp, self.torque_params.ki,
-                             k_f=self.torque_params.kf, pos_limit=self.steer_max, neg_limit=-self.steer_max)
+                             k_f=self.torque_params.kf*2, pos_limit=self.steer_max, neg_limit=-self.steer_max)
     self.torque_from_lateral_accel = CI.torque_from_lateral_accel()
     self.use_steering_angle = self.torque_params.useSteeringAngle
     self.steering_angle_deadzone_deg = self.torque_params.steeringAngleDeadzoneDeg
@@ -127,8 +127,11 @@ class LatControlTorque(LatControl):
   def update(self, active, CS, VM, params, steer_limited, desired_curvature, llk, model_data=None):
     pid_log = log.ControlsState.LateralTorqueState.new_message()
     nn_log = None
-
+    
     if not active:
+      output_torque = 0.0
+      pid_log.active = False
+    elif CS.vEgo < 11 / 3.6:  # 11km/h 이하에서 업데이트가 되는걸 막아 암살시도 방지.
       output_torque = 0.0
       pid_log.active = False
     else:
