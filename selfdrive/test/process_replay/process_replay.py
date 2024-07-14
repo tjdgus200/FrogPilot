@@ -745,7 +745,7 @@ def _replay_multi_process(
 def generate_params_config(lr=None, CP=None, fingerprint=None, custom_params=None) -> dict[str, Any]:
   params_dict = {
     "OpenpilotEnabledToggle": True,
-    "DisengageOnAccelerator": True,
+    "DisengageOnAccelerator": False,
     "DisableLogging": False,
   }
 
