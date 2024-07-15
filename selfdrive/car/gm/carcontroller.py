@@ -65,7 +65,7 @@ class CarController(CarControllerBase):
     else:
 
       pedaloffset = 0.24
-      pedal_gas = clip((pedaloffset + accel*0.6), 0.0, 1.0)
+      pedal_gas = clip((pedaloffset + accel*0.5), 0.0, 1.0)
 
     return pedal_gas
 
