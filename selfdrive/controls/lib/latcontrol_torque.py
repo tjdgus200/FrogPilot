@@ -25,7 +25,7 @@ from openpilot.selfdrive.modeld.constants import ModelConstants
 
 LOW_SPEED_X = [0, 10, 20, 30]
 LOW_SPEED_Y = [15, 13, 10, 5]
-LOW_SPEED_Y_NN = [12, 3, 1, 0]
+LOW_SPEED_Y_NN = [12, 7, 5, 3]
 
 LAT_PLAN_MIN_IDX = 5
 
@@ -67,7 +67,7 @@ class LatControlTorque(LatControl):
     super().__init__(CP, CI)
     self.torque_params = CP.lateralTuning.torque
     self.pid = PIDController(self.torque_params.kp, self.torque_params.ki,
-                             k_f=self.torque_params.kf, pos_limit=self.steer_max, neg_limit=-self.steer_max)
+                             k_f=self.torque_params.kf*1.5, pos_limit=self.steer_max, neg_limit=-self.steer_max)
     self.torque_from_lateral_accel = CI.torque_from_lateral_accel()
     self.use_steering_angle = self.torque_params.useSteeringAngle
     self.steering_angle_deadzone_deg = self.torque_params.steeringAngleDeadzoneDeg
@@ -84,13 +84,13 @@ class LatControlTorque(LatControl):
       # Note that LAT_PLAN_MIN_IDX is defined above and is used in order to prevent
       # using a "future" value that is actually planned to occur before the "current" desired
       # value, which is offset by the steerActuatorDelay.
-      self.friction_look_ahead_v = [1.4, 2.0] # how many seconds in the future to look ahead in [0, ~2.1] in 0.1 increments
-      self.friction_look_ahead_bp = [9.0, 30.0] # corresponding speeds in m/s in [0, ~40] in 1.0 increments
+      self.friction_look_ahead_v = [0.5, 1.2] # how many seconds in the future to look ahead in [0, ~2.1] in 0.1 increments
+      self.friction_look_ahead_bp = [3.0, 30.0] # corresponding speeds in m/s in [0, ~40] in 1.0 increments
 
       # Scaling the lateral acceleration "friction response" could be helpful for some.
       # Increase for a stronger response, decrease for a weaker response.
-      self.lat_jerk_friction_factor = 0.4
-      self.lat_accel_friction_factor = 0.7 # in [0, 3], in 0.05 increments. 3 is arbitrary safety limit
+      self.lat_jerk_friction_factor = 1
+      self.lat_accel_friction_factor = 1 # in [0, 3], in 0.05 increments. 3 is arbitrary safety limit
 
       # precompute time differences between ModelConstants.T_IDXS
       self.t_diffs = np.diff(ModelConstants.T_IDXS)
@@ -106,7 +106,7 @@ class LatControlTorque(LatControl):
 
       # setup future time offsets
       self.nn_time_offset = CP.steerActuatorDelay + 0.2
-      future_times = [0.3, 0.6, 1.0, 1.5] # seconds in the future
+      future_times = [0.3, 0.5, 0.8, 1.2] # seconds in the future
       self.nn_future_times = [i + self.nn_time_offset for i in future_times]
       self.nn_future_times_np = np.array(self.nn_future_times)
 
@@ -127,8 +127,11 @@ class LatControlTorque(LatControl):
   def update(self, active, CS, VM, params, steer_limited, desired_curvature, llk, model_data=None):
     pid_log = log.ControlsState.LateralTorqueState.new_message()
     nn_log = None
-
+    
     if not active:
+      output_torque = 0.0
+      pid_log.active = False
+    elif CS.vEgo < 11 / 3.6:  # 11km/h 이하에서 업데이트가 되는걸 막아 암살시도 방지.
       output_torque = 0.0
       pid_log.active = False
     else:
