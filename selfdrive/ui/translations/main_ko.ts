@@ -1840,53 +1840,55 @@ Default matches half of the MUTCD standard of 4 inches.</source>
     <name>FrogPilotLateralPanel</name>
     <message>
         <source>Always on Lateral</source>
-        <translation type="unfinished"></translation>
+        <translation>상시 조향</translation>
     </message>
     <message>
         <source>openpilot&apos;s steering control stays active even when the brake or gas pedals are pressed.
 
 Deactivate only occurs with the &apos;Cruise Control&apos; button.</source>
-        <translation type="unfinished"></translation>
+        <translation>오픈파일럿의 스티어링 제어는 브레이크나 가스 페달을 밟아도 계속 활성화됩니다.
+
+비활성화는 &apos;크루즈 컨트롤&apos; 버튼으로만 발생합니다.</translation>
     </message>
     <message>
         <source>Control with LKAS Button</source>
-        <translation type="unfinished"></translation>
+        <translation>차선이탈방지 버튼을 통해 제어</translation>
     </message>
     <message>
         <source>&apos;Always on Lateral&apos; gets turned on or off using the &apos;LKAS&apos; button.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;LKAS&apos; 버튼을 사용하여 &apos;상시 조향 모드&apos;을 켜거나 끌 수 있습니다.</translation>
     </message>
     <message>
         <source>Enable with Cruise Control</source>
-        <translation type="unfinished"></translation>
+        <translation>크루즈 컨트롤로 활성화</translation>
     </message>
     <message>
         <source>&apos;Always on Lateral&apos; gets turned on by pressing the &apos;Cruise Control&apos; button bypassing the requirement to enable openpilot first.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;상시조향모드&apos; 기능은 오픈 파일럿을 먼저 활성화할 필요 없이 &apos;크루즈 컨트롤&apos; 버튼을 눌러 켜집니다.</translation>
     </message>
     <message>
         <source>Pause on Brake Below</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;상시 조향&apos; 일시 정지 속도</translation>
     </message>
     <message>
         <source>&apos;Always on Lateral&apos; pauses when the brake pedal is pressed below the set speed.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;상시 조향&apos; 기능은 브레이크 페달을 설정 속도 이하로 밟으면 일시 정지합니다.</translation>
     </message>
     <message>
         <source>Hide the Status Bar</source>
-        <translation type="unfinished"></translation>
+        <translation>상태 바 숨김</translation>
     </message>
     <message>
         <source>The status bar for &apos;Always on Lateral&apos; is hidden.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;상시조향모드&apos;의 상태 표시줄이 숨겨져 있습니다.</translation>
     </message>
     <message>
         <source>Lane Change Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>차선변경 설정</translation>
     </message>
     <message>
         <source>How openpilot handles lane changes.</source>
-        <translation type="unfinished"></translation>
+        <translation>오픈파일럿이 차선 변경을 처리하는 방식.</translation>
     </message>
     <message>
         <source>Hands-Free Lane Change</source>
@@ -3168,42 +3170,42 @@ Want to submit your own animations? Share them in the &apos;feature-request&apos
     </message>
     <message>
         <source>Stop and Go Hack</source>
-        <translation type="unfinished"></translation>
+        <translation>정지 및 이동 해킹</translation>
     </message>
     <message>
         <source>Force stop and go for vehicles without stock stop and go functionality.</source>
-        <translation type="unfinished"></translation>
+        <translation>정지 및 이동 기능이 없는 차량의 경우 강제 정지 및 이동 기능을 사용합니다.</translation>
     </message>
     <message>
         <source>Lock</source>
-        <translation type="unfinished"></translation>
+        <translation>잠금</translation>
     </message>
     <message>
         <source>Unlock</source>
-        <translation type="unfinished"></translation>
+        <translation>잠금해제</translation>
     </message>
 </context>
 <context>
     <name>FrogPilotVisualsPanel</name>
     <message>
         <source>Onroad UI Widgets</source>
-        <translation type="unfinished"></translation>
+        <translation>온로드UI 위젯</translation>
     </message>
     <message>
         <source>Custom FrogPilot widgets used in the onroad user interface.</source>
-        <translation type="unfinished"></translation>
+        <translation>사용자 인터페이스에 사용되는 사용자 정의 개구리파일럿 위젯입니다.</translation>
     </message>
     <message>
         <source>Compass</source>
-        <translation type="unfinished"></translation>
+        <translation>나침반</translation>
     </message>
     <message>
         <source>A compass in the onroad UI to show the current driving direction.</source>
-        <translation type="unfinished"></translation>
+        <translation>현재 주행 방향을 보여주는 도로 UI의 나침반입니다.</translation>
     </message>
     <message>
         <source>Dynamic Path Width</source>
-        <translation type="unfinished"></translation>
+        <translation>동적 경로 너비</translation>
     </message>
     <message>
         <source>Automatically adjust the width of the driving path display based on the current engagement state:
@@ -3211,47 +3213,51 @@ Want to submit your own animations? Share them in the &apos;feature-request&apos
 Fully engaged = 100%
 Always On Lateral Active = 75%
 Fully disengaged = 50%</source>
-        <translation type="unfinished"></translation>
+        <translation>현재 상태에 따라 주행 경로 표시의 너비를 자동으로 조정합니다:
+
+Fully engaged = 100%
+상시조향모드 = 75%
+Fully disengaged = 50%</translation>
     </message>
     <message>
         <source>Gas/Brake Pedal Indicators</source>
-        <translation type="unfinished"></translation>
+        <translation>엑셀 페달 표시</translation>
     </message>
     <message>
         <source>Pedal indicators in the onroad UI that change opacity based on the pressure applied.</source>
-        <translation type="unfinished"></translation>
+        <translation>페달 압력에 따라 온로드UI 의 불투명도가 바뀝니다.</translation>
     </message>
     <message>
         <source>Paths</source>
-        <translation type="unfinished"></translation>
+        <translation>경로</translation>
     </message>
     <message>
         <source>Projected acceleration path, detected lanes, and vehicles in the blind spot.</source>
-        <translation type="unfinished"></translation>
+        <translation>예상 가속 경로, 감지된 차선, 사각 지대의 차량.</translation>
     </message>
     <message>
         <source>Road Name</source>
-        <translation type="unfinished"></translation>
+        <translation>도로 이름</translation>
     </message>
     <message>
         <source>The current road name is displayed at the bottom of the screen using data from &apos;OpenStreetMap&apos;.</source>
-        <translation type="unfinished"></translation>
+        <translation>현재 도로 이름은 &apos;OpenStreetMap&apos;의 데이터를 사용하여 화면 하단에 표시됩니다.</translation>
     </message>
     <message>
         <source>Rotating Steering Wheel</source>
-        <translation type="unfinished"></translation>
+        <translation>스티어링 휠 회전</translation>
     </message>
     <message>
         <source>The steering wheel in the onroad UI rotates along with your steering wheel movements.</source>
-        <translation type="unfinished"></translation>
+        <translation>온로드 UI의 스티어링 휠은 스티어링 휠의 움직임에 따라 회전합니다.</translation>
     </message>
     <message>
         <source>Quality of Life Improvements</source>
-        <translation type="unfinished"></translation>
+        <translation>삶의 질 향상</translation>
     </message>
     <message>
         <source>Miscellaneous visual focused features to improve your overall openpilot experience.</source>
-        <translation type="unfinished"></translation>
+        <translation>전반적인 오픈 파일럿 경험을 개선하기 위한 다양한 시각적 기능이 제공됩니다.</translation>
     </message>
     <message>
         <source>Larger Map Display</source>
@@ -3271,19 +3277,19 @@ Fully disengaged = 50%</source>
     </message>
     <message>
         <source>Screen Standby Mode</source>
-        <translation type="unfinished"></translation>
+        <translation>화면 대기 모드</translation>
     </message>
     <message>
         <source>The screen is turned off after it times out when driving, but it automatically wakes up if engagement state changes or important alerts occur.</source>
-        <translation type="unfinished"></translation>
+        <translation>운전 중 시간 초과가 되면 화면이 꺼지지만, 상태가 변경되거나 중요한 알림이 발생하면 자동으로 깨어납니다.</translation>
     </message>
     <message>
         <source>Show Driver Camera When In Reverse</source>
-        <translation type="unfinished"></translation>
+        <translation>후진 시 운전자 카메라 표시</translation>
     </message>
     <message>
         <source>The driver camera feed is displayed when the vehicle is in reverse.</source>
-        <translation type="unfinished"></translation>
+        <translation>차량 후진기어시 운전자 카메라 피드가 표시됩니다.</translation>
     </message>
     <message>
         <source>Stopped Timer</source>
@@ -3291,7 +3297,7 @@ Fully disengaged = 50%</source>
     </message>
     <message>
         <source>A timer on the onroad UI to indicate how long the vehicle has been stopped.</source>
-        <translation type="unfinished"></translation>
+        <translation>차량이 얼마나 오랫동안 정지해 있었는지를 나타내는 도로 UI의 타이머입니다.</translation>
     </message>
     <message>
         <source>Acceleration</source>
@@ -3303,7 +3309,7 @@ Fully disengaged = 50%</source>
     </message>
     <message>
         <source>Blind Spot</source>
-        <translation type="unfinished"></translation>
+        <translation>사각지대</translation>
     </message>
     <message>
         <source>Dynamic</source>
@@ -3363,11 +3369,11 @@ Fully disengaged = 50%</source>
     </message>
     <message>
         <source>SELECT</source>
-        <translation type="unfinished">선택</translation>
+        <translation>선택</translation>
     </message>
     <message>
         <source>Select a map style</source>
-        <translation type="unfinished"></translation>
+        <translation>맵 스타일을 고르세요.</translation>
     </message>
 </context>
 <context>
@@ -3686,7 +3692,7 @@ Fully disengaged = 50%</source>
     </message>
     <message>
         <source>FrogPilot</source>
-        <translation type="unfinished"></translation>
+        <translation>개구리파일럿</translation>
     </message>
 </context>
 <context>
@@ -3754,11 +3760,11 @@ This may take up to a minute.</source>
     </message>
     <message>
         <source>← Back</source>
-        <translation type="unfinished"></translation>
+        <translation>뒤로</translation>
     </message>
     <message>
         <source>FrogPilot</source>
-        <translation type="unfinished"></translation>
+        <translation>개구리파일럿</translation>
     </message>
 </context>
 <context>
@@ -3967,23 +3973,19 @@ This may take up to a minute.</source>
     </message>
     <message>
         <source>MEMORY</source>
-        <translation type="unfinished"></translation>
+        <translation>메모리</translation>
     </message>
     <message>
         <source>LEFT</source>
-        <translation type="unfinished"></translation>
+        <translation>남음</translation>
     </message>
     <message>
         <source>USED</source>
-        <translation type="unfinished"></translation>
+        <translation>사용</translation>
     </message>
 </context>
 <context>
     <name>SoftwarePanel</name>
-    <message>
-        <source>Updates are only downloaded while the car is off.</source>
-        <translation type="vanished">업데이트는 차량 시동이 꺼졌을 때 다운로드됩니다.</translation>
-    </message>
     <message>
         <source>Current Version</source>
         <translation>현재 버전</translation>
@@ -4054,31 +4056,31 @@ This may take up to a minute.</source>
     </message>
     <message>
         <source>Updates are only downloaded while the car is off or in park.</source>
-        <translation type="unfinished"></translation>
+        <translation>업데이트는 차량이 꺼져 있거나 주차되어 있을 때만 다운로드됩니다.</translation>
     </message>
     <message>
         <source>Automatically Update FrogPilot</source>
-        <translation type="unfinished"></translation>
+        <translation>프로그파일럿 자동 업데이트</translation>
     </message>
     <message>
         <source>FrogPilot will automatically update itself and it&apos;s assets when you&apos;re offroad and connected to Wi-Fi.</source>
-        <translation type="unfinished"></translation>
+        <translation>개구리파일럿은 오프로드 상태이고 Wi-Fi에 연결되어 있으면 자동으로 자체 업데이트합니다.</translation>
     </message>
     <message>
         <source>Do you want to permanently delete any additional FrogPilot assets? This is 100% unrecoverable and includes backups, downloaded models, themes, and long-term storage toggle settings for easy reinstalls.</source>
-        <translation type="unfinished"></translation>
+        <translation>개구리파일럿의 모든 추가 설정 값을 영구적으로 삭제하시겠습니까? 이는 100% 복구 불가능하며 백업, 다운로드된 모델, 테마, 간편한 재설치를 위한 장기 보관 토글 설정이 포함되어 있습니다.</translation>
     </message>
     <message>
         <source>Error Log</source>
-        <translation type="unfinished"></translation>
+        <translation>에러 로그</translation>
     </message>
     <message>
         <source>VIEW</source>
-        <translation type="unfinished">보기</translation>
+        <translation>보기</translation>
     </message>
     <message>
         <source>View the error log for openpilot crashes.</source>
-        <translation type="unfinished"></translation>
+        <translation>오픈파일럿 오류 로그를 확인하세요.</translation>
     </message>
 </context>
 <context>
@@ -4186,7 +4188,7 @@ This may take up to a minute.</source>
     </message>
     <message>
         <source>When enabled, pressing the accelerator pedal will disengage openpilot.</source>
-        <translation>활성화된 경우 가속 페달을 밟으면 openpilot이 해제됩니다.</translation>
+        <translation>활성화된 경우 가속 페달을 밟으면 오픈파일럿이 해제됩니다.</translation>
     </message>
     <message>
         <source>Show ETA in 24h Format</source>
@@ -4210,11 +4212,11 @@ This may take up to a minute.</source>
     </message>
     <message>
         <source>openpilot defaults to driving in &lt;b&gt;chill mode&lt;/b&gt;. Experimental mode enables &lt;b&gt;alpha-level features&lt;/b&gt; that aren&apos;t ready for chill mode. Experimental features are listed below:</source>
-        <translation>openpilot은 기본적으로 &lt;b&gt;안정 모드&lt;/b&gt;로 주행합니다. 실험 모드는 안정화되지 않은 &lt;b&gt;알파 수준의 기능&lt;/b&gt;을 활성화합니다. 실험 모드의 기능은 아래와 같습니다:</translation>
+        <translation>오픈파일럿은 기본적으로 &lt;b&gt;안정 모드&lt;/b&gt;로 주행합니다. 실험 모드는 안정화되지 않은 &lt;b&gt;알파 수준의 기능&lt;/b&gt;을 활성화합니다. 실험 모드의 기능은 아래와 같습니다:</translation>
     </message>
     <message>
         <source>Let the driving model control the gas and brakes. openpilot will drive as it thinks a human would, including stopping for red lights and stop signs. Since the driving model decides the speed to drive, the set speed will only act as an upper bound. This is an alpha quality feature; mistakes should be expected.</source>
-        <translation>openpilot의 주행모델이 가감속을 제어합니다. openpilot은 신호등과 정지 표지판을 보고 멈추는 것을 포함하여 인간이 운전하는 것처럼 생각하고 주행합니다. 주행 모델이 주행할 속도를 결정하므로 설정된 속도는 최대 주행 속도로만 기능합니다. 이 기능은 알파 수준이므로 사용에 각별히 주의해야 합니다.</translation>
+        <translation>오픈파일럿의 주행모델이 가감속을 제어합니다. openpilot은 신호등과 정지 표지판을 보고 멈추는 것을 포함하여 인간이 운전하는 것처럼 생각하고 주행합니다. 주행 모델이 주행할 속도를 결정하므로 설정된 속도는 최대 주행 속도로만 기능합니다. 이 기능은 알파 수준이므로 사용에 각별히 주의해야 합니다.</translation>
     </message>
     <message>
         <source>New Driving Visualization</source>
@@ -4230,7 +4232,7 @@ This may take up to a minute.</source>
     </message>
     <message>
         <source>openpilot Longitudinal Control (Alpha)</source>
-        <translation>openpilot 가감속 제어 (알파)</translation>
+        <translation>오픈파일럿 가감속 제어 (알파)</translation>
     </message>
     <message>
         <source>WARNING: openpilot longitudinal control is in alpha for this car and will disable Automatic Emergency Braking (AEB).</source>
@@ -4258,11 +4260,11 @@ This may take up to a minute.</source>
     </message>
     <message>
         <source>An alpha version of openpilot longitudinal control can be tested, along with Experimental mode, on non-release branches.</source>
-        <translation type="vanished">openpilot 가감속 제어 알파 버전은 비 릴리즈 브랜치에서 실험 모드와 함께 테스트할 수 있습니다.</translation>
+        <translation>오픈파일럿 가감속 제어 알파 버전은 비 릴리즈 브랜치에서 실험 모드와 함께 테스트할 수 있습니다.</translation>
     </message>
     <message>
         <source>Enable the openpilot longitudinal control (alpha) toggle to allow Experimental mode.</source>
-        <translation>실험 모드를 사용하려면 openpilot E2E 가감속 제어 (알파) 토글을 활성화하세요.</translation>
+        <translation>실험 모드를 사용하려면 오픈파일럿 E2E 가감속 제어 (알파) 토글을 활성화하세요.</translation>
     </message>
     <message>
         <source>End-to-End Longitudinal Control</source>
@@ -4270,11 +4272,11 @@ This may take up to a minute.</source>
     </message>
     <message>
         <source>Standard is recommended. In aggressive mode, openpilot will follow lead cars closer and be more aggressive with the gas and brake. In relaxed mode openpilot will stay further away from lead cars. On supported cars, you can cycle through these personalities with your steering wheel distance button.</source>
-        <translation>표준 모드를 권장합니다. 공격적 모드의 openpilot은 선두 차량을 더 가까이 따라가고 가감속제어를 사용하여 더욱 공격적으로 움직입니다. 편안한 모드의 openpilot은 선두 차량으로부터 더 멀리 떨어져 있습니다. 지원되는 차량에서는 스티어링 휠 거리 버튼을 사용하여 이러한 특성을 순환할 수 있습니다.</translation>
+        <translation>표준 모드를 권장합니다. 공격적 모드의 openpilot은 선두 차량을 더 가까이 따라가고 가감속제어를 사용하여 더욱 공격적으로 움직입니다. 편안한 모드의 오픈파일럿은 선두 차량으로부터 더 멀리 떨어져 있습니다. 지원되는 차량에서는 스티어링 휠 거리 버튼을 사용하여 이러한 특성을 순환할 수 있습니다.</translation>
     </message>
     <message>
         <source>The driving visualization will transition to the road-facing wide-angle camera at low speeds to better show some turns. The Experimental mode logo will also be shown in the top right corner.</source>
-        <translation type="unfinished"></translation>
+        <translation>주행 시각화는 저속에서 도로를 향한 광각 카메라로 전환되어 일부 회전을 더 잘 보여줍니다. 실험 모드 로고도 오른쪽 상단 모서리에 표시됩니다.</translation>
     </message>
 </context>
 <context>
@@ -4316,83 +4318,83 @@ This may take up to a minute.</source>
     <name>UtilitiesPanel</name>
     <message>
         <source>Flash Panda</source>
-        <translation type="unfinished"></translation>
+        <translation>플래시 판다</translation>
     </message>
     <message>
         <source>FLASH</source>
-        <translation type="unfinished"></translation>
+        <translation>플래시</translation>
     </message>
     <message>
         <source>Use this button to flash the Panda device&apos;s firmware if you&apos;re running into issues.</source>
-        <translation type="unfinished"></translation>
+        <translation>문제가 발생할 경우 이 버튼을 사용하여 판다 펌웨어를 플래시하세요.</translation>
     </message>
     <message>
         <source>Are you sure you want to flash the Panda?</source>
-        <translation type="unfinished"></translation>
+        <translation>판다 플래시 하겠습니까?</translation>
     </message>
     <message>
         <source>Flash</source>
-        <translation type="unfinished"></translation>
+        <translation>플래시</translation>
     </message>
     <message>
         <source>Flashing...</source>
-        <translation type="unfinished"></translation>
+        <translation>플래싱하는 중...</translation>
     </message>
     <message>
         <source>Flashed!</source>
-        <translation type="unfinished"></translation>
+        <translation>플래싱 완료!</translation>
     </message>
     <message>
         <source>Rebooting...</source>
-        <translation type="unfinished"></translation>
+        <translation>재부팅 중...</translation>
     </message>
     <message>
         <source>Force Started State</source>
-        <translation type="unfinished"></translation>
+        <translation>강제 시작 상태</translation>
     </message>
     <message>
         <source>Force openpilot either offroad or onroad.</source>
-        <translation type="unfinished"></translation>
+        <translation>오프로드나 온로드 모두에서 오픈 파일럿을 강제로 실행합니다.</translation>
     </message>
     <message>
         <source>OFFROAD</source>
-        <translation type="unfinished"></translation>
+        <translation>오프로드</translation>
     </message>
     <message>
         <source>ONROAD</source>
-        <translation type="unfinished"></translation>
+        <translation>온로드</translation>
     </message>
     <message>
         <source>OFF</source>
-        <translation type="unfinished"></translation>
+        <translation>끄기</translation>
     </message>
     <message>
         <source>Reset Toggles to Default</source>
-        <translation type="unfinished"></translation>
+        <translation>토글을 기본값으로 재설정</translation>
     </message>
     <message>
         <source>RESET</source>
-        <translation type="unfinished">초기화</translation>
+        <translation>초기화</translation>
     </message>
     <message>
         <source>Reset your toggle settings back to their default settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>토글 설정을 기본 설정으로 되돌립니다.</translation>
     </message>
     <message>
         <source>Are you sure you want to completely reset all of your toggle settings?</source>
-        <translation type="unfinished"></translation>
+        <translation>모든 토글 설정을 완전히 재설정하시겠습니까?</translation>
     </message>
     <message>
         <source>Reset</source>
-        <translation type="unfinished">초기화</translation>
+        <translation>초기화</translation>
     </message>
     <message>
         <source>Resetting...</source>
-        <translation type="unfinished"></translation>
+        <translation>초기화 하는 중...</translation>
     </message>
     <message>
         <source>Reset!</source>
-        <translation type="unfinished"></translation>
+        <translation>재설정!</translation>
     </message>
 </context>
 <context>
@@ -4419,11 +4421,11 @@ This may take up to a minute.</source>
     </message>
     <message>
         <source>Uploading disabled</source>
-        <translation type="unfinished"></translation>
+        <translation>업로드 비활성화</translation>
     </message>
     <message>
         <source>Toggle off the &apos;Disable Uploading&apos; toggle to enable uploads.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;업로드 비활성화&apos; 토글을 끄면 업로드가 활성화됩니다.</translation>
     </message>
 </context>
 <context>
