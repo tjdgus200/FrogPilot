@@ -17,7 +17,7 @@
     </message>
     <message>
         <source>Disable Internet Check</source>
-        <translation type="unfinished"></translation>
+        <translation>인터넷 체크 비활성화</translation>
     </message>
 </context>
 <context>
@@ -135,7 +135,7 @@
     </message>
     <message>
         <source>Vehicle in blind spot</source>
-        <translation type="unfinished"></translation>
+        <translation>사각 지대 차량 있음</translation>
     </message>
     <message>
         <source>m/s²</source>
@@ -2059,331 +2059,333 @@ Deactivate only occurs with the &apos;Cruise Control&apos; button.</source>
     <name>FrogPilotLongitudinalPanel</name>
     <message>
         <source>Conditional Experimental Mode</source>
-        <translation type="unfinished"></translation>
+        <translation>조건부 실험 모드</translation>
     </message>
     <message>
         <source>Automatically switches to &apos;Experimental Mode&apos; when specific conditions are met.</source>
-        <translation type="unfinished"></translation>
+        <translation>특정 조건이 충족되면 자동으로 &apos;실험 모드&apos;로 전환됩니다.</translation>
     </message>
     <message>
         <source>Below</source>
-        <translation type="unfinished"></translation>
+        <translation>아래</translation>
     </message>
     <message>
         <source>&apos;Experimental Mode&apos; is active when driving below the set speed without a lead vehicle.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;실험 모드&apos;는 선행 차량이 없이 설정 속도 이하로 주행할 때 활성화됩니다.</translation>
     </message>
     <message>
         <source>Curve Detected Ahead</source>
-        <translation type="unfinished"></translation>
+        <translation>전방 곡선 감지</translation>
     </message>
     <message>
         <source>&apos;Experimental Mode&apos; is active when a curve is detected in the road ahead.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;실험 모드&apos;는 전방에 곡선이 감지되면 활성화됩니다.</translation>
     </message>
     <message>
         <source>Lead Detected Ahead</source>
-        <translation type="unfinished"></translation>
+        <translation>전방 차량 감지</translation>
     </message>
     <message>
         <source>&apos;Experimental Mode&apos; is active when a slower or stopped vehicle is detected ahead.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;실험 모드&apos;는 앞에 느린 차량이나 정지한 차량이 감지되면 활성화됩니다.</translation>
     </message>
     <message>
         <source>Navigation Data</source>
-        <translation type="unfinished"></translation>
+        <translation>내비게이션 데이터</translation>
     </message>
     <message>
         <source>&apos;Experimental Mode&apos; is active based on navigation data, such as upcoming intersections or turns.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;실험 모드&apos;는 다가오는 교차로나 회전과 같은 내비게이션 데이터를 기반으로 활성화됩니다.</translation>
     </message>
     <message>
         <source>openpilot Wants to Stop In</source>
-        <translation type="unfinished"></translation>
+        <translation>오픈파일럿이 멈추고 싶대</translation>
     </message>
     <message>
         <source>&apos;Experimental Mode&apos; is active when openpilot wants to stop such as for a stop sign or red light.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;실험 모드&apos;는 오픈파일럿이 정지 신호나 신호등에서 멈추려고 할 때 활성화됩니다.</translation>
     </message>
     <message>
         <source>Turn Signal Below</source>
-        <translation type="unfinished"></translation>
+        <translation>방향 지시등 속도 설정</translation>
     </message>
     <message>
         <source>&apos;Experimental Mode&apos; is active when using turn signals below the set speed.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;실험 모드&apos;는 설정 속도 이하에서 방향 지시등을 사용할 때 활성화됩니다.</translation>
     </message>
     <message>
         <source>Hide the Status Bar</source>
-        <translation type="unfinished"></translation>
+        <translation>상태 바 숨기기</translation>
     </message>
     <message>
         <source>The status bar for &apos;Conditional Experimental Mode&apos; is hidden.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;조건부 실험 모드&apos;의 상태 표시줄이 숨겨져 있습니다.</translation>
     </message>
     <message>
         <source>Curve Speed Control</source>
-        <translation type="unfinished"></translation>
+        <translation>곡선 주행 속도 제어</translation>
     </message>
     <message>
         <source>Automatically slow down for curves detected ahead or through the downloaded maps.</source>
-        <translation type="unfinished"></translation>
+        <translation>다운로드한 지도나 앞쪽에 감지된 곡선에서 자동으로 속도를 줄입니다.</translation>
     </message>
     <message>
         <source>Curve Detection Method</source>
-        <translation type="unfinished"></translation>
+        <translation>곡선 감지 방법</translation>
     </message>
     <message>
         <source>The method used to detect curves.</source>
-        <translation type="unfinished"></translation>
+        <translation>곡선을 감지하는 데 사용되는 방법입니다.</translation>
     </message>
     <message>
         <source>Curve Detection Failsafe</source>
-        <translation type="unfinished"></translation>
+        <translation>곡선 감지 안전장치</translation>
     </message>
     <message>
         <source>Curve control is triggered only when a curve is detected ahead. Use this as a failsafe to prevent false positives when using the &apos;Map Based&apos; method.</source>
-        <translation type="unfinished"></translation>
+        <translation>커브 제어는 커브가 앞에 감지될 때만 트리거됩니다. 이를 &apos;맵 기반&apos; 방법을 사용할 때 잘못된 판단을 방지하기 위한 안전 장치로 사용합니다.</translation>
     </message>
     <message>
         <source>Curve Sensitivity</source>
-        <translation type="unfinished"></translation>
+        <translation>곡선 민감도</translation>
     </message>
     <message>
         <source>How sensitive openpilot is to detecting curves. Higher values trigger earlier responses at the risk of triggering too often, while lower values increase confidence at the risk of triggering too infrequently.</source>
-        <translation type="unfinished"></translation>
+        <translation>오픈파일럿이 곡선을 감지하는 데 얼마나 민감한지. 값이 높을수록 너무 자주 트리거할 위험이 있는 초기 응답을 트리거하는 반면, 값이 낮을수록 너무 자주 트리거할 위험이 있는 신뢰도가 높아집니다.</translation>
     </message>
     <message>
         <source>Turn Speed Aggressiveness</source>
-        <translation type="unfinished"></translation>
+        <translation>회전 속도 적극성</translation>
     </message>
     <message>
         <source>How aggressive openpilot takes turns. Higher values result in quicker turns, while lower values provide gentler turns.</source>
-        <translation type="unfinished"></translation>
+        <translation>적극적인 오픈파일럿이 교대로 작동하는 방식. 값이 높을수록 턴이 빨라지는 반면, 값이 낮을수록 턴이 완만해집니다.</translation>
     </message>
     <message>
         <source>Disable Speed Value Smoothing In the UI</source>
-        <translation type="unfinished"></translation>
+        <translation>UI에서 속도 값 스무딩 사용 안 함</translation>
     </message>
     <message>
         <source>Speed value smoothing is disabled in the UI to instead display the exact speed requested by the curve control.</source>
-        <translation type="unfinished"></translation>
+        <translation>대신 곡선 컨트롤에서 요청한 정확한 속도를 표시하기 위해 UI에서 속도 값 평활이 비활성화됩니다.</translation>
     </message>
     <message>
         <source>Experimental Mode Activation</source>
-        <translation type="unfinished"></translation>
+        <translation>실험 모드 활성화</translation>
     </message>
     <message>
         <source>&apos;Experimental Mode&apos; is toggled off/on using the steering wheel buttons or the on-screen controls.
 
 This overrides &apos;Conditional Experimental Mode&apos;.</source>
-        <translation type="unfinished"></translation>
+        <translation>스티어링 휠 버튼 또는 화면 컨트롤을 사용하여 &apos;실험 모드&apos;를 끄거나 켤 수 있습니다.
+
+이 기능은 &apos;조건부 실험 모드&apos;를 재정의합니다.</translation>
     </message>
     <message>
         <source>Click the LKAS Button</source>
-        <translation type="unfinished"></translation>
+        <translation>LKAS 버튼 클릭</translation>
     </message>
     <message>
         <source>&apos;Experimental Mode&apos; is toggled by pressing the &apos;LKAS&apos; button on the steering wheel.</source>
-        <translation type="unfinished"></translation>
+        <translation>스티어링 휠의 &apos;LKAS&apos; 버튼을 누르면 &apos;실험 모드&apos;가 전환됩니다.</translation>
     </message>
     <message>
         <source>Double-Tap the Screen</source>
-        <translation type="unfinished"></translation>
+        <translation>스크린 두 번 터치</translation>
     </message>
     <message>
         <source>&apos;Experimental Mode&apos; is toggled by double-tapping the onroad UI within 0.5 seconds.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;실험 모드&apos;는 0.5초 이내에 온로드 UI를 두 번 탭하면 전환됩니다.</translation>
     </message>
     <message>
         <source>Long Press the Distance Button</source>
-        <translation type="unfinished"></translation>
+        <translation>차간 거리 버튼 길게 누르지</translation>
     </message>
     <message>
         <source>&apos;Experimental Mode&apos; is toggled by holding the &apos;distance&apos; button on the steering wheel for 0.5+ seconds.</source>
-        <translation type="unfinished"></translation>
+        <translation>스티어링 휠의 &apos;거리&apos; 버튼을 0.5초 이상 유지하면 &apos;실험 모드&apos;가 전환됩니다.</translation>
     </message>
     <message>
         <source>Longitudinal Tuning</source>
-        <translation type="unfinished"></translation>
+        <translation>롱~컨트롤 튜닝</translation>
     </message>
     <message>
         <source>Settings that control how openpilot manages speed and acceleration.</source>
-        <translation type="unfinished"></translation>
+        <translation>오픈파일럿이 속도와 가속도를 관리하는 방법을 제어하는 설정입니다.</translation>
     </message>
     <message>
         <source>Acceleration Profile</source>
-        <translation type="unfinished"></translation>
+        <translation>가속 프로필</translation>
     </message>
     <message>
         <source>Choose between a sporty or eco-friendly acceleration rate.</source>
-        <translation type="unfinished"></translation>
+        <translation>스포티한 가속률 또는 친환경 가속률 중 하나를 선택하세요.</translation>
     </message>
     <message>
         <source>Deceleration Profile</source>
-        <translation type="unfinished"></translation>
+        <translation>감속 프로필</translation>
     </message>
     <message>
         <source>Choose between a sporty or eco-friendly deceleration rate.</source>
-        <translation type="unfinished"></translation>
+        <translation>스포티한 감속률 또는 친환경 감속률 중 하나를 선택하세요.</translation>
     </message>
     <message>
         <source>Human-Like Acceleration</source>
-        <translation type="unfinished"></translation>
+        <translation>사람처럼 가속</translation>
     </message>
     <message>
         <source>Uses the lead&apos;s acceleration rate when at a takeoff and ramps off the acceleration rate when approaching the maximum set speed for a smoother max speed approach.</source>
-        <translation type="unfinished"></translation>
+        <translation>출발시 앞차의 가속 속도를 사용하고 최대 설정 속도에 가까워지면 가속 속도를 낮춰 부드러운 최대 속도 접근 방식을 제공합니다.</translation>
     </message>
     <message>
         <source>Human-Like Following Distance</source>
-        <translation type="unfinished"></translation>
+        <translation>사람 같은 차간 거리</translation>
     </message>
     <message>
         <source>Dynamically adjusts the following distance to feel more natural when approaching slower or stopped vehicles.</source>
-        <translation type="unfinished"></translation>
+        <translation>앞차 추종 거리를 동적으로 조정하여 속도가 느리거나 정차한 차량에 접근할 때 더욱 자연스럽게 느껴지도록 합니다.</translation>
     </message>
     <message>
         <source>Increase Stopped Distance</source>
-        <translation type="unfinished"></translation>
+        <translation>정지 거리 증가</translation>
     </message>
     <message>
         <source>Increases the distance to stop behind vehicles.</source>
-        <translation type="unfinished"></translation>
+        <translation>차량 뒤에서 멈출 수 있는 거리를 늘립니다.</translation>
     </message>
     <message>
         <source>Quality of Life Improvements</source>
-        <translation type="unfinished"></translation>
+        <translation>삶의 질 향상</translation>
     </message>
     <message>
         <source>Miscellaneous longitudinal focused features to improve your overall openpilot experience.</source>
-        <translation type="unfinished"></translation>
+        <translation>전반적인 오픈파일럿 경험을 개선하기 위한 다양한 롱~컨트롤에 초점을 맞춘 기능입니다.</translation>
     </message>
     <message>
         <source>Cruise Increase Interval</source>
-        <translation type="unfinished"></translation>
+        <translation>크루즈 증가 간격</translation>
     </message>
     <message>
         <source>Interval used when increasing the cruise control speed.</source>
-        <translation type="unfinished"></translation>
+        <translation>크루즈 컨트롤 속도를 높일 때 사용되는 간격입니다.</translation>
     </message>
     <message>
         <source>Custom Cruise Interval (Long Press)</source>
-        <translation type="unfinished"></translation>
+        <translation>사용자 정의 크루즈 간격(길게 누름)</translation>
     </message>
     <message>
         <source>Interval used when increasing the cruise control speed when holding down the button for 0.5+ seconds.</source>
-        <translation type="unfinished"></translation>
+        <translation>버튼을 0.5초 이상 눌러 크루즈 컨트롤 속도를 높일 때 사용되는 간격입니다.</translation>
     </message>
     <message>
         <source>Map Accel/Decel to Gears</source>
-        <translation type="unfinished"></translation>
+        <translation>가속/감속을 기어에 매핑</translation>
     </message>
     <message>
         <source>Map the acceleration and deceleration profiles to the &apos;Eco&apos; or &apos;Sport&apos; gear modes.</source>
-        <translation type="unfinished"></translation>
+        <translation>가속 및 감속 프로필을 &apos;에코&apos; 또는 &apos;스포츠&apos; 기어 모드에 매핑합니다.</translation>
     </message>
     <message>
         <source>Onroad Personality Button</source>
-        <translation type="unfinished"></translation>
+        <translation>온로드 운전 개인화 버튼</translation>
     </message>
     <message>
         <source>The current driving personality is displayed on the screen. Tap to switch personalities, or long press for 2.5 seconds to activate &apos;Traffic Mode&apos;.</source>
-        <translation type="unfinished"></translation>
+        <translation>현재 운전 성격이 화면에 표시됩니다. 개성을 전환하려면 탭하거나 2.5초 동안 길게 눌러 &apos;교통 체증 모드&apos;를 활성화합니다.</translation>
     </message>
     <message>
         <source>Reverse Cruise Increase</source>
-        <translation type="unfinished"></translation>
+        <translation>역방향(?) 크루즈 증가</translation>
     </message>
     <message>
         <source>The long press feature is reversed in order to increase speed by 5 mph instead of 1.</source>
-        <translation type="unfinished"></translation>
+        <translation>길게 누르기 기능은 속도를 1mph가 아닌 5mph만큼 높이기 위해 반대로 설정되었습니다.</translation>
     </message>
     <message>
         <source>Speed Limit Controller</source>
-        <translation type="unfinished"></translation>
+        <translation>속도 제한 제어</translation>
     </message>
     <message>
         <source>Automatically adjust your max speed to match the speed limit using &apos;Open Street Maps&apos;, &apos;Navigate on openpilot&apos;, or your car&apos;s dashboard (Toyota/Lexus/HKG only).</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;Open Street Maps&apos;, &apos;오픈파일럿 내비게이션&apos; 또는 자동차 대시보드(Toyota/Lexus/HKG에 한함)를 사용하여 최대 속도를 제한 속도에 맞게 자동으로 조정하세요.</translation>
     </message>
     <message>
         <source>Confirm New Speed Limits</source>
-        <translation type="unfinished"></translation>
+        <translation>새로운 속도 제한 확인</translation>
     </message>
     <message>
         <source>Require manual confirmation before using a new speed limit.</source>
-        <translation type="unfinished"></translation>
+        <translation>새로운 속도 제한을 사용하기 전에 수동으로 확인하도록 요구합니다.</translation>
     </message>
     <message>
         <source>Fallback Method</source>
-        <translation type="unfinished"></translation>
+        <translation>대비 방법</translation>
     </message>
     <message>
         <source>Choose what happens when no speed limit data is available.</source>
-        <translation type="unfinished"></translation>
+        <translation>속도 제한 데이터가 없는 경우 어떻게 할지 선택하세요.</translation>
     </message>
     <message>
         <source>Override Method</source>
-        <translation type="unfinished"></translation>
+        <translation>방법 재정의</translation>
     </message>
     <message>
         <source>Choose how you want to override the current speed limit.
 
 </source>
-        <translation type="unfinished"></translation>
+        <translation>현재 속도 제한을 재정의할 방법을 선택합니다.</translation>
     </message>
     <message>
         <source>Speed Limit Source Priority</source>
-        <translation type="unfinished"></translation>
+        <translation>속도 제한 소스 우선 순위</translation>
     </message>
     <message>
         <source>Set the order of priority for speed limit data sources.</source>
-        <translation type="unfinished"></translation>
+        <translation>속도 제한 데이터 소스의 우선 순위를 설정합니다.</translation>
     </message>
     <message>
         <source>Speed Limit Offsets</source>
-        <translation type="unfinished"></translation>
+        <translation>속도 제한 오프셋</translation>
     </message>
     <message>
         <source>Manage toggles related to &apos;Speed Limit Controller&apos;s controls.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;속도 제한 컨트롤러&apos; 컨트롤과 관련된 토글을 관리합니다.</translation>
     </message>
     <message>
         <source>Speed Limit Offset (0-34 mph)</source>
-        <translation type="unfinished"></translation>
+        <translation>속도 제한 오프셋(0~55 kph)</translation>
     </message>
     <message>
         <source>Set the speed limit offset for speeds between 0 and 34 mph.</source>
-        <translation type="unfinished"></translation>
+        <translation>0~55 kph의 속도에 대한 제한 속도 오프셋을 설정합니다.</translation>
     </message>
     <message>
         <source>Speed Limit Offset (35-54 mph)</source>
-        <translation type="unfinished"></translation>
+        <translation>속도 제한 오프셋(56~87 kph)</translation>
     </message>
     <message>
         <source>Set the speed limit offset for speeds between 35 and 54 mph.</source>
-        <translation type="unfinished"></translation>
+        <translation>시속 56 에서 87 kph 사이의 속도에 대한 제한 속도 오프셋을 설정합니다.</translation>
     </message>
     <message>
         <source>Speed Limit Offset (55-64 mph)</source>
-        <translation type="unfinished"></translation>
+        <translation>속도 제한 오프셋(89~103kph)</translation>
     </message>
     <message>
         <source>Set the speed limit offset for speeds between 55 and 64 mph.</source>
-        <translation type="unfinished"></translation>
+        <translation>시속 89에서 103 kph 사이의 속도에 대한 제한 속도 오프셋을 설정합니다.</translation>
     </message>
     <message>
         <source>Speed Limit Offset (65-99 mph)</source>
-        <translation type="unfinished"></translation>
+        <translation>속도 제한 오프셋(104~160kph)</translation>
     </message>
     <message>
         <source>Set the speed limit offset for speeds between 65 and 99 mph.</source>
-        <translation type="unfinished"></translation>
+        <translation>속도 제한 오프셋을 시속 104에서 160 kph 사이로 설정합니다.</translation>
     </message>
     <message>
         <source>Miscellaneous &apos;Speed Limit Controller&apos; focused features to improve your overall openpilot experience.</source>
-        <translation type="unfinished"></translation>
+        <translation>전반적인 오픈 파일럿 경험을 개선하기 위해 다양한 &apos;속도 제한 컨트롤러&apos;에 초점을 맞춘 기능을 제공합니다.</translation>
     </message>
     <message>
         <source>Force MPH Readings from Dashboard</source>
@@ -2696,7 +2698,7 @@ This overrides &apos;Conditional Experimental Mode&apos;.</source>
         <translation>개구리파일럿의 사운드 알림과 알림을 사용자 지정하는 옵션입니다.</translation>
     </message>
     <message>
-        <source>FrogPilot features than impact acceleration, braking, and steering.</source>
+        <source>FrogPilot features that impact acceleration, braking, and steering.</source>
         <translation>개구리파일럿은 가속 충격, 제동, 조향 기능을 갖추고 있습니다.</translation>
     </message>
     <message>
