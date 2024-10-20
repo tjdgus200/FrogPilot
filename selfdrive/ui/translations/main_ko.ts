@@ -4290,15 +4290,7 @@ This may take up to a minute.</source>
     </message>
     <message>
         <source>The driving visualization will transition to the road-facing wide-angle camera at low speeds to better show some turns. The Experimental mode logo will also be shown in the top right corner.</source>
-        <translation>주행 시각화는 저속에서 도로를 향한 광각 카메라로 전환되어 일부 회전을 더 잘 보여줍니다. 실험 모드 로고도 오른쪽 상단 모서리에 표시됩니다.</translation>
-    </message>
-    <message>
-        <source>Always-On Driver Monitoring</source>
-        <translation>상시 운전자 감시</translation>
-    </message>
-    <message>
-        <source>Enable driver monitoring even when openpilot is not engaged.</source>
-        <translation>오픈파일럿이 동작하지 않을 때도 운전자 감시를 활성화 합니다.</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
