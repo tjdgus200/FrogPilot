@@ -3761,8 +3761,8 @@ This may take up to a minute.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Driving</source>
-        <translation>운전설정</translation>
+        <source>Controls</source>
+        <translation>제어판</translation>
     </message>
     <message>
         <source>Navigation</source>
