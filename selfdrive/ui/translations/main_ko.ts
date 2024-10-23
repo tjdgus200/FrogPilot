@@ -2594,121 +2594,121 @@ This overrides &apos;Conditional Experimental Mode&apos;.</source>
     <name>FrogPilotParamManageControl</name>
     <message>
         <source>MANAGE</source>
-        <translation type="unfinished"></translation>
+        <translation>관리</translation>
     </message>
 </context>
 <context>
     <name>FrogPilotSettingsWindow</name>
     <message>
         <source>Advanced Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>고급 설정</translation>
     </message>
     <message>
         <source>Alerts and Sounds</source>
-        <translation type="unfinished"></translation>
+        <translation>경고 및 사운드</translation>
     </message>
     <message>
         <source>Driving Controls</source>
-        <translation type="unfinished"></translation>
+        <translation>주행 제어</translation>
     </message>
     <message>
         <source>Navigation</source>
-        <translation type="unfinished"></translation>
+        <translation>내비게이션</translation>
     </message>
     <message>
         <source>System Management</source>
-        <translation type="unfinished"></translation>
+        <translation>시스템 관리</translation>
     </message>
     <message>
         <source>Theme and Appearance</source>
-        <translation type="unfinished"></translation>
+        <translation>테마 및 모양</translation>
     </message>
     <message>
         <source>Vehicle Controls</source>
-        <translation type="unfinished"></translation>
+        <translation>차량 제어</translation>
     </message>
     <message>
         <source>Advanced FrogPilot features for more experienced users.</source>
-        <translation type="unfinished"></translation>
+        <translation>숙련된 사용자를 위한 고급 개구리파일럿 기능.</translation>
     </message>
     <message>
         <source>Options to customize FrogPilot&apos;s sound alerts and notifications.</source>
-        <translation type="unfinished"></translation>
+        <translation>개구리파일럿의 사운드 알림과 알림을 사용자 지정하는 옵션입니다.</translation>
     </message>
     <message>
         <source>FrogPilot features than impact acceleration, braking, and steering.</source>
-        <translation type="unfinished"></translation>
+        <translation>개구리파일럿은 가속 충격, 제동, 조향 기능을 갖추고 있습니다.</translation>
     </message>
     <message>
         <source>Offline maps downloader and &apos;Navigate On openpilot (NOO)&apos; settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>오프라인 지도 다운로더 및 지도 경로 기반 오픈파일럿 설정.</translation>
     </message>
     <message>
         <source>Tools and system utilities used to maintain and troubleshoot FrogPilot.</source>
-        <translation type="unfinished"></translation>
+        <translation>개구리파일럿을 유지관리하고 문제를 해결하는 데 사용되는 도구와 시스템 유틸리티입니다.</translation>
     </message>
     <message>
         <source>Options for customizing FrogPilot&apos;s themes, UI appearance, and onroad widgets.</source>
-        <translation type="unfinished"></translation>
+        <translation>개구리파일럿의 테마, UI 모양 및 도로 위젯을 사용자 정의할 수 있는 옵션입니다.</translation>
     </message>
     <message>
         <source>Vehicle-specific settings and configurations for supported makes and models.</source>
-        <translation type="unfinished"></translation>
+        <translation>지원되는 차량과 모델에 대한 차량별 설정 및 구성입니다.</translation>
     </message>
     <message>
         <source>DRIVING</source>
-        <translation type="unfinished"></translation>
+        <translation>운전</translation>
     </message>
     <message>
         <source>VISUALS</source>
-        <translation type="unfinished"></translation>
+        <translation>비주얼</translation>
     </message>
     <message>
         <source>MANAGE</source>
-        <translation type="unfinished"></translation>
+        <translation>관리</translation>
     </message>
     <message>
         <source>GAS / BRAKE</source>
-        <translation type="unfinished"></translation>
+        <translation>엑셀/브레이크</translation>
     </message>
     <message>
         <source>STEERING</source>
-        <translation type="unfinished"></translation>
+        <translation>조향</translation>
     </message>
     <message>
         <source>DATA</source>
-        <translation type="unfinished"></translation>
+        <translation>데이터</translation>
     </message>
     <message>
         <source>DEVICE</source>
-        <translation type="unfinished"></translation>
+        <translation>콤마 장치</translation>
     </message>
     <message>
         <source>UTILITIES</source>
-        <translation type="unfinished"></translation>
+        <translation>유틸리티</translation>
     </message>
     <message>
         <source>APPEARANCE</source>
-        <translation type="unfinished"></translation>
+        <translation>모양</translation>
     </message>
     <message>
         <source>THEME</source>
-        <translation type="unfinished"></translation>
+        <translation>테마</translation>
     </message>
 </context>
 <context>
     <name>FrogPilotSoundsPanel</name>
     <message>
         <source>Alert Volume Controller</source>
-        <translation type="unfinished"></translation>
+        <translation>알림 볼륨 제어판</translation>
     </message>
     <message>
         <source>Control the volume level for each individual sound in openpilot.</source>
-        <translation type="unfinished"></translation>
+        <translation>오픈파일럿에서 각 개별 사운드의 볼륨 레벨을 제어합니다.</translation>
     </message>
     <message>
         <source>Disengage Volume</source>
-        <translation type="unfinished"></translation>
+        <translation>해제 볼륨</translation>
     </message>
     <message>
         <source>Related alerts:
@@ -2717,22 +2717,30 @@ Adaptive Cruise Disabled
 Parking Brake Engaged
 Brake Pedal Pressed
 Speed too Low</source>
-        <translation type="unfinished"></translation>
+        <translation>관련 알람:
+
+어댑티브 크루즈 비활성화
+주차 브레이크 작동
+브레이크 페달 눌림
+속도 너무 낮음</translation>
     </message>
     <message>
         <source>Engage Volume</source>
-        <translation type="unfinished"></translation>
+        <translation>오파 작동 볼륨</translation>
     </message>
     <message>
         <source>Related alerts:
 
 NNFF Torque Controller loaded
 openpilot engaged</source>
-        <translation type="unfinished"></translation>
+        <translation>관련 알림:
+
+NNFF 토크 컨트롤러 로드됨
+오픈파일럿 작동됨</translation>
     </message>
     <message>
         <source>Prompt Volume</source>
-        <translation type="unfinished"></translation>
+        <translation>프롬프트(즉각) 볼륨</translation>
     </message>
     <message>
         <source>Related alerts:
@@ -2741,297 +2749,321 @@ Car Detected in Blindspot
 Speed too Low
 Steer Unavailable Below &apos;X&apos;
 Take Control, Turn Exceeds Steering Limit</source>
-        <translation type="unfinished"></translation>
+        <translation>관련 알림:
+
+사각지대에서 차량 감지
+속도가 너무 낮음
+&apos;X&apos; 아래에서 스티어링 사용 불가
+스티어링 제한을 초과하는 방향으로 제어</translation>
     </message>
     <message>
         <source>Prompt Distracted Volume</source>
-        <translation type="unfinished"></translation>
+        <translation>정신없는 프롬프트 볼륨</translation>
     </message>
     <message>
         <source>Related alerts:
 
 Pay Attention, Driver Distracted
 Touch Steering Wheel, Driver Unresponsive</source>
-        <translation type="unfinished"></translation>
+        <translation>관련 알림:
+
+주의, 운전자 주의 산만
+핸들 터치, 운전자 무반응</translation>
     </message>
     <message>
         <source>Refuse Volume</source>
-        <translation type="unfinished"></translation>
+        <translation>거부 볼륨</translation>
     </message>
     <message>
         <source>Related alerts:
 
 openpilot Unavailable</source>
-        <translation type="unfinished"></translation>
+        <translation>관련 알림:
+
+오픈파일럿 사용 불가</translation>
     </message>
     <message>
         <source>Warning Soft Volume</source>
-        <translation type="unfinished"></translation>
+        <translation>경고 소프트 볼륨</translation>
     </message>
     <message>
         <source>Related alerts:
 
 BRAKE!, Risk of Collision
 TAKE CONTROL IMMEDIATELY</source>
-        <translation type="unfinished"></translation>
+        <translation>관련 알림:
+
+브레이크!, 충돌 위험
+즉시 제어</translation>
     </message>
     <message>
         <source>Warning Immediate Volume</source>
-        <translation type="unfinished"></translation>
+        <translation>즉각적인 경고 볼륨</translation>
     </message>
     <message>
         <source>Related alerts:
 
 DISENGAGE IMMEDIATELY, Driver Distracted
 DISENGAGE IMMEDIATELY, Driver Unresponsive</source>
-        <translation type="unfinished"></translation>
+        <translation>관련 알림:
+
+즉시 해제, 운전자 주의 산만
+즉시 해제, 운전자 응답 없음</translation>
     </message>
     <message>
         <source>Custom Alerts</source>
-        <translation type="unfinished"></translation>
+        <translation>사용자 지정 알림</translation>
     </message>
     <message>
         <source>Enable custom alerts for openpilot events.</source>
-        <translation type="unfinished"></translation>
+        <translation>오픈파일럿 이벤트에 대한 사용자 지정 알림을 활성화합니다.</translation>
     </message>
     <message>
         <source>Goat Scream Steering Saturated Alert</source>
-        <translation type="unfinished"></translation>
+        <translation>염소 비명 경고</translation>
     </message>
     <message>
         <source>Enable the famed &apos;Goat Scream&apos; that has brought both joy and anger to FrogPilot users all around the world!</source>
-        <translation type="unfinished"></translation>
+        <translation>전 세계 개구리파일럿 사용자들에게 기쁨과 분노를 동시에 안겨준 유명한 &apos;염소 비명&apos;을 활성화하세요!</translation>
     </message>
     <message>
         <source>Green Light Alert</source>
-        <translation type="unfinished"></translation>
+        <translation>초록불 알림</translation>
     </message>
     <message>
         <source>Get an alert when a traffic light changes from red to green.</source>
-        <translation type="unfinished"></translation>
+        <translation>신호등이 빨간색에서 녹색으로 변경되면 알림을 받습니다.</translation>
     </message>
     <message>
         <source>Lead Departing Alert</source>
-        <translation type="unfinished"></translation>
+        <translation>앞차 출발 알림</translation>
     </message>
     <message>
         <source>Get an alert when the lead vehicle starts departing when at a standstill.</source>
-        <translation type="unfinished"></translation>
+        <translation>정지 상태에서 선두 차량이 출발하기 시작하면 알림을 받습니다.</translation>
     </message>
     <message>
         <source>Loud Blindspot Alert</source>
-        <translation type="unfinished"></translation>
+        <translation>시끄러운 사각지대 경고</translation>
     </message>
     <message>
         <source>Enable a louder alert for when a vehicle is detected in the blindspot when attempting to change lanes.</source>
-        <translation type="unfinished"></translation>
+        <translation>차선 변경을 시도할 때 사각지대에서 차량이 감지되면 더 큰 경고를 활성화합니다.</translation>
     </message>
     <message>
         <source>Speed Limit Change Alert</source>
-        <translation type="unfinished"></translation>
+        <translation>속도 제한 변경 알림</translation>
     </message>
     <message>
         <source>Trigger an alert when the speed limit changes.</source>
-        <translation type="unfinished"></translation>
+        <translation>속도 제한이 변경되면 알림을 보냅니다.</translation>
     </message>
 </context>
 <context>
     <name>FrogPilotThemesPanel</name>
     <message>
         <source>Custom Theme</source>
-        <translation type="unfinished"></translation>
+        <translation>사용자 설정 테마</translation>
     </message>
     <message>
         <source>Custom openpilot themes.</source>
-        <translation type="unfinished"></translation>
+        <translation>사용자 설정 오픈파일럿 테마</translation>
     </message>
     <message>
         <source>Color Scheme</source>
-        <translation type="unfinished"></translation>
+        <translation>색상 구성</translation>
     </message>
     <message>
         <source>Themed color schemes.
 
 Want to submit your own color scheme? Share it in the &apos;feature-request&apos; channel on the FrogPilot Discord!</source>
-        <translation type="unfinished"></translation>
+        <translation>테마별 색상 구성표.
+
+나만의 색 구성표를 제출하고 싶으신가요? 개구리파일럿 디스코드의 &apos;기능 요청&apos; 채널에서 공유하세요!</translation>
     </message>
     <message>
         <source>Icon Pack</source>
-        <translation type="unfinished"></translation>
+        <translation>아이콘 팩</translation>
     </message>
     <message>
         <source>Themed icon packs.
 
 Want to submit your own icons? Share them in the &apos;feature-request&apos; channel on the FrogPilot Discord!</source>
-        <translation type="unfinished"></translation>
+        <translation>테마 아이콘 팩.
+
+나만의 아이콘을 제출하고 싶으신가요? 개구리파일럿 디스코드의 &apos;기능 요청&apos; 채널에서 공유하세요!</translation>
     </message>
     <message>
         <source>Sound Pack</source>
-        <translation type="unfinished"></translation>
+        <translation>사운드 팩</translation>
     </message>
     <message>
         <source>Themed sound effects.
 
 Want to submit your own sounds? Share them in the &apos;feature-request&apos; channel on the FrogPilot Discord!</source>
-        <translation type="unfinished"></translation>
+        <translation>테마별 사운드 효과.
+
+자신의 사운드를 제출하고 싶으신가요? FrogPilot Discord의 &apos;feature-request&apos; 채널에서 공유하세요!</translation>
     </message>
     <message>
         <source>Steering Wheel</source>
-        <translation type="unfinished"></translation>
+        <translation>스티어링 휠</translation>
     </message>
     <message>
         <source>Custom steering wheel icons.</source>
-        <translation type="unfinished"></translation>
+        <translation>사용자 정의 스티어링 휠 아이콘.</translation>
     </message>
     <message>
         <source>Turn Signal Animation</source>
-        <translation type="unfinished"></translation>
+        <translation>방향 지시등 애니메이션</translation>
     </message>
     <message>
         <source>Themed turn signal animations.
 
 Want to submit your own animations? Share them in the &apos;feature-request&apos; channel on the FrogPilot Discord!</source>
-        <translation type="unfinished"></translation>
+        <translation>테마별 방향 지시등 애니메이션.
+
+자신의 애니메이션을 제출하고 싶으신가요? FrogPilot Discord의 &apos;feature-request&apos; 채널에서 공유하세요!</translation>
     </message>
     <message>
         <source>Download Status</source>
-        <translation type="unfinished"></translation>
+        <translation>다운로드 상태</translation>
     </message>
     <message>
         <source>Holiday Themes</source>
-        <translation type="unfinished"></translation>
+        <translation>홀리데이 테마</translation>
     </message>
     <message>
         <source>Change the openpilot theme based on the current holiday. Minor holidays last one day, while major holidays (Easter, Christmas, Halloween, etc.) last a week.</source>
-        <translation type="unfinished"></translation>
+        <translation>현재 공휴일을 기준으로 열린 파일럿 테마를 변경합니다. 마이너 홀리데이는 하루 동안 지속되며, 주요 홀리데이(이스터, 크리스마스, 할로윈 등)는 일주일 동안 지속됩니다.</translation>
     </message>
     <message>
         <source>Random Events</source>
-        <translation type="unfinished"></translation>
+        <translation>랜덤 이벤트</translation>
     </message>
     <message>
         <source>Random cosmetic events that happen during certain driving conditions. These events are purely for fun and don&apos;t affect driving controls!</source>
-        <translation type="unfinished"></translation>
+        <translation>특정 주행 조건에서 발생하는 무작위 이벤트입니다. 이러한 이벤트는 순전히 재미를 위한 것이며 주행 제어에 영향을 미치지 않습니다!</translation>
     </message>
     <message>
         <source>Startup Alert</source>
-        <translation type="unfinished"></translation>
+        <translation>시작 알림</translation>
     </message>
     <message>
         <source>Custom &apos;Startup&apos; alert message that appears when you start driving.</source>
-        <translation type="unfinished"></translation>
+        <translation>운전을 시작할 때 표시되는 사용자 지정 &apos;시동&apos; 알림 메시지입니다.</translation>
     </message>
     <message>
         <source>DELETE</source>
-        <translation type="unfinished"></translation>
+        <translation>삭제</translation>
     </message>
     <message>
         <source>DOWNLOAD</source>
-        <translation type="unfinished">다운로드</translation>
+        <translation>다운로드</translation>
     </message>
     <message>
         <source>SELECT</source>
-        <translation type="unfinished">선택</translation>
+        <translation>선택</translation>
     </message>
     <message>
         <source>Select a color scheme to delete</source>
-        <translation type="unfinished"></translation>
+        <translation>삭제할 색 구성표 선택</translation>
     </message>
     <message>
         <source>Are you sure you want to delete the &apos;%1&apos; color scheme?</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;%1&apos;색 구성표를 삭제하시겠습니까?</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation type="unfinished"></translation>
+        <translation>삭제</translation>
     </message>
     <message>
         <source>Select a color scheme to download</source>
-        <translation type="unfinished"></translation>
+        <translation>다운로드할 색 구성표 선택</translation>
     </message>
     <message>
         <source>Select a color scheme</source>
-        <translation type="unfinished"></translation>
+        <translation>색상 구성표 선택</translation>
     </message>
     <message>
         <source>Select an icon pack to delete</source>
-        <translation type="unfinished"></translation>
+        <translation>삭제할 아이콘 팩 선택</translation>
     </message>
     <message>
         <source>Are you sure you want to delete the &apos;%1&apos; icon pack?</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;%1&apos; 아이콘 팩을 삭제하시겠습니까?</translation>
     </message>
     <message>
         <source>Select an icon pack to download</source>
-        <translation type="unfinished"></translation>
+        <translation>다운로드할 아이콘 팩 선택</translation>
     </message>
     <message>
         <source>Select an icon pack</source>
-        <translation type="unfinished"></translation>
+        <translation>아이콘 팩 선택</translation>
     </message>
     <message>
         <source>Select a signal pack to delete</source>
-        <translation type="unfinished"></translation>
+        <translation>삭제할 신호팩을 선택하세요.</translation>
     </message>
     <message>
         <source>Are you sure you want to delete the &apos;%1&apos; signal pack?</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;%1&apos; 신호팩을 삭제하시겠습니까?</translation>
     </message>
     <message>
         <source>Select a signal pack to download</source>
-        <translation type="unfinished"></translation>
+        <translation>다운로드할 신호팩을 선택하세요</translation>
     </message>
     <message>
         <source>Select a signal pack</source>
-        <translation type="unfinished"></translation>
+        <translation>신호팩을 선택하세요</translation>
     </message>
     <message>
         <source>Select a sound pack to delete</source>
-        <translation type="unfinished"></translation>
+        <translation>삭제할 사운드 팩을 선택하세요.</translation>
     </message>
     <message>
         <source>Are you sure you want to delete the &apos;%1&apos; sound scheme?</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;%1&apos; 사운드 구성표를 삭제하시겠습니까?</translation>
     </message>
     <message>
         <source>Select a sound pack to download</source>
-        <translation type="unfinished"></translation>
+        <translation>다운로드할 사운드팩을 선택하세요.</translation>
     </message>
     <message>
         <source>Select a sound scheme</source>
-        <translation type="unfinished"></translation>
+        <translation>사운드 구성표를 선택하세요.</translation>
     </message>
     <message>
         <source>Select a steering wheel to delete</source>
-        <translation type="unfinished"></translation>
+        <translation>삭제할 스티어링 휠을 선택하세요.</translation>
     </message>
     <message>
         <source>Are you sure you want to delete the &apos;%1&apos; steering wheel image?</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;%1&apos; 스티어링 휠 이미지를 삭제하시겠습니까?</translation>
     </message>
     <message>
         <source>Select a steering wheel to download</source>
-        <translation type="unfinished"></translation>
+        <translation>다운로드할 스티어링 휠을 선택하세요.</translation>
     </message>
     <message>
         <source>Select a steering wheel</source>
-        <translation type="unfinished"></translation>
+        <translation>핸들을 선택하세요.</translation>
     </message>
     <message>
         <source>STOCK</source>
-        <translation type="unfinished"></translation>
+        <translation>스톡</translation>
     </message>
     <message>
         <source>FROGPILOT</source>
-        <translation type="unfinished"></translation>
+        <translation>개구리파일럿</translation>
     </message>
     <message>
         <source>CUSTOM</source>
-        <translation type="unfinished"></translation>
+        <translation>커스텀</translation>
     </message>
     <message>
         <source>CLEAR</source>
-        <translation type="unfinished"></translation>
+        <translation>클리어</translation>
     </message>
     <message>
         <source>Enter your text for the top half</source>
@@ -3047,58 +3079,58 @@ Want to submit your own animations? Share them in the &apos;feature-request&apos
     </message>
     <message>
         <source>CANCEL</source>
-        <translation type="unfinished"></translation>
+        <translation>취소</translation>
     </message>
 </context>
 <context>
     <name>FrogPilotVehiclesPanel</name>
     <message>
         <source>Select Make</source>
-        <translation type="unfinished"></translation>
+        <translation>차량 제조사 선택</translation>
     </message>
     <message>
         <source>SELECT</source>
-        <translation type="unfinished">선택</translation>
+        <translation>선택</translation>
     </message>
     <message>
         <source>Select a Make</source>
-        <translation type="unfinished"></translation>
+        <translation>차량 제조사를 선택하세요.</translation>
     </message>
     <message>
         <source>Select Model</source>
-        <translation type="unfinished"></translation>
+        <translation>차량 모델 선택</translation>
     </message>
     <message>
         <source>Select a Model</source>
-        <translation type="unfinished"></translation>
+        <translation>차량 모델을 선택하세요.</translation>
     </message>
     <message>
         <source>Disable Automatic Fingerprint Detection</source>
-        <translation type="unfinished"></translation>
+        <translation>핑거프린트 자동 인식 비활성화</translation>
     </message>
     <message>
         <source>Forces the selected fingerprint and prevents it from ever changing.</source>
-        <translation type="unfinished"></translation>
+        <translation>선택한 핑거프린트를 강제로 적용하고 변경되지 않도록 방지합니다.</translation>
     </message>
     <message>
         <source>Disable openpilot Longitudinal Control</source>
-        <translation type="unfinished"></translation>
+        <translation>오픈파일럿 롱~컨트롤 비활성화</translation>
     </message>
     <message>
         <source>Disable openpilot longitudinal control and use stock ACC instead.</source>
-        <translation type="unfinished"></translation>
+        <translation>오픈 파일럿 롱~컨트롤을 비활성화하고 대신 스톡 ACC를 사용합니다.</translation>
     </message>
     <message>
         <source>Are you sure you want to completely disable openpilot longitudinal control?</source>
-        <translation type="unfinished"></translation>
+        <translation>오픈 파일럿 롱~컨트롤을 완전히 비활성화하시겠습니까?</translation>
     </message>
     <message>
         <source>Reboot required to take effect.</source>
-        <translation type="unfinished"></translation>
+        <translation>적용하려면 재부팅이 필요합니다.</translation>
     </message>
     <message>
         <source>Reboot Now</source>
-        <translation type="unfinished"></translation>
+        <translation>지금 재부팅</translation>
     </message>
     <message>
         <source>2017 Volt Stop and Go Hack</source>
@@ -3110,31 +3142,31 @@ Want to submit your own animations? Share them in the &apos;feature-request&apos
     </message>
     <message>
         <source>Experimental GM Tune</source>
-        <translation type="unfinished"></translation>
+        <translation>실험적 GM 튜닝</translation>
     </message>
     <message>
         <source>FrogsGoMoo&apos;s experimental GM tune that is based on nothing but guesswork. Use at your own risk!</source>
-        <translation type="unfinished"></translation>
+        <translation>FrogsGoMoo의 실험적 GM 튜닝은 추측에 근거한 것입니다. 사용 시 위험을 감수하세요!</translation>
     </message>
     <message>
         <source>Uphill/Downhill Smoothing</source>
-        <translation type="unfinished"></translation>
+        <translation>오르막/내리막 부드럽게</translation>
     </message>
     <message>
         <source>Smoothen the car’s gas and brake response when driving on slopes.</source>
-        <translation type="unfinished"></translation>
+        <translation>경사로 주행 시 차량의 가속 및 브레이크 반응을 부드럽게 합니다.</translation>
     </message>
     <message>
         <source>Use comma&apos;s New Longitudinal API</source>
-        <translation type="unfinished"></translation>
+        <translation>콤마의 새로운 롱~컨트롤 API 사용</translation>
     </message>
     <message>
         <source>Comma&apos;s new longitudinal control system that has shown great improvement with acceleration and braking, but has a few issues on some GM vehicles.</source>
-        <translation type="unfinished"></translation>
+        <translation>가속 및 제동 기능이 크게 개선되었지만 일부 GM 차량에는 몇 가지 문제가 있는 콤마의 새로운 롱~컨트롤 시스템이 탑재되었습니다.</translation>
     </message>
     <message>
         <source>Use comma&apos;s new longitudinal control system that has shown great improvement with acceleration and braking, but has a few issues on Hyundai/Kia/Genesis.</source>
-        <translation type="unfinished"></translation>
+        <translation>가속 및 제동 기능이 크게 개선되었지만 현대/기아/제네시스에 몇 가지 문제가 있는 콤마의 새로운 롱~컨트롤 시스템을 사용하세요.</translation>
     </message>
     <message>
         <source>Subaru Crosstrek Torque Increase</source>
@@ -3265,15 +3297,15 @@ Fully disengaged = 50%</translation>
     </message>
     <message>
         <source>A larger size of the map in the onroad UI for easier navigation readings.</source>
-        <translation type="unfinished"></translation>
+        <translation>온로드 UI에서 지도의 더 큰 크기로 이동하여 더 쉽게 탐색할 수 있습니다.</translation>
     </message>
     <message>
         <source>Map Style</source>
-        <translation type="unfinished"></translation>
+        <translation>맵 스따일</translation>
     </message>
     <message>
         <source>Custom map styles for the map used during navigation.</source>
-        <translation type="unfinished"></translation>
+        <translation>주행 중에 사용되는 지도의 사용자 지정 스타일입니다.</translation>
     </message>
     <message>
         <source>Screen Standby Mode</source>
@@ -4060,7 +4092,7 @@ This may take up to a minute.</source>
     </message>
     <message>
         <source>Automatically Update FrogPilot</source>
-        <translation>프로그파일럿 자동 업데이트</translation>
+        <translation>개구리파일럿 자동 업데이트</translation>
     </message>
     <message>
         <source>FrogPilot will automatically update itself and it&apos;s assets when you&apos;re offroad and connected to Wi-Fi.</source>
