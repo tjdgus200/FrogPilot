@@ -298,7 +298,7 @@ class CarInterface(CarInterfaceBase):
         # Note: Low speed, stop and go not tested. Should be fairly smooth on highway
         if use_new_api:
           ret.longitudinalTuning.kiBP = [0., 3., 6., 35.]
-          ret.longitudinalTuning.kiV = [0.10, 0.175, 0.225, 0.33]
+          ret.longitudinalTuning.kiV = [0.0, 0.175, 0.225, 0.33]
         else:
           ret.longitudinalTuning.kpBP = [0., 3., 6., 35.]
           ret.longitudinalTuning.kpV = [0.10, 0.175, 0.225, 0.33]
