@@ -1161,102 +1161,102 @@ Default: 1.0.</source>
     </message>
     <message>
         <source>openpilot requires the device to be mounted within 4° left or right and within 5° up or 9° down. openpilot is continuously calibrating, resetting is rarely required.</source>
-        <translation type="unfinished">openpilot 장치는 좌우 4°, 위로 5°, 아래로 9° 이내 각도로 장착되어야 합니다. openpilot은 지속적으로 자동 보정되며 재설정은 거의 필요하지 않습니다.</translation>
+        <translation>openpilot 장치는 좌우 4°, 위로 5°, 아래로 9° 이내 각도로 장착되어야 합니다. 오픈파일럿은 지속적으로 자동 보정되며 재설정은 거의 필요하지 않습니다.</translation>
     </message>
     <message>
         <source> Your device is pointed %1° %2 and %3° %4.</source>
-        <translation type="unfinished"> 사용자의 장치는 %2 %1° 및 %4 %3° 의 방향으로 장착되어 있습니다.</translation>
+        <translation> 사용자의 장치는 %2 %1° 및 %4 %3° 의 방향으로 장착되어 있습니다.</translation>
     </message>
     <message>
         <source>down</source>
-        <translation type="unfinished">아래로</translation>
+        <translation>아래로</translation>
     </message>
     <message>
         <source>up</source>
-        <translation type="unfinished">위로</translation>
+        <translation>위로</translation>
     </message>
     <message>
         <source>left</source>
-        <translation type="unfinished">좌측으로</translation>
+        <translation>좌측으로</translation>
     </message>
     <message>
         <source>right</source>
-        <translation type="unfinished">우측으로</translation>
+        <translation>우측으로</translation>
     </message>
 </context>
 <context>
     <name>FrogPilotAdvancedVisualsPanel</name>
     <message>
         <source>Advanced Onroad UI Widgets</source>
-        <translation type="unfinished"></translation>
+        <translation>고급 온로드 UI 위젯</translation>
     </message>
     <message>
         <source>Advanced user customizations for the Onroad UI.</source>
-        <translation type="unfinished"></translation>
+        <translation>Onroad UI에 대한 고급 사용자 정의.</translation>
     </message>
     <message>
         <source>Camera View</source>
-        <translation type="unfinished"></translation>
+        <translation>카메라 뷰</translation>
     </message>
     <message>
         <source>Camera view for the onroad UI. This is purely a visual change and doesn&apos;t impact how openpilot drives.</source>
-        <translation type="unfinished"></translation>
+        <translation>온로드 UI의 카메라 뷰. 이는 순전히 시각적인 변화이며 오픈파일럿의 운전 방식에는 영향을 미치지 않습니다.</translation>
     </message>
     <message>
         <source>Display Stopping Points</source>
-        <translation type="unfinished"></translation>
+        <translation>정지 지점 표시</translation>
     </message>
     <message>
         <source>Display an image on the screen where openpilot is detecting a potential red light/stop sign.</source>
-        <translation type="unfinished"></translation>
+        <translation>오픈파일럿이 잠재적인 적색 신호/정지 신호를 감지하는 화면에 이미지를 표시합니다.</translation>
     </message>
     <message>
         <source>Hide Lead Marker</source>
-        <translation type="unfinished"></translation>
+        <translation>선행 차량 표시 숨기기</translation>
     </message>
     <message>
         <source>Hide the marker for the vehicle ahead on the screen.</source>
-        <translation type="unfinished"></translation>
+        <translation>화면에서 전방 차량의 표시를 숨깁니다.</translation>
     </message>
     <message>
         <source>Hide Speed</source>
-        <translation type="unfinished"></translation>
+        <translation>속도 숨기기</translation>
     </message>
     <message>
         <source>Hide the speed indicator in the onroad UI. Additional toggle allows it to be hidden/shown via tapping the speed itself.</source>
-        <translation type="unfinished"></translation>
+        <translation>온로드 UI에서 속도 표시기 숨기기. 추가 토글을 사용하면 속도 자체를 탭하여 숨길 수 있습니다.</translation>
     </message>
     <message>
         <source>Hide UI Elements</source>
-        <translation type="unfinished"></translation>
+        <translation>UI 요소 숨기기</translation>
     </message>
     <message>
         <source>Hide the selected UI elements from the onroad screen.</source>
-        <translation type="unfinished"></translation>
+        <translation>선택한 UI 요소를 온로드 화면에서 숨깁니다.</translation>
     </message>
     <message>
         <source>Use Wheel Speed</source>
-        <translation type="unfinished"></translation>
+        <translation>휠 스피드 사용</translation>
     </message>
     <message>
         <source>Use the wheel speed instead of the cluster speed in the onroad UI.</source>
-        <translation type="unfinished"></translation>
+        <translation>온로드 UI에서 클러스터 속도 대신 휠 속도를 사용합니다.</translation>
     </message>
     <message>
         <source>Developer UI</source>
-        <translation type="unfinished"></translation>
+        <translation>개발자 UI</translation>
     </message>
     <message>
         <source>Show detailed information about openpilot&apos;s internal operations.</source>
-        <translation type="unfinished"></translation>
+        <translation>오픈파일럿의 내부 운영에 대한 자세한 정보를 표시합니다.</translation>
     </message>
     <message>
         <source>Border Metrics</source>
-        <translation type="unfinished"></translation>
+        <translation>테두리 표시</translation>
     </message>
     <message>
         <source>Display performance metrics around the edge of the screen while driving.</source>
-        <translation type="unfinished"></translation>
+        <translation>주행 중 화면 가장자리 주변에 성능 지표를 표시합니다.</translation>
     </message>
     <message>
         <source>FPS Display</source>
@@ -1264,69 +1264,71 @@ Default: 1.0.</source>
     </message>
     <message>
         <source>Display the &apos;Frames Per Second&apos; (FPS) at the bottom of the screen while driving.</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <source>Lateral Metrics</source>
-        <translation type="unfinished"></translation>
+        <translation>조향 표시</translation>
     </message>
     <message>
         <source>Display metrics related to steering control at the top of the screen while driving.</source>
-        <translation type="unfinished"></translation>
+        <translation>주행 중 스티어링 제어와 관련된 지표를 화면 상단에 표시합니다.</translation>
     </message>
     <message>
         <source>Longitudinal Metrics</source>
-        <translation type="unfinished"></translation>
+        <translation>롱~컨트롤 표시</translation>
     </message>
     <message>
         <source>Display metrics related to acceleration, speed, and desired following distance at the top of the screen while driving.</source>
-        <translation type="unfinished"></translation>
+        <translation>주행 중 가속, 속도 및 원하는 추종 거리와 관련된 지표를 화면 상단에 표시합니다.</translation>
     </message>
     <message>
         <source>Numerical Temperature Gauge</source>
-        <translation type="unfinished"></translation>
+        <translation>온도 게이지</translation>
     </message>
     <message>
         <source>Show exact temperature readings instead of general status labels like &apos;GOOD&apos;, &apos;OK&apos;, or &apos;HIGH&apos; in the sidebar.</source>
-        <translation type="unfinished"></translation>
+        <translation>사이드바에 &apos;GOOD&apos;, &apos;OK&apos;, &apos;HIGH&apos;와 같은 일반 상태 라벨 대신 정확한 온도 수치를 표시합니다.</translation>
     </message>
     <message>
         <source>Sidebar</source>
-        <translation type="unfinished"></translation>
+        <translation>사이드바</translation>
     </message>
     <message>
         <source>Display system information like CPU, GPU, RAM usage, IP address, and storage space in the sidebar.</source>
-        <translation type="unfinished"></translation>
+        <translation>사이드바에 CPU, GPU, RAM 사용량, IP 주소, 스토리지 공간과 같은 시스템 정보를 표시합니다.</translation>
     </message>
     <message>
         <source>Use International System of Units</source>
-        <translation type="unfinished"></translation>
+        <translation>국제 단위 시스템 사용</translation>
     </message>
     <message>
         <source>Display measurements using the &apos;International System of Units&apos; (SI).</source>
-        <translation type="unfinished"></translation>
+        <translation>국제 단위계(SI)를 사용하여 측정값을 표시합니다.</translation>
     </message>
     <message>
         <source>Model UI</source>
-        <translation type="unfinished"></translation>
+        <translation>모델UI</translation>
     </message>
     <message>
         <source>Customize the model visualizations on the screen.</source>
-        <translation type="unfinished"></translation>
+        <translation>화면에서 모델 시각화를 사용자 지정합니다.</translation>
     </message>
     <message>
         <source>Lane Lines Width</source>
-        <translation type="unfinished"></translation>
+        <translation>차선 폭</translation>
     </message>
     <message>
         <source>How thick the lane lines appear on the display.
 
 Default matches the MUTCD standard of 4 inches.</source>
-        <translation type="unfinished"></translation>
+        <translation>디스플레이에 차선이 얼마나 두꺼운지 표시합니다.
+
+기본값은 MUTCD 표준인 4인치와 일치합니다.</translation>
     </message>
     <message>
         <source>Path Edges Width</source>
-        <translation type="unfinished"></translation>
+        <translation>경로 가장자리 너비</translation>
     </message>
     <message>
         <source>The width of the edges of the driving path to represent different modes and statuses.
@@ -1340,103 +1342,117 @@ Color Guide:
 - Orange: &apos;Experimental Mode&apos;
 - Red: &apos;Traffic Mode&apos;
 - Yellow: &apos;Conditional Experimental Mode&apos; Overridden</source>
-        <translation type="unfinished"></translation>
+        <translation>주행 경로 가장자리의 너비는 다양한 모드와 상태를 나타냅니다.
+
+기본값은 전체 경로 너비의 20%입니다.
+
+컬러 가이드:
+- 파란색: 탐색
+- 하늘색: &apos;상시 조향 모드&apos;
+- 녹색: 기본
+- 주황색: &apos;실험 모드&apos;
+- 빨간색: &apos;교통 모드&apos;
+- 노란색: &apos;조건부 실험 모드&apos;가 재정의됨</translation>
     </message>
     <message>
         <source>Path Width</source>
-        <translation type="unfinished"></translation>
+        <translation>경로 너비</translation>
     </message>
     <message>
         <source>How wide the driving path appears on your screen.
 
 Default (6.1 feet / 1.9 meters) matches the width of a 2019 Lexus ES 350.</source>
-        <translation type="unfinished"></translation>
+        <translation>화면에 표시되는 주행 경로의 너비.
+
+기본값(6.1피트/1.9미터)은 2019년형 렉서스 ES 350의 너비와 일치합니다.</translation>
     </message>
     <message>
         <source>Road Edges Width</source>
-        <translation type="unfinished"></translation>
+        <translation>도로 가장자리 너비</translation>
     </message>
     <message>
         <source>How thick the road edges appear on the display.
 
 Default matches half of the MUTCD standard lane line width of 4 inches.</source>
-        <translation type="unfinished"></translation>
+        <translation>디스플레이에 표시되는 도로 가장자리의 두께.
+
+기본값은 MUTCD 표준 차선 폭인 4인치의 절반과 일치합니다.</translation>
     </message>
     <message>
         <source>&apos;Unlimited&apos; Road UI</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;무제한?&apos; 도로 UI</translation>
     </message>
     <message>
         <source>Extend the display of the path, lane lines, and road edges as far as the model can see.</source>
-        <translation type="unfinished"></translation>
+        <translation>경로, 차선 및 도로 가장자리의 표시를 모델이 볼 수 있는 곳까지 확장합니다.</translation>
     </message>
     <message>
         <source>Auto</source>
-        <translation type="unfinished"></translation>
+        <translation>자동</translation>
     </message>
     <message>
         <source>Driver</source>
-        <translation type="unfinished"></translation>
+        <translation>운전자</translation>
     </message>
     <message>
         <source>Standard</source>
-        <translation type="unfinished">표준</translation>
+        <translation>표준</translation>
     </message>
     <message>
         <source>Wide</source>
-        <translation type="unfinished"></translation>
+        <translation>넓게</translation>
     </message>
     <message>
         <source>Control Via UI</source>
-        <translation type="unfinished"></translation>
+        <translation>UI를 통한 제어</translation>
     </message>
     <message>
         <source>Alerts</source>
-        <translation type="unfinished"></translation>
+        <translation>알람</translation>
     </message>
     <message>
         <source>Map Icon</source>
-        <translation type="unfinished"></translation>
+        <translation>맵 아이콘</translation>
     </message>
     <message>
         <source>Max Speed</source>
-        <translation type="unfinished"></translation>
+        <translation>최대 속도</translation>
     </message>
     <message>
         <source>Show Distance</source>
-        <translation type="unfinished"></translation>
+        <translation>거리 표시</translation>
     </message>
     <message>
         <source>Blind Spot</source>
-        <translation type="unfinished"></translation>
+        <translation>사각지대</translation>
     </message>
     <message>
         <source>Steering Torque</source>
-        <translation type="unfinished"></translation>
+        <translation>스티어링 토크</translation>
     </message>
     <message>
         <source>Turn Signal</source>
-        <translation type="unfinished"></translation>
+        <translation>방향 지시등</translation>
     </message>
     <message>
         <source>Adjacent Path Metrics</source>
-        <translation type="unfinished"></translation>
+        <translation>인접 경로 기준</translation>
     </message>
     <message>
         <source>Auto Tune</source>
-        <translation type="unfinished"></translation>
+        <translation>자동 튜닝</translation>
     </message>
     <message>
         <source>Lead Info</source>
-        <translation type="unfinished"></translation>
+        <translation>선두 차량 정보</translation>
     </message>
     <message>
         <source>Longitudinal Jerk</source>
-        <translation type="unfinished"></translation>
+        <translation>롱~컨트롤 절뚝임</translation>
     </message>
     <message>
         <source>Fahrenheit</source>
-        <translation type="unfinished"></translation>
+        <translation>화씨</translation>
     </message>
     <message>
         <source>CPU</source>
@@ -1456,11 +1472,11 @@ Default matches half of the MUTCD standard lane line width of 4 inches.</source>
     </message>
     <message>
         <source>SSD Left</source>
-        <translation type="unfinished"></translation>
+        <translation>SSD 남은용량</translation>
     </message>
     <message>
         <source>SSD Used</source>
-        <translation type="unfinished"></translation>
+        <translation>SSD 사용량</translation>
     </message>
     <message>
         <source> inches</source>
@@ -1478,13 +1494,17 @@ Default matches half of the MUTCD standard lane line width of 4 inches.</source>
         <source>Adjust how thick the lane lines appear on the display.
 
 Default matches the Vienna standard of 10 centimeters.</source>
-        <translation type="unfinished"></translation>
+        <translation>디스플레이에 차선이 얼마나 두꺼운지 조정합니다.
+
+기본값은 비엔나 표준인 10센티미터와 일치합니다.</translation>
     </message>
     <message>
         <source>Adjust how thick the road edges appear on the display.
 
 Default matches half of the Vienna standard of 10 centimeters.</source>
-        <translation type="unfinished"></translation>
+        <translation>디스플레이에 표시되는 도로 가장자리의 두께를 조정합니다.
+
+기본값은 비엔나 표준인 10센티미터의 절반과 일치합니다.</translation>
     </message>
     <message>
         <source> centimeters</source>
@@ -1498,28 +1518,32 @@ Default matches half of the Vienna standard of 10 centimeters.</source>
         <source>Adjust how thick the lane lines appear on the display.
 
 Default matches the MUTCD standard of 4 inches.</source>
-        <translation type="unfinished"></translation>
+        <translation>디스플레이에 두꺼운 차선선이 표시되는 방법을 조정합니다.
+
+기본값은 4인치의 돌연변이를 일치합니다.</translation>
     </message>
     <message>
         <source>Adjust how thick the road edges appear on the display.
 
 Default matches half of the MUTCD standard of 4 inches.</source>
-        <translation type="unfinished"></translation>
+        <translation>디스플레이에 도로 가장자리가 얼마나 두꺼운지 조정합니다.
+
+기본값은 MUTCD 표준인 4인치의 절반과 일치합니다.</translation>
     </message>
 </context>
 <context>
     <name>FrogPilotConfirmationDialog</name>
     <message>
         <source>Reboot Later</source>
-        <translation type="unfinished"></translation>
+        <translation>나중에 재부팅</translation>
     </message>
     <message>
         <source>Yes</source>
-        <translation type="unfinished"></translation>
+        <translation>네</translation>
     </message>
     <message>
         <source>No</source>
-        <translation type="unfinished"></translation>
+        <translation>아니요</translation>
     </message>
 </context>
 <context>
@@ -1892,51 +1916,51 @@ Deactivate only occurs with the &apos;Cruise Control&apos; button.</source>
     </message>
     <message>
         <source>Hands-Free Lane Change</source>
-        <translation type="unfinished"></translation>
+        <translation>핸즈 프리 차선 변경</translation>
     </message>
     <message>
         <source>Lane changes are conducted without needing to touch the steering wheel upon turn signal activation.</source>
-        <translation type="unfinished"></translation>
+        <translation>방향 지시등 작동 시 스티어링 휠을 터치할 필요 없이 차선 변경이 수행됩니다.</translation>
     </message>
     <message>
         <source>Lane Change Delay</source>
-        <translation type="unfinished"></translation>
+        <translation>차선 변경 지연 시간</translation>
     </message>
     <message>
         <source>How long openpilot waits before changing lanes.</source>
-        <translation type="unfinished"></translation>
+        <translation>차선 변경 전 오픈파일럿 대기 시간.</translation>
     </message>
     <message>
         <source>Lane Width Requirement</source>
-        <translation type="unfinished"></translation>
+        <translation>차선 폭 요구 사항</translation>
     </message>
     <message>
         <source>The minimum lane width for openpilot to detect a lane as a lane.</source>
-        <translation type="unfinished"></translation>
+        <translation>오픈파일럿이 차선을 차선으로 감지하기 위한 최소 차선 폭입니다.</translation>
     </message>
     <message>
         <source>Minimum Speed for Lane Change</source>
-        <translation type="unfinished"></translation>
+        <translation>차선 변경을 위한 최소 속도</translation>
     </message>
     <message>
         <source>The minimum speed required for openpilot to perform a lane change.</source>
-        <translation type="unfinished"></translation>
+        <translation>오픈파일럿이 차선 변경을 수행하는 데 필요한 최소 속도입니다.</translation>
     </message>
     <message>
         <source>Single Lane Change Per Signal</source>
-        <translation type="unfinished"></translation>
+        <translation>신호당 단일 차선 변경</translation>
     </message>
     <message>
         <source>Lane changes are limited to one per turn signal activation.</source>
-        <translation type="unfinished"></translation>
+        <translation>차선 변경은 방향 지시등 작동 시 한 번으로 제한됩니다.</translation>
     </message>
     <message>
         <source>Lateral Tuning</source>
-        <translation type="unfinished"></translation>
+        <translation>조향 튜닝</translation>
     </message>
     <message>
         <source>Settings that control how openpilot manages steering.</source>
-        <translation type="unfinished"></translation>
+        <translation>오픈파일럿이 스티어링을 관리하는 방법을 제어하는 설정입니다.</translation>
     </message>
     <message>
         <source>Neural Network Feedforward (NNFF)</source>
@@ -1944,35 +1968,35 @@ Deactivate only occurs with the &apos;Cruise Control&apos; button.</source>
     </message>
     <message>
         <source>Twilsonco&apos;s &apos;Neural Network FeedForward&apos; for more precise steering control.</source>
-        <translation type="unfinished"></translation>
+        <translation>보다 정밀한 스티어링 제어를 위한 Twilsonco&apos;s &apos;Neural Network FeedForward&apos;.</translation>
     </message>
     <message>
         <source>Smooth Curve Handling</source>
-        <translation type="unfinished"></translation>
+        <translation>부드러운 곡선 핸들링</translation>
     </message>
     <message>
         <source>Smoother steering when entering and exiting curves with Twilsonco&apos;s torque adjustments.</source>
-        <translation type="unfinished"></translation>
+        <translation>Twilsonco의 토크 조정으로 커브에 진입하거나 커브에서 나올 때 더욱 부드러운 조향이 가능합니다.</translation>
     </message>
     <message>
         <source>Quality of Life Improvements</source>
-        <translation type="unfinished"></translation>
+        <translation>삶의 질 향상</translation>
     </message>
     <message>
         <source>Miscellaneous lateral focused features to improve your overall openpilot experience.</source>
-        <translation type="unfinished"></translation>
+        <translation>전반적인 오픈파일럿 경험을 개선하기 위한 다양한 조향에 초점을 맞춘 기능.</translation>
     </message>
     <message>
         <source>Pause Steering Below</source>
-        <translation type="unfinished"></translation>
+        <translation>조향 제어 중지</translation>
     </message>
     <message>
         <source>Pauses steering control when driving below the set speed.</source>
-        <translation type="unfinished"></translation>
+        <translation>설정 속도 이하로 주행할 경우 조향 제어를 일시 중지합니다.</translation>
     </message>
     <message>
         <source>mph</source>
-        <translation type="unfinished">mph</translation>
+        <translation>mph</translation>
     </message>
     <message>
         <source> feet</source>
@@ -1980,11 +2004,11 @@ Deactivate only occurs with the &apos;Cruise Control&apos; button.</source>
     </message>
     <message>
         <source>Reboot required to take effect.</source>
-        <translation type="unfinished"></translation>
+        <translation>적용하려면 재부팅이 필요합니다.</translation>
     </message>
     <message>
         <source>Reboot Now</source>
-        <translation type="unfinished"></translation>
+        <translation>지금 재부팅</translation>
     </message>
     <message>
         <source>kph</source>
@@ -3333,11 +3357,11 @@ Fully disengaged = 50%</translation>
     </message>
     <message>
         <source>Acceleration</source>
-        <translation type="unfinished"></translation>
+        <translation>가속페달</translation>
     </message>
     <message>
         <source>Adjacent</source>
-        <translation type="unfinished"></translation>
+        <translation>인접</translation>
     </message>
     <message>
         <source>Blind Spot</source>
