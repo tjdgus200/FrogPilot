@@ -533,23 +533,23 @@
     <name>FrogPilotAdvancedDrivingPanel</name>
     <message>
         <source>Advanced Lateral Tuning</source>
-        <translation type="unfinished"></translation>
+        <translation>고급 조향 튜닝</translation>
     </message>
     <message>
         <source>Advanced settings that control how openpilot manages steering.</source>
-        <translation type="unfinished"></translation>
+        <translation>오픈파일럿이 스티어링을 관리하는 방법을 제어하는 고급 설정입니다.</translation>
     </message>
     <message>
         <source>Friction (Default: %1)</source>
-        <translation type="unfinished"></translation>
+        <translation>Friction (기본값: %1)</translation>
     </message>
     <message>
         <source>Friction</source>
-        <translation type="unfinished"></translation>
+        <translation>Friction</translation>
     </message>
     <message>
         <source>The resistance in steering. Higher values provide more stable steering but can make it feel heavy, while lower values allow lighter steering but may feel too sensitive.</source>
-        <translation type="unfinished"></translation>
+        <translation>조향 저항. 값이 높을수록 조향이 더 안정적이지만 무거워질 수 있고, 값이 낮을수록 조향이 가볍지만 너무 민감하게 느껴질 수 있습니다.</translation>
     </message>
     <message>
         <source>Kp Factor (Default: %1)</source>
@@ -561,7 +561,7 @@
     </message>
     <message>
         <source>How aggressively the car corrects its steering. Higher values offer quicker corrections but may feel jerky, while lower values make steering smoother but slower to respond.</source>
-        <translation type="unfinished"></translation>
+        <translation>자동차가 스티어링을 얼마나 적극적으로 교정하는지. 값이 높을수록 교정이 더 빠르지만 갑작스럽게 느껴질 수 있고, 값이 낮을수록 스티어링이 더 부드럽지만 반응 속도가 느려집니다.</translation>
     </message>
     <message>
         <source>Lateral Accel (Default: %1)</source>
@@ -573,7 +573,7 @@
     </message>
     <message>
         <source>Adjust how fast the car can steer from side to side. Higher values allow quicker lane changes but can feel unstable, while lower values provide smoother steering but may feel sluggish.</source>
-        <translation type="unfinished"></translation>
+        <translation>차량이 좌우로 얼마나 빨리 조향할 수 있는지 조정합니다. 값이 높을수록 차선 변경이 더 빠르지만 불안정하게 느껴질 수 있고, 값이 낮을수록 조향이 더 부드럽지만 느리게 느껴질 수 있습니다.</translation>
     </message>
     <message>
         <source>Steer Ratio (Default: %1)</source>
@@ -585,7 +585,7 @@
     </message>
     <message>
         <source>Adjust how much openpilot needs to turn the wheel to steer. Higher values feel like driving a truck, more stable at high speeds, but harder to steer quickly at low speeds, while lower values feel like a go-kart, easier to steer in tight spots but more sensitive and less stable at high speeds.</source>
-        <translation type="unfinished"></translation>
+        <translation>오픈파일럿이 조향하기 위해 스티어링휠을 얼마나 돌려야 하는지 조정합니다. 값이 높을수록 트럭을 운전하는 느낌이 들고, 고속에서는 더 안정적이지만 저속에서는 빠르게 조종하기 어렵고, 값이 낮을수록 카트를 운전하는 느낌이 들고, 좁은 곳에서 조종하기 쉽지만 고속에서는 더 민감하고 덜 안정적입니다.</translation>
     </message>
     <message>
         <source>comma&apos;s 2022 Taco Bell Turn Hack</source>
@@ -593,399 +593,435 @@
     </message>
     <message>
         <source>Use comma&apos;s hack they used to help handle left and right turns more precisely during their 2022 &apos;Taco Bell&apos; drive.</source>
-        <translation type="unfinished"></translation>
+        <translation>2022년 &apos;타코 벨&apos; 드라이브에서 좌우 회전을 더 정확하게 처리하는 데 사용한 콤마의 해킹을 사용하세요.</translation>
     </message>
     <message>
         <source>Force Auto Tune On</source>
-        <translation type="unfinished"></translation>
+        <translation>강제 자동 튜닝 켜기</translation>
     </message>
     <message>
         <source>Forces comma&apos;s auto lateral tuning for unsupported vehicles.</source>
-        <translation type="unfinished"></translation>
+        <translation>지원되지 않는 차량에 대해 콤마의 조향 자동 튜닝을 강제합니다.</translation>
     </message>
     <message>
         <source>Force Auto Tune Off</source>
-        <translation type="unfinished"></translation>
+        <translation>강제 자동 튜닝 끄기</translation>
     </message>
     <message>
         <source>Forces comma&apos;s auto lateral tuning off for supported vehicles.</source>
-        <translation type="unfinished"></translation>
+        <translation>지원되는 차량에 대해 콤마의 조향 자동 튜닝을 강제로 끕니다.</translation>
     </message>
     <message>
         <source>Force Turn Desires Below Lane Change Speed</source>
-        <translation type="unfinished"></translation>
+        <translation>차선 변경 속도 제한 설정</translation>
     </message>
     <message>
         <source>Force the model to use turn desires when driving below the minimum lane change speed to help make left and right turns more precisely.</source>
-        <translation type="unfinished"></translation>
+        <translation>최소 차선 변경 속도 이하로 주행할 때 모델이 회전 요구 사항을 사용하도록 강제하여 좌회전과 우회전을 보다 정확하게 할 수 있도록 돕습니다.</translation>
     </message>
     <message>
         <source>Advanced Longitudinal Tuning</source>
-        <translation type="unfinished"></translation>
+        <translation>고급 롱~컨트롤 튜닝</translation>
     </message>
     <message>
         <source>Advanced settings that control how openpilot manages speed and acceleration.</source>
-        <translation type="unfinished"></translation>
+        <translation>오픈파일럿이 속도와 가속도를 관리하는 방법을 제어하는 고급 설정입니다.</translation>
     </message>
     <message>
         <source>Lead Detection Confidence</source>
-        <translation type="unfinished"></translation>
+        <translation>선행 차량 감지 신뢰도</translation>
     </message>
     <message>
         <source>How sensitive openpilot is to detecting vehicles ahead. A lower value can help detect vehicles sooner and from farther away, but may occasionally mistake other objects for vehicles.</source>
-        <translation type="unfinished"></translation>
+        <translation>오픈파일럿이 앞의 차량을 감지하는 데 얼마나 민감한지 설정합니다. 값이 낮을수록 차량을 더 빨리, 더 멀리서 감지하는 데 도움이 되지만, 가끔 다른 물체를 차량으로 오인할 수 있습니다.</translation>
     </message>
     <message>
         <source>Maximum Acceleration Rate</source>
-        <translation type="unfinished"></translation>
+        <translation>최대 가속률</translation>
     </message>
     <message>
         <source>Set a cap on how fast openpilot can accelerate to prevent high acceleration at low speeds.</source>
-        <translation type="unfinished"></translation>
+        <translation>저속에서 높은 가속이 발생하는 것을 방지하기 위해 오픈파일럿의 가속 속도에 제한을 설정합니다.</translation>
     </message>
     <message>
         <source>Advanced Quality of Life</source>
-        <translation type="unfinished"></translation>
+        <translation>향상된 삶의 질</translation>
     </message>
     <message>
         <source>Miscellaneous advanced features to improve your overall openpilot experience.</source>
-        <translation type="unfinished"></translation>
+        <translation>전반적인 오픈 파일럿 경험을 개선하는 기타 고급 기능입니다.</translation>
     </message>
     <message>
         <source>Force Keep openpilot in the Standstill State</source>
-        <translation type="unfinished"></translation>
+        <translation>강제 정지 상태 유지</translation>
     </message>
     <message>
         <source>Keep openpilot in the &apos;standstill&apos; state until the gas pedal or &apos;resume&apos; button is pressed.</source>
-        <translation type="unfinished"></translation>
+        <translation>가솔린 페달 또는 &apos;Res&apos; 버튼을 누를 때까지 파일럿을 &apos;정지 상태&apos;를 유지합니다.</translation>
     </message>
     <message>
         <source>Force Stop for &apos;Detected&apos; Stop Lights/Signs</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;감지된&apos; 정지 신호등/표지판에 대한 강제 정지</translation>
     </message>
     <message>
         <source>Whenever openpilot &apos;detects&apos; a potential stop light/stop sign, force a stop where it originally detected it to prevent running the potential red light/stop sign.</source>
-        <translation type="unfinished"></translation>
+        <translation>오픈 파일럿이 잠재적인 정지 신호/정지 표지판을 '감지'할 때마다 원래 감지한 위치에서 강제로 정지시켜 잠재적인 빨간 신호/정지 표지판 위반을 방지합니다.</translation>
     </message>
     <message>
         <source>Set Speed Offset</source>
-        <translation type="unfinished"></translation>
+        <translation>속도 오프셋 설정</translation>
     </message>
     <message>
         <source>How much higher or lower the set speed should be compared to your current set speed. For example, if you prefer to drive 5 mph above the speed limit, this setting will automatically add that difference when you adjust your set speed.</source>
-        <translation type="unfinished"></translation>
+        <translation>설정 속도를 현재 설정 속도와 비교할 때 얼마나 높거나 낮아야 하는지. 예를 들어 제한 속도보다 5마일 이상 빠르게 주행하는 것을 선호하는 경우, 설정 속도를 조정하면 이 설정에 따라 자동으로 그 차이가 추가됩니다.</translation>
     </message>
     <message>
         <source>Customize Driving Personalities</source>
-        <translation type="unfinished"></translation>
+        <translation>운전자 개인화 설정</translation>
     </message>
     <message>
         <source>Customize the personality profiles to suit your preferences.</source>
-        <translation type="unfinished"></translation>
+        <translation>선호도에 맞게 성격 프로필을 사용자 지정합니다.</translation>
     </message>
     <message>
         <source>Traffic Personality</source>
-        <translation type="unfinished"></translation>
+        <translation>교통 체증 모드</translation>
     </message>
     <message>
         <source>Customize the &apos;Traffic&apos; personality profile, tailored for navigating through traffic.</source>
-        <translation type="unfinished"></translation>
+        <translation>교통 체증 속을 헤쳐나가는 데 적합한 &apos;교통&apos; 성격 프로필을 사용자 정의하세요.</translation>
     </message>
     <message>
         <source>Following Distance</source>
-        <translation type="unfinished"></translation>
+        <translation>추종 거리</translation>
     </message>
     <message>
         <source>The minimum following distance in &apos;Traffic Mode.&apos; openpilot will adjust dynamically between this value and the &apos;Aggressive&apos; profile distance based on your speed.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;교통 모드&apos;의 최소 추종 거리입니다. 오픈파일럿은 속도에 따라 이 값과 &apos;공격적&apos; 프로필 거리 사이를 동적으로 조정합니다.</translation>
     </message>
     <message>
         <source>Acceleration Sensitivity</source>
-        <translation type="unfinished"></translation>
+        <translation>가속 민감도</translation>
     </message>
     <message>
         <source>How sensitive openpilot is to changes in acceleration in &apos;Traffic Mode.&apos; Higher values result in smoother, more gradual acceleration and deceleration, while lower values allow for faster changes that may feel more abrupt.</source>
-        <translation type="unfinished"></translation>
+        <translation>오픈파일럿이 &apos;트래픽 모드&apos;에서 가속도의 변화에 얼마나 민감한지, 값이 높을수록 더 부드럽고 점진적인 가속 및 감속이 이루어지며, 값이 낮을수록 더 급격하게 느껴질 수 있는 더 빠른 변화가 가능합니다.</translation>
     </message>
     <message>
         <source>Deceleration Sensitivity</source>
-        <translation type="unfinished"></translation>
+        <translation>감속 민감도</translation>
     </message>
     <message>
         <source>Controls how sensitive openpilot is to changes in deceleration in &apos;Traffic Mode.&apos; Higher values result in smoother, more gradual braking, while lower values allow for quicker, more responsive braking that may feel abrupt.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;트래픽 모드&apos;에서 감속 변화에 대한 오픈파일럿의 민감도를 제어합니다. 값이 높을수록 더 부드럽고 점진적인 제동이 이루어지고, 값이 낮을수록 더 빠르고 반응성이 좋은 제동이 가능하지만 갑작스럽게 느껴질 수 있습니다.</translation>
     </message>
     <message>
         <source>Safety Distance Sensitivity</source>
-        <translation type="unfinished"></translation>
+        <translation>안전 거리 민감도</translation>
     </message>
     <message>
         <source>Adjusts how cautious openpilot is around other vehicles or obstacles in &apos;Traffic Mode.&apos; Higher values increase following distances and prioritize safety, leading to more cautious driving, while lower values allow for closer following but may reduce reaction time.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;트래픽 모드&apos;에서 오픈파일럿이 다른 차량이나 장애물 주변에서 얼마나 조심하는지 조정합니다. 값이 높을수록 추종 거리가 늘어나고 안전을 우선시하여 더욱 조심스러운 운전이 이루어지는 반면, 값이 낮을수록 추종 거리가 가까워지지만 반응 시간이 단축될 수 있습니다.</translation>
     </message>
     <message>
         <source>Speed Increase Responsiveness</source>
-        <translation type="unfinished"></translation>
+        <translation>속도 증가 반응성</translation>
     </message>
     <message>
         <source>Controls how quickly openpilot adjusts speed in &apos;Traffic Mode.&apos; Higher values ensure smoother, more gradual speed changes, while lower values enable quicker adjustments that might feel sharper or less smooth.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;트래픽 모드&apos;에서 오픈파일럿이 속도를 얼마나 빨리 조정하는지 제어합니다. 값이 높을수록 더 부드럽고 점진적인 속도 변화가 보장되고, 값이 낮을수록 더 빠르게 조정이 가능하지만 더 날카롭거나 덜 매끄럽게 느껴질 수 있습니다.</translation>
     </message>
     <message>
         <source>Speed Decrease Responsiveness</source>
-        <translation type="unfinished"></translation>
+        <translation>속도 감소 반응성</translation>
     </message>
     <message>
         <source>Sets how quickly openpilot adjusts to decreasing speeds in &apos;Traffic Mode.&apos; Higher values ensure smoother transitions when slowing down, while lower values allow for quicker, more responsive speed reductions that might feel sharper.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;트래픽 모드&apos;에서 openpilot이 감소하는 속도에 얼마나 빨리 적응하는지 설정합니다. 값이 높을수록 속도를 줄일 때 더 부드럽게 전환되고, 값이 낮을수록 더 빠르고 반응성이 뛰어난 속도 감소가 가능하지만 더 날카롭게 느껴질 수 있습니다.</translation>
     </message>
     <message>
         <source>Reset Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>설정 재설정</translation>
     </message>
     <message>
         <source>Restore the &apos;Traffic Mode&apos; settings to their default values.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;트래픽 모드&apos; 설정을 기본값으로 복원합니다.</translation>
     </message>
     <message>
         <source>Aggressive Personality</source>
-        <translation type="unfinished"></translation>
+        <translation>적극적인 주행</translation>
     </message>
     <message>
         <source>Customize the &apos;Aggressive&apos; personality profile, designed for a more assertive driving style.</source>
-        <translation type="unfinished"></translation>
+        <translation>더욱 공격적인 운전 스타일을 위해 설계된 &apos;적극적인 주행&apos; 프로필을 사용자 정의하세요.</translation>
     </message>
     <message>
         <source>Set the following distance for &apos;Aggressive&apos; mode. This determines roughly how many seconds you&apos;ll follow behind the car ahead.
 
 Default: 1.25 seconds.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;적극적&apos; 모드에 대한 다음 거리를 설정합니다. 이는 앞차 뒤에서 몇 초 동안 따라갈 것인지를 대략적으로 결정합니다.
+
+기본값: 1.25 초.</translation>
     </message>
     <message>
         <source>Controls how sensitive openpilot is to acceleration changes in &apos;Aggressive&apos; mode. Higher values make acceleration and deceleration smoother but slower, while lower values allow quicker changes that may feel jerky.
 
 Default: 0.5.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;적극적&apos; 모드에서 가속도 변화에 대한 오픈파일럿의 민감도를 제어합니다. 값이 높을수록 가속과 감속이 더 부드럽지만 더 느리고, 값이 낮을수록 덜컹거리는 느낌이 들 수 있는 빠른 변화가 가능합니다.
+
+기본값: 0.5.</translation>
     </message>
     <message>
         <source>Controls how sensitive openpilot is to deceleration in &apos;Aggressive&apos; mode. Higher values result in smoother braking, while lower values allow for more immediate braking that may feel abrupt.
 
 Default: 0.5.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;적극적&apos; 모드에서 오픈파일럿이 감속에 얼마나 민감한지 제어합니다. 값이 높을수록 제동이 더 부드러워지고, 값이 낮을수록 갑작스럽게 느껴질 수 있는 즉각적인 제동이 가능합니다.
+
+기본값: 0.5.</translation>
     </message>
     <message>
         <source>Adjusts how cautious openpilot is around vehicles or obstacles in &apos;Aggressive&apos; mode. Higher values make it more cautious, while lower values allow for closer following, increasing the risk of sudden braking.
 
 Default: 1.0.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;적극적&apos; 모드에서 차량이나 장애물 주변에서 오픈파일럿이 얼마나 조심스러운지 조정합니다. 값이 높을수록 더 조심스러워지고, 값이 낮을수록 더 가까이 따라가게 되어 급제동 위험이 커집니다.
+
+기본값: 1.0.</translation>
     </message>
     <message>
         <source>Controls how quickly openpilot adjusts speed in &apos;Aggressive&apos; mode. Higher values result in smoother but slower speed changes, while lower values make speed adjustments quicker but potentially more abrupt.
 
 Default: 0.5.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;적극적&apos; 모드에서 오픈파일럿이 속도를 얼마나 빨리 조정하는지 제어합니다. 값이 높을수록 더 부드럽지만 속도가 느리게 변경되고, 값이 낮을수록 속도 조정이 더 빠르지만 잠재적으로 더 갑작스럽게 변경됩니다.
+
+기본값: 0.5.</translation>
     </message>
     <message>
         <source>Sets how quickly openpilot adjusts to speed reductions in &apos;Aggressive&apos; mode. Higher values ensure smoother transitions when slowing down, while lower values allow for quicker, more responsive speed decreases that may feel sharp.
 
 Default: 0.5.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;적극적&apos; 모드에서 오픈파일럿이 속도 감소에 얼마나 빨리 적응하는지 설정합니다. 값이 높을수록 속도를 줄일 때 더 부드럽게 전환되고, 값이 낮을수록 더 빠르고 반응성이 좋은 속도 감소가 가능하여 날카롭게 느껴질 수 있습니다.
+
+기본값: 0.5.</translation>
     </message>
     <message>
         <source>Restore the &apos;Aggressive&apos; settings to their default values.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;적극적&apos; 설정을 기본값으로 복원합니다.</translation>
     </message>
     <message>
         <source>Standard Personality</source>
-        <translation type="unfinished"></translation>
+        <translation>표준 모드 설정</translation>
     </message>
     <message>
         <source>Customize the &apos;Standard&apos; personality profile, optimized for balanced driving.</source>
-        <translation type="unfinished"></translation>
+        <translation>균형 잡힌 운전에 최적화된 &apos;표준&apos; 성격 프로필을 사용자 정의하세요.</translation>
     </message>
     <message>
         <source>Set the following distance for &apos;Standard&apos; mode. This determines roughly how many seconds you&apos;ll follow behind the car ahead.
 
 Default: 1.45 seconds.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;표준&apos; 모드에 대해 다음 거리를 설정합니다. 이는 앞차 뒤에서 몇 초 동안 따라갈 것인지를 대략적으로 결정합니다.
+
+기본값: 1.45 초.</translation>
     </message>
     <message>
         <source>Controls how sensitive openpilot is to acceleration changes in &apos;Standard&apos; mode. Higher values make acceleration and deceleration smoother but slower, while lower values allow quicker changes that may feel jerky.
 
 Default: 1.0.</source>
-        <translation type="unfinished"></translation>
+        <translation>오픈파일럿이 &apos;표준&apos; 모드에서 가속도 변화에 얼마나 민감한지 제어합니다. 값이 높을수록 가속과 감속이 더 부드럽지만 더 느리고, 값이 낮을수록 더 빠르게 변하지만 덜컹거리는 느낌이 들 수 있습니다.
+
+기본값: 1.0.</translation>
     </message>
     <message>
         <source>Controls how sensitive openpilot is to deceleration in &apos;Standard&apos; mode. Higher values result in smoother braking, while lower values allow for quicker, more immediate braking that may feel abrupt.
 
 Default: 1.0.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;표준&apos; 모드에서 감속에 대한 오픈파일럿의 민감도를 조절합니다. 값이 높을수록 제동이 더 부드러워지고, 값이 낮을수록 더 빠르고 즉각적인 제동이 가능하지만 갑작스럽게 느껴질 수 있습니다.
+
+기본값: 1.0.</translation>
     </message>
     <message>
         <source>Adjusts how cautious openpilot is around vehicles or obstacles in &apos;Standard&apos; mode. Higher values make it more cautious, while lower values allow for closer following, increasing the risk of sudden braking.
 
 Default: 1.0.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;표준&apos; 모드에서 차량이나 장애물 주변에서 오픈 파일럿이 얼마나 조심스러운지 조정합니다. 값이 높을수록 더 조심스러워지고, 값이 낮을수록 더 가까이 따라가게 되어 급제동 위험이 커집니다.
+
+기본값: 1.0.</translation>
     </message>
     <message>
         <source>Controls how quickly openpilot adjusts speed in &apos;Standard&apos; mode. Higher values result in smoother but slower speed changes, while lower values make speed adjustments quicker but potentially more abrupt.
 
 Default: 1.0.</source>
-        <translation type="unfinished"></translation>
+        <translation>오픈파일럿이 &apos;표준&apos; 모드에서 속도를 얼마나 빨리 조정할지 제어합니다. 값이 높을수록 더 부드럽지만 속도가 느리게 변경되고, 값이 낮을수록 속도 조정이 더 빠르지만 잠재적으로 더 갑작스럽게 변경됩니다.
+
+기본값: 1.0.</translation>
     </message>
     <message>
         <source>Sets how quickly openpilot adjusts to speed reductions in &apos;Standard&apos; mode. Higher values ensure smoother transitions when slowing down, while lower values allow for quicker, more responsive speed decreases that may feel sharp.
 
 Default: 1.0.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;표준&apos; 모드에서 오픈파일럿이 속도 감소에 얼마나 빨리 적응하는지 설정합니다. 값이 높을수록 속도를 줄일 때 더 부드럽게 전환되고, 값이 낮을수록 더 빠르고 반응성이 좋은 속도 감소가 가능하여 날카롭게 느껴질 수 있습니다.
+
+기본값: 1.0.</translation>
     </message>
     <message>
         <source>Restore the &apos;Standard&apos; settings to their default values.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;표준&apos; 설정을 기본값으로 복원합니다.</translation>
     </message>
     <message>
         <source>Relaxed Personality</source>
-        <translation type="unfinished"></translation>
+        <translation>늘어지는 모드</translation>
     </message>
     <message>
         <source>Customize the &apos;Relaxed&apos; personality profile, ideal for a more laid-back driving style.</source>
-        <translation type="unfinished"></translation>
+        <translation>보다 느긋한 운전 스타일을 위해 &apos;늘어지는&apos; 성격 프로필을 사용자 지정하세요.</translation>
     </message>
     <message>
         <source>Set the following distance for &apos;Relaxed&apos; mode. This determines roughly how many seconds you&apos;ll follow behind the car ahead.
 
 Default: 1.75 seconds.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;늘어지는&apos; 모드에 대한 다음 거리를 설정합니다. 이는 앞차 뒤에서 몇 초 동안 따라갈 것인지 대략적으로 결정합니다.
+
+기본값: 1.75초.</translation>
     </message>
     <message>
         <source>Controls how sensitive openpilot is to acceleration changes in &apos;Relaxed&apos; mode. Higher values make acceleration and deceleration smoother but slower, while lower values allow quicker changes that may feel jerky.
 
 Default: 1.0.</source>
-        <translation type="unfinished"></translation>
+        <translation>오픈파일럿이 &apos;늘어지는&apos; 모드에서 가속도 변화에 얼마나 민감한지 제어합니다. 값이 높을수록 가속과 감속이 더 부드럽지만 더 느리고, 값이 낮을수록 덜컹거리는 느낌이 들 수 있는 빠른 변화가 가능합니다.
+
+기본값: 1.0.</translation>
     </message>
     <message>
         <source>Controls how sensitive openpilot is to deceleration in &apos;Relaxed&apos; mode. Higher values result in smoother braking, while lower values allow for quicker, more immediate braking that may feel abrupt.
 
 Default: 1.0.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;늘어지는&apos; 모드에서 감속에 대한 오픈파일럿의 민감도를 제어합니다. 값이 높을수록 제동이 더 부드러워지고, 값이 낮을수록 더 빠르고 즉각적인 제동이 가능하지만 갑작스럽게 느껴질 수 있습니다.
+
+기본값: 1.0.</translation>
     </message>
     <message>
         <source>Adjusts how cautious openpilot is around vehicles or obstacles in &apos;Relaxed&apos; mode. Higher values make it more cautious, while lower values allow for closer following, increasing the risk of sudden braking.
 
 Default: 1.0.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;늘어지는&apos; 모드에서 차량이나 장애물 주변에서 오픈파일럿이 얼마나 조심스러운지 조정합니다. 값이 높을수록 더 조심스러워지고, 값이 낮을수록 더 가까이 따라가게 되어 급제동 위험이 커집니다.
+
+기본값: 1.0.</translation>
     </message>
     <message>
         <source>Controls how quickly openpilot adjusts speed in &apos;Relaxed&apos; mode. Higher values result in smoother but slower speed changes, while lower values make speed adjustments quicker but potentially more abrupt.
 
 Default: 1.0.</source>
-        <translation type="unfinished"></translation>
+        <translation>오픈파일럿이 &apos;늘어지는&apos; 모드에서 속도를 얼마나 빨리 조정할지 제어합니다. 값이 높을수록 더 부드럽지만 속도가 느리게 변경되고, 값이 낮을수록 속도 조정이 더 빠르지만 잠재적으로 더 갑작스럽게 변경됩니다.
+
+기본값: 1.0.</translation>
     </message>
     <message>
         <source>Sets how quickly openpilot adjusts to speed reductions in &apos;Relaxed&apos; mode. Higher values ensure smoother transitions when slowing down, while lower values allow for quicker, more responsive speed decreases that may feel sharp.
 
 Default: 1.0.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;늘어지는&apos; 모드에서 openpilot이 속도 감소에 얼마나 빨리 적응하는지. 값이 높을수록 속도를 줄일 때 더 부드럽게 전환되고, 값이 낮을수록 더 빠르고 반응성이 좋은 속도 감소가 가능하여 날카롭게 느껴질 수 있습니다.
+
+기본값: 1.0.</translation>
     </message>
     <message>
         <source>Restore the &apos;Relaxed&apos; settings to their default values.</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;늘어지는&apos; 설정을 기본값으로 복원합니다.</translation>
     </message>
     <message>
         <source>Model Management</source>
-        <translation type="unfinished"></translation>
+        <translation>모델 관리</translation>
     </message>
     <message>
         <source>Manage the driving models used by openpilot.</source>
-        <translation type="unfinished"></translation>
+        <translation>오픈파일럿에서 사용하는 주행 모델을 관리합니다.</translation>
     </message>
     <message>
         <source>Automatically Update and Download Models</source>
-        <translation type="unfinished"></translation>
+        <translation>모델을 자동으로 업데이트하고 다운로드</translation>
     </message>
     <message>
         <source>Automatically download new or updated driving models.</source>
-        <translation type="unfinished"></translation>
+        <translation>새로운 주행 모델이나 업데이트된 주행 모델을 자동으로 다운로드합니다.</translation>
     </message>
     <message>
         <source>Model Randomizer</source>
-        <translation type="unfinished"></translation>
+        <translation>모델 임의 선택</translation>
     </message>
     <message>
         <source>A random model is selected and can be reviewed at the end of each drive if it&apos;s longer than 15 minutes to help find your preferred model.</source>
-        <translation type="unfinished"></translation>
+        <translation>무작위로 선택된 모델이 제공되며, 15분 이상 소요될 경우 각 주행이 끝난 후에 검토하여 원하는 모델을 찾는 데 도움이 됩니다.</translation>
     </message>
     <message>
         <source>Manage Model Blacklist</source>
-        <translation type="unfinished"></translation>
+        <translation>모델 블랙리스트 관리</translation>
     </message>
     <message>
         <source>Control which models are blacklisted and won&apos;t be used for future drives.</source>
-        <translation type="unfinished"></translation>
+        <translation>어떤 모델을 블랙리스트에 등록하고 향후 드라이브에 사용하지 않을지 제어합니다.</translation>
     </message>
     <message>
         <source>Reset Model Scores</source>
-        <translation type="unfinished"></translation>
+        <translation>리셋 모델 점수</translation>
     </message>
     <message>
         <source>Clear the ratings you&apos;ve given to the driving models.</source>
-        <translation type="unfinished"></translation>
+        <translation>주행 모델에 부여한 평가를 지웁니다.</translation>
     </message>
     <message>
         <source>Review Model Scores</source>
-        <translation type="unfinished"></translation>
+        <translation>모델 점수 검토</translation>
     </message>
     <message>
         <source>View the ratings you&apos;ve assigned to the driving models.</source>
-        <translation type="unfinished"></translation>
+        <translation>주행 모델에 지정한 등급을 확인하세요.</translation>
     </message>
     <message>
         <source>Delete Model</source>
-        <translation type="unfinished"></translation>
+        <translation>모델 삭제</translation>
     </message>
     <message>
         <source>Remove the selected driving model from your device.</source>
-        <translation type="unfinished"></translation>
+        <translation>선택한 주행 모델을 장치에서 제거합니다.</translation>
     </message>
     <message>
         <source>Download Model</source>
-        <translation type="unfinished"></translation>
+        <translation>모델 다운로드</translation>
     </message>
     <message>
         <source>Download undownloaded driving models.</source>
-        <translation type="unfinished"></translation>
+        <translation>다운로드되지 않은 주행 모델을 다운로드하세요.</translation>
     </message>
     <message>
         <source>Download All Models</source>
-        <translation type="unfinished"></translation>
+        <translation>모든 모델 다운로드</translation>
     </message>
     <message>
         <source>Download all undownloaded driving models.</source>
-        <translation type="unfinished"></translation>
+        <translation>다운로드되지 않은 모든 주행 모델을 다운로드하세요.</translation>
     </message>
     <message>
         <source>Select Model</source>
-        <translation type="unfinished"></translation>
+        <translation>모델 선택</translation>
     </message>
     <message>
         <source>Select which model openpilot uses to drive.</source>
-        <translation type="unfinished"></translation>
+        <translation>오픈파일럿이 어떤 모델을 사용하여 운전하는지 선택하세요.</translation>
     </message>
     <message>
         <source>Reset Model Calibrations</source>
-        <translation type="unfinished"></translation>
+        <translation>모델 캘리브레이션 재설정</translation>
     </message>
     <message>
         <source>Reset calibration settings for the driving models.</source>
-        <translation type="unfinished"></translation>
+        <translation>주행 모델에 대한 캘리브레이션 설정을 재설정합니다.</translation>
     </message>
     <message>
         <source>mph</source>
-        <translation type="unfinished">mph</translation>
+        <translation>mph</translation>
     </message>
     <message>
         <source>Reset</source>
-        <translation type="unfinished">초기화</translation>
+        <translation>초기화</translation>
     </message>
     <message>
         <source> seconds</source>
@@ -993,99 +1029,99 @@ Default: 1.0.</source>
     </message>
     <message>
         <source>ADD</source>
-        <translation type="unfinished">추가</translation>
+        <translation>추가</translation>
     </message>
     <message>
         <source>REMOVE</source>
-        <translation type="unfinished">삭제</translation>
+        <translation>삭제</translation>
     </message>
     <message>
         <source>There&apos;s no more models to blacklist! The only available model is &quot;%1&quot;!</source>
-        <translation type="unfinished"></translation>
+        <translation>블랙리스트에 추가할 모델이 더 이상 없습니다! 유일하게 사용 가능한 모델은 &quot;%1&quot;입니다!</translation>
     </message>
     <message>
         <source>OK</source>
-        <translation type="unfinished">OK</translation>
+        <translation>OK</translation>
     </message>
     <message>
         <source>Select a model to add to the blacklist</source>
-        <translation type="unfinished"></translation>
+        <translation>블랙리스트에 추가할 모델을 선택하세요</translation>
     </message>
     <message>
         <source>Are you sure you want to add the &apos;%1&apos; model to the blacklist?</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;%1&apos; 모델을 블랙리스트에 추가하시겠습니까?</translation>
     </message>
     <message>
         <source>Add</source>
-        <translation type="unfinished"></translation>
+        <translation>추가</translation>
     </message>
     <message>
         <source>Select a model to remove from the blacklist</source>
-        <translation type="unfinished"></translation>
+        <translation>블랙리스트에서 제거할 모델을 선택하세요</translation>
     </message>
     <message>
         <source>Are you sure you want to remove the &apos;%1&apos; model from the blacklist?</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;%1&apos; 모델을 블랙리스트에서 제거하시겠습니까?</translation>
     </message>
     <message>
         <source>Remove</source>
-        <translation type="unfinished"></translation>
+        <translation>제거</translation>
     </message>
     <message>
         <source>RESET</source>
-        <translation type="unfinished">초기화</translation>
+        <translation>초기화</translation>
     </message>
     <message>
         <source>Reset all model scores?</source>
-        <translation type="unfinished"></translation>
+        <translation>모든 모델 점수를 초기화하시겠습니까?</translation>
     </message>
     <message>
         <source>VIEW</source>
-        <translation type="unfinished">보기</translation>
+        <translation>보기</translation>
     </message>
     <message>
         <source>DELETE</source>
-        <translation type="unfinished"></translation>
+        <translation>삭제</translation>
     </message>
     <message>
         <source>Select a model to delete</source>
-        <translation type="unfinished"></translation>
+        <translation>삭제할 모델을 선택하세요</translation>
     </message>
     <message>
         <source>Are you sure you want to delete the &apos;%1&apos; model?</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;%1&apos; 모델을 삭제하시겠습니까?</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation type="unfinished"></translation>
+        <translation>삭제</translation>
     </message>
     <message>
         <source>Deleting...</source>
-        <translation type="unfinished"></translation>
+        <translation>삭제하는 중</translation>
     </message>
     <message>
         <source>Deleted!</source>
-        <translation type="unfinished"></translation>
+        <translation>삭제 완료!</translation>
     </message>
     <message>
         <source>DOWNLOAD</source>
-        <translation type="unfinished">다운로드</translation>
+        <translation>다운로드</translation>
     </message>
     <message>
         <source>CANCEL</source>
-        <translation type="unfinished"></translation>
+        <translation>취소</translation>
     </message>
     <message>
         <source>Select a driving model to download</source>
-        <translation type="unfinished"></translation>
+        <translation>다운로드할 주행 모델을 선택하세요</translation>
     </message>
     <message>
         <source>Downloading %1...</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 다운로드 중...</translation>
     </message>
     <message>
         <source>SELECT</source>
-        <translation type="unfinished">선택</translation>
+        <translation>선택</translation>
     </message>
     <message>
         <source>Select a model - 🗺️ = Navigation | 📡 = Radar | 👀 = VOACC</source>
@@ -1093,63 +1129,63 @@ Default: 1.0.</source>
     </message>
     <message>
         <source>WARNING: This is a very experimental model and may drive dangerously!</source>
-        <translation type="unfinished"></translation>
+        <translation>경고: 이 모델은 매우 실험적인 모델이므로 위험하게 운전될 수 있습니다!</translation>
     </message>
     <message>
         <source>I understand the risks.</source>
-        <translation type="unfinished"></translation>
+        <translation>저는 위험을 이해합니다.</translation>
     </message>
     <message>
         <source>Start with a fresh calibration for the newly selected model?</source>
-        <translation type="unfinished"></translation>
+        <translation>새로 선택한 모델에 대해 새로운 캘리브레이션을 시작하시겠습니까?</translation>
     </message>
     <message>
         <source>Reboot required to take effect.</source>
-        <translation type="unfinished"></translation>
+        <translation>적용하려면 재부팅이 필요합니다.</translation>
     </message>
     <message>
         <source>Reboot Now</source>
-        <translation type="unfinished"></translation>
+        <translation>지금 재부팅</translation>
     </message>
     <message>
         <source>RESET ALL</source>
-        <translation type="unfinished"></translation>
+        <translation>모든 설정 재설정</translation>
     </message>
     <message>
         <source>RESET ONE</source>
-        <translation type="unfinished"></translation>
+        <translation>하나만 재설정</translation>
     </message>
     <message>
         <source>Are you sure you want to completely reset all of your model calibrations?</source>
-        <translation type="unfinished"></translation>
+        <translation>모든 모델 보정을 완전히 재설정하시겠습니까?</translation>
     </message>
     <message>
         <source>Select a model to reset</source>
-        <translation type="unfinished"></translation>
+        <translation>재설정할 모델을 선택하세요</translation>
     </message>
     <message>
         <source>Are you sure you want to completely reset this model&apos;s calibrations?</source>
-        <translation type="unfinished"></translation>
+        <translation>이 모델의 보정을 완전히 재설정하시겠습니까?</translation>
     </message>
     <message>
         <source>The &apos;Model Randomizer&apos; only works with downloaded models. Do you want to download all the driving models?</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;Model Randomizer&apos;는 다운로드한 모델에서만 작동합니다. 모든 주행 모델을 다운로드하시겠습니까?</translation>
     </message>
     <message>
         <source>Are you sure you want to completely reset your settings for the &apos;Traffic Mode&apos; personality?</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;트래픽 모드&apos; 특성에 대한 설정을 완전히 재설정하시겠습니까?</translation>
     </message>
     <message>
         <source>Are you sure you want to completely reset your settings for the &apos;Aggressive&apos; personality?</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;적극적&apos; 성격에 대한 설정을 완전히 재설정하시겠습니까?</translation>
     </message>
     <message>
         <source>Are you sure you want to completely reset your settings for the &apos;Standard&apos; personality?</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;표준&apos; 특성에 대한 설정을 완전히 재설정하시겠습니까?</translation>
     </message>
     <message>
         <source>Are you sure you want to completely reset your settings for the &apos;Relaxed&apos; personality?</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;늘어지는&apos; 성격에 대한 설정을 완전히 재설정하시겠습니까?</translation>
     </message>
     <message>
         <source>kph</source>
