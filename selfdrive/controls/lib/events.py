@@ -1213,7 +1213,7 @@ EVENTS: dict[int, dict[str, Alert | AlertCallbackType]] = {
       "Slowing down",
       "",
       AlertStatus.normal, AlertSize.small,
-      Priority.LOW, VisualAlert.none, AudibleAlert.speedDown, 2.),
+      Priority.LOW, VisualAlert.none, AudibleAlert.none, 2.),
   },
 }
 
