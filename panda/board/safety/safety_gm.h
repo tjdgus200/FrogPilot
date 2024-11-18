@@ -221,6 +221,11 @@ static bool gm_tx_hook(const CANPacket_t *to_send) {
     }
   }
 
+  if (addr == 0xBD) {
+    if (!get_longitudinal_allowed()) {
+      tx = false;
+    }
+  }
   // LKA STEER: safety check
   if (addr == 0x180) {
     int desired_torque = ((GET_BYTE(to_send, 0) & 0x7U) << 8) + GET_BYTE(to_send, 1);
